@@ -1,4 +1,4 @@
 as-io
 =====
 
-Data import/export tools for TIBCO ActiveSpaces
+Data import/export framework for TIBCO ActiveSpaces
