@@ -69,7 +69,7 @@
           <manifestLocation>META-INF</manifestLocation>
           <instructions>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Export-Package>com.tibco.as.io,com.tibco.as.io.operation</Export-Package>
+            <Export-Package>com.tibco.as.io,com.tibco.as.io.cli,com.tibco.as.io.operation,com.tibco.as.io.transfer</Export-Package>
           </instructions>
         </configuration>
       </plugin>
