@@ -34,6 +34,8 @@ public abstract class AbstractCLIApplication implements IEventListener {
 	private String dataStore;
 	@Parameter(names = { "-no_exit" }, description = "Do not shut down after the Eclipse application has ended")
 	private Boolean noExit;
+	@Parameter(names = { "-security_token" }, description = "Security token path")
+	private String securityToken;
 
 	protected AbstractCLIApplication() {
 		EventManager.addListener(this);
@@ -114,6 +116,9 @@ public abstract class AbstractCLIApplication implements IEventListener {
 			}
 			if (workerThreadCount != null) {
 				memberDef.setWorkerThreadCount(workerThreadCount);
+			}
+			if (securityToken != null) {
+				memberDef.setSecurityTokenFile(securityToken);
 			}
 			try {
 				metaspace = Metaspace.connect(metaspaceName, memberDef);
