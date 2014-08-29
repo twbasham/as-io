@@ -14,7 +14,13 @@ public class Field implements Cloneable {
 
 	private boolean key;
 
+	private boolean skip;
+
 	public Field() {
+	}
+	
+	public Field(String name) {
+		this.name = name;
 	}
 
 	public Field(String name, FieldType type) {
@@ -44,6 +50,7 @@ public class Field implements Cloneable {
 		field.name = name;
 		field.nullable = nullable;
 		field.type = type;
+		field.skip = skip;
 	}
 
 	public String getName() {
@@ -68,6 +75,14 @@ public class Field implements Cloneable {
 
 	public void setEncrypted(boolean encrypted) {
 		this.encrypted = encrypted;
+	}
+
+	public boolean isSkip() {
+		return skip;
+	}
+
+	public void setSkip(boolean skip) {
+		this.skip = skip;
 	}
 
 	public boolean isNullable() {

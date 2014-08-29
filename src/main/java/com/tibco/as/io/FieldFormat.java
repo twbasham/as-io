@@ -15,6 +15,7 @@ public class FieldFormat extends Format {
 	private static final String NULLABLE = "nullable";
 	private static final String ENCRYPTED = "encrypted";
 	private static final String KEY = "key";
+	private static final String SKIP = "skip";
 
 	public String format(com.tibco.as.io.Field field) {
 		return super.format(field);
@@ -48,6 +49,10 @@ public class FieldFormat extends Format {
 				buffer.append(SEPARATOR);
 				buffer.append(KEY);
 			}
+			if (field.isSkip()) {
+				buffer.append(SEPARATOR);
+				buffer.append(SKIP);
+			}
 			buffer.append(BRACKET_CLOSE);
 		}
 		return buffer;
@@ -69,16 +74,25 @@ public class FieldFormat extends Format {
 							.trim();
 					int separatorPos = attributes.indexOf(SEPARATOR);
 					if (separatorPos > 0) {
-						field.setType(attributes.substring(0, separatorPos)
-								.trim());
+						if (SKIP.equals(attributes.trim())) {
+							field.setSkip(true);
+						} else {
+							field.setType(attributes.substring(0, separatorPos)
+									.trim());
+						}
 						if (separatorPos + 1 < attributes.length()) {
 							attributes = attributes.substring(separatorPos);
 							field.setNullable(attributes.contains(NULLABLE));
 							field.setEncrypted(attributes.contains(ENCRYPTED));
 							field.setKey(attributes.contains(KEY));
+							field.setSkip(attributes.contains(SKIP));
 						}
 					} else {
-						field.setType(attributes);
+						if (SKIP.equals(attributes.trim())) {
+							field.setSkip(true);
+						} else {
+							field.setType(attributes);
+						}
 					}
 				}
 			}

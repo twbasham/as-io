@@ -25,7 +25,6 @@ import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
-import com.tibco.as.util.Utils;
 
 public class TestExporter extends TestBase {
 
@@ -34,10 +33,12 @@ public class TestExporter extends TestBase {
 	@Test
 	public void testExporter() throws Exception {
 		String spaceName = "cust_account";
+		FieldDef unused = FieldDef.create("unused", FieldType.STRING);
+		unused.setNullable(true);
 		SpaceDef spaceDef = SpaceDef.create(spaceName, 0, Arrays.asList(
 				FieldDef.create("guid", FieldType.STRING),
 				FieldDef.create("last-payment", FieldType.DATETIME),
-				FieldDef.create("average-spend", FieldType.DOUBLE)));
+				FieldDef.create("average-spend", FieldType.DOUBLE), unused));
 		spaceDef.setKey("guid");
 		SpaceDef spaceDef2 = SpaceDef.create("space2", 0, Arrays.asList(
 				FieldDef.create("guid", FieldType.STRING),
@@ -90,7 +91,14 @@ public class TestExporter extends TestBase {
 			protected IConverter<Tuple, String[]> getConverter(
 					Transfer transfer, SpaceDef spaceDef)
 					throws UnsupportedConversionException {
-				FieldDef[] fieldDefs = Utils.getFieldDefs(spaceDef);
+				Field[] fields = new Field[4];
+				fields[0] = new Field("guid");
+				fields[1] = new Field("last-payment");
+				fields[2] = new Field("average-spend");
+				fields[3] = new Field("unused");
+				fields[3].setSkip(true);
+				FieldDef[] fieldDefs = FieldUtils
+						.getFieldDefs(spaceDef, fields);
 				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
 				IConverter[] converters;
 				try {
@@ -113,6 +121,7 @@ public class TestExporter extends TestBase {
 		exporter.execute();
 		Assert.assertEquals(3, outList.size());
 		for (String[] line : outList) {
+			Assert.assertEquals(3, line.length);
 			Calendar calendar = Calendar.getInstance();
 			String guid = line[0];
 			if (guid.equals("1")) {
