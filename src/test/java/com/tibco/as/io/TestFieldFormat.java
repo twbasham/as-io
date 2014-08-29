@@ -29,6 +29,9 @@ public class TestFieldFormat {
 		field.setNullable(true);
 		assertEquals("field-1[DATETIME nullable encrypted key]",
 				format.format(field));
+		field.setSkip(true);
+		assertEquals("field-1[DATETIME nullable encrypted key skip]",
+				format.format(field));
 	}
 
 	@Test
@@ -58,6 +61,9 @@ public class TestFieldFormat {
 		assertEquals(true, field.isKey());
 		assertEquals(true, field.isEncrypted());
 		assertEquals(true, field.isNullable());
+		field = format.parseObject("field-1[skip]");
+		assertEquals("field-1", field.getName());
+		assertEquals(true, field.isSkip());
 	}
 
 }

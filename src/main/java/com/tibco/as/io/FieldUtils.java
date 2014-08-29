@@ -2,6 +2,8 @@ package com.tibco.as.io;
 
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,6 +25,9 @@ public class FieldUtils {
 
 	public static FieldDef getFieldDef(Field field) {
 		if (field.getName() == null) {
+			return null;
+		}
+		if (field.isSkip()) {
 			return null;
 		}
 		FieldType type = field.getType();
@@ -54,21 +59,26 @@ public class FieldUtils {
 	}
 
 	public static Field[] getFields(Field[] fields, SpaceDef spaceDef) {
-		Field[] result = fields;
+		Collection<Field> result = new ArrayList<Field>();
 		if (fields == null || fields.length == 0) {
-			FieldDef[] fieldDefs = getFieldDefs(spaceDef);
-			result = new Field[fieldDefs.length];
-			for (int index = 0; index < fieldDefs.length; index++) {
-				result[index] = new Field();
-				result[index].setName(fieldDefs[index].getName());
+			for (FieldDef fieldDef : getFieldDefs(spaceDef)) {
+				result.add(new Field(fieldDef.getName()));
+			}
+		} else {
+			for (Field field : fields) {
+				if (field.isSkip()) {
+					continue;
+				}
+				result.add(field);
 			}
 		}
 		for (Field field : result) {
-			if (field.getName() != null) {
-				getField(spaceDef, field.getName()).copyTo(field);
+			if (field.getName() == null) {
+				continue;
 			}
+			getField(spaceDef, field.getName()).copyTo(field);
 		}
-		return result;
+		return result.toArray(new Field[result.size()]);
 	}
 
 	private static FieldDef[] getFieldDefs(SpaceDef spaceDef) {
