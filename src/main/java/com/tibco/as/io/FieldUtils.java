@@ -58,6 +58,17 @@ public class FieldUtils {
 		return fieldDefs;
 	}
 
+	public static FieldDef[] getFieldDefs(SpaceDef spaceDef, String... fields) {
+		if (fields.length == 0) {
+			return getFieldDefs(spaceDef);
+		}
+		FieldDef[] fieldDefs = new FieldDef[fields.length];
+		for (int index = 0; index < fields.length; index++) {
+			fieldDefs[index] = spaceDef.getFieldDef(fields[index]);
+		}
+		return fieldDefs;
+	}
+
 	public static Field[] getFields(Field[] fields, SpaceDef spaceDef) {
 		Collection<Field> result = new ArrayList<Field>();
 		if (fields == null || fields.length == 0) {
