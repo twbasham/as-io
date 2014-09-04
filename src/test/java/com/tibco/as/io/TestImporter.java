@@ -1,7 +1,9 @@
 package com.tibco.as.io;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
@@ -93,6 +95,17 @@ public class TestImporter extends TestBase {
 			@Override
 			protected SpaceDef createSpaceDef(String spaceName, Import config) {
 				return SpaceDef.create(spaceName);
+			}
+
+			@Override
+			protected Transfer createTransfer() {
+				return new Import();
+			}
+
+			@Override
+			protected Collection<Transfer> getTransfers(Metaspace metaspace)
+					throws TransferException {
+				return new ArrayList<Transfer>();
 			}
 		};
 		Import config = new Import();

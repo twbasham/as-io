@@ -86,6 +86,11 @@ public class TestBatch extends TestBase {
 						String.class);
 			}
 
+			@Override
+			protected Transfer createTransfer() {
+				return new Export();
+			}
+
 		};
 		Export defaultExport = new Export();
 		defaultExport.setWorkerCount(5);
@@ -123,6 +128,18 @@ public class TestBatch extends TestBase {
 						transfer.getAttributes(), fieldDefs, String.class);
 				return new TupleToArrayConverter<String>(accessors, converters,
 						String.class);
+			}
+
+			@Override
+			protected Transfer createTransfer() {
+				return new Export();
+			}
+
+			@Override
+			protected IOutputStream<String[]> getOutputStream(
+					Metaspace metaspace, Transfer transfer, SpaceDef spaceDef)
+					throws TransferException {
+				return null;
 			}
 
 		};

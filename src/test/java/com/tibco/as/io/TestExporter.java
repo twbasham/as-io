@@ -111,6 +111,11 @@ public class TestExporter extends TestBase {
 				return new TupleToArrayConverter<String>(accessors, converters,
 						String.class);
 			}
+
+			@Override
+			protected Transfer createTransfer() {
+				return new Export();
+			}
 		};
 		ListOutputStream<String[]> out = new ListOutputStream<String[]>(outList);
 		out.setSleep(140);
