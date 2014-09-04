@@ -17,11 +17,6 @@ public abstract class Exporter<T> extends MetaspaceTransfer<Tuple, T> {
 	}
 
 	@Override
-	protected Export createTransfer() {
-		return new Export();
-	}
-
-	@Override
 	protected Collection<Transfer> getTransfers(Metaspace metaspace) {
 		Collection<Transfer> transfers = new ArrayList<Transfer>();
 		try {
@@ -53,12 +48,6 @@ public abstract class Exporter<T> extends MetaspaceTransfer<Tuple, T> {
 			Transfer transfer, SpaceDef spaceDef) {
 		Export export = (Export) transfer;
 		return new SpaceInputStream(metaspace, spaceDef.getName(), export);
-	}
-
-	@Override
-	protected IOutputStream<T> getOutputStream(Metaspace metaspace,
-			Transfer transfer, SpaceDef spaceDef) throws TransferException {
-		throw new TransferException("Output not set");
 	}
 
 	public Export addExport(String spaceName) {

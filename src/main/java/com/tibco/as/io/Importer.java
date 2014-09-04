@@ -1,6 +1,5 @@
 package com.tibco.as.io;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import com.tibco.as.space.FieldDef;
@@ -13,11 +12,6 @@ public abstract class Importer<T> extends MetaspaceTransfer<T, Tuple> {
 
 	public Importer(Metaspace metaspace) {
 		super(metaspace);
-	}
-
-	@Override
-	protected Import createTransfer() {
-		return new Import();
 	}
 
 	@Override
@@ -39,7 +33,8 @@ public abstract class Importer<T> extends MetaspaceTransfer<T, Tuple> {
 		return spaceDef;
 	}
 
-	protected abstract SpaceDef createSpaceDef(String spaceName, Import config) throws Exception;
+	protected abstract SpaceDef createSpaceDef(String spaceName, Import config)
+			throws Exception;
 
 	@Override
 	protected IOutputStream<Tuple> getOutputStream(Metaspace metaspace,
@@ -80,11 +75,6 @@ public abstract class Importer<T> extends MetaspaceTransfer<T, Tuple> {
 			return array[index];
 		}
 		return null;
-	}
-
-	@Override
-	protected Collection<Transfer> getTransfers(Metaspace metaspace) {
-		return new ArrayList<Transfer>();
 	}
 
 }
