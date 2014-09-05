@@ -93,8 +93,7 @@ public class TestImporter extends TestBase {
 			}
 
 			@Override
-			protected SpaceDef createSpaceDef(String spaceName, Import config) {
-				return SpaceDef.create(spaceName);
+			protected void populateSpaceDef(SpaceDef spaceDef, Import config) {
 			}
 
 			@Override

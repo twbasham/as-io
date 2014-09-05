@@ -21,7 +21,8 @@ public abstract class Importer<T> extends MetaspaceTransfer<T, Tuple> {
 		String spaceName = getSpaceName(config);
 		SpaceDef spaceDef = metaspace.getSpaceDef(spaceName);
 		if (spaceDef == null) {
-			spaceDef = createSpaceDef(spaceName, config);
+			spaceDef = SpaceDef.create(spaceName);
+			populateSpaceDef(spaceDef, config);
 			Collection<String> keys = spaceDef.getKeyDef().getFieldNames();
 			if (keys.isEmpty()) {
 				for (FieldDef fieldDef : spaceDef.getFieldDefs()) {
@@ -33,7 +34,7 @@ public abstract class Importer<T> extends MetaspaceTransfer<T, Tuple> {
 		return spaceDef;
 	}
 
-	protected abstract SpaceDef createSpaceDef(String spaceName, Import config)
+	protected abstract void populateSpaceDef(SpaceDef spaceDef, Import config)
 			throws Exception;
 
 	@Override
