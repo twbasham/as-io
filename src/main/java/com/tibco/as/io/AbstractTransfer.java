@@ -2,7 +2,7 @@ package com.tibco.as.io;
 
 import com.tibco.as.convert.Attributes;
 
-public class Transfer implements Cloneable {
+public abstract class AbstractTransfer implements Cloneable {
 
 	private Integer batchSize;
 
@@ -13,6 +13,9 @@ public class Transfer implements Cloneable {
 	private String spaceName;
 
 	private Long limit;
+
+	@Override
+	public abstract AbstractTransfer clone();
 
 	public Long getLimit() {
 		return limit;
@@ -60,14 +63,7 @@ public class Transfer implements Cloneable {
 		return attributes;
 	}
 
-	@Override
-	public Transfer clone() {
-		Transfer transfer = new Transfer();
-		copyTo(transfer);
-		return transfer;
-	}
-
-	public void copyTo(Transfer target) {
+	public void copyTo(AbstractTransfer target) {
 		target.batchSize = batchSize;
 		target.attributes = attributes;
 		target.queueCapacity = queueCapacity;

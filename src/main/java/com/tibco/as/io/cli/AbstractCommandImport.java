@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import com.beust.jcommander.Parameter;
 import com.tibco.as.io.ITransfer;
-import com.tibco.as.io.Import;
+import com.tibco.as.io.AbstractImport;
 import com.tibco.as.io.Operation;
 import com.tibco.as.space.Member.DistributionRole;
 
@@ -20,7 +20,7 @@ public abstract class AbstractCommandImport extends AbstractCommand {
 	@Parameter(description = "Wait for ready timeout", names = { "-wait_for_ready_timeout" })
 	private Long waitForReadyTimeout;
 
-	public void configure(Import transfer) {
+	public void configure(AbstractImport transfer) {
 		super.configure(transfer);
 		transfer.setDistributionRole(distributionRole);
 		transfer.setOperation(operation);

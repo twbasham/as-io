@@ -2,7 +2,7 @@ package com.tibco.as.io;
 
 import com.tibco.as.space.Member.DistributionRole;
 
-public class Import extends Transfer {
+public abstract class AbstractImport extends AbstractTransfer {
 
 	private DistributionRole distributionRole;
 
@@ -44,7 +44,7 @@ public class Import extends Transfer {
 		this.operation = operation;
 	}
 
-	public void copyTo(Import target) {
+	public void copyTo(AbstractImport target) {
 		target.distributionRole = distributionRole;
 		target.keepSpaceOpen = keepSpaceOpen;
 		target.operation = operation;

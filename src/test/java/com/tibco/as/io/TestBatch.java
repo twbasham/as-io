@@ -59,18 +59,18 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testBatch() throws Exception {
 		final List<String[]> list = new Vector<String[]>();
-		Exporter<String[]> exporter = new Exporter<String[]>(getMetaspace()) {
+		AbstractExporter<String[]> exporter = new AbstractExporter<String[]>(getMetaspace()) {
 
 			@Override
 			protected IOutputStream<String[]> getOutputStream(
-					Metaspace metaspace, Transfer transfer, SpaceDef spaceDef) {
+					Metaspace metaspace, AbstractTransfer transfer, SpaceDef spaceDef) {
 				return new ListOutputStream<String[]>(list);
 			}
 
 			@SuppressWarnings("rawtypes")
 			@Override
 			protected IConverter<Tuple, String[]> getConverter(
-					Transfer transfer, SpaceDef spaceDef)
+					AbstractTransfer transfer, SpaceDef spaceDef)
 					throws UnsupportedConversionException {
 				FieldDef[] fieldDefs = Utils.getFieldDefs(spaceDef);
 				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
@@ -87,12 +87,12 @@ public class TestBatch extends TestBase {
 			}
 
 			@Override
-			protected Transfer createTransfer() {
-				return new Export();
+			protected AbstractTransfer createTransfer() {
+				return new TestExport();
 			}
 
 		};
-		Export defaultExport = new Export();
+		TestExport defaultExport = new TestExport();
 		defaultExport.setWorkerCount(5);
 		defaultExport.setBatchSize(7000);
 		defaultExport.setQueueCapacity(35000);
@@ -114,13 +114,13 @@ public class TestBatch extends TestBase {
 		List<String[]> list = new Vector<String[]>();
 		ListOutputStream<String[]> out = new ListOutputStream<String[]>(list);
 		out.setSleep(100);
-		final Exporter<String[]> exporter = new Exporter<String[]>(
+		final AbstractExporter<String[]> exporter = new AbstractExporter<String[]>(
 				getMetaspace()) {
 
 			@SuppressWarnings("rawtypes")
 			@Override
 			protected IConverter<Tuple, String[]> getConverter(
-					Transfer transfer, SpaceDef spaceDef)
+					AbstractTransfer transfer, SpaceDef spaceDef)
 					throws UnsupportedConversionException {
 				FieldDef[] fieldDefs = Utils.getFieldDefs(spaceDef);
 				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
@@ -131,19 +131,19 @@ public class TestBatch extends TestBase {
 			}
 
 			@Override
-			protected Transfer createTransfer() {
-				return new Export();
+			protected AbstractTransfer createTransfer() {
+				return new TestExport();
 			}
 
 			@Override
 			protected IOutputStream<String[]> getOutputStream(
-					Metaspace metaspace, Transfer transfer, SpaceDef spaceDef)
+					Metaspace metaspace, AbstractTransfer transfer, SpaceDef spaceDef)
 					throws TransferException {
 				return null;
 			}
 
 		};
-		Export export = new Export();
+		TestExport export = new TestExport();
 		export.setSpaceName(space.getName());
 		export.setTimeScope(TimeScope.ALL);
 		export.setTimeout(100L);

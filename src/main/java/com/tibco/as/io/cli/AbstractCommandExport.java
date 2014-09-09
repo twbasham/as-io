@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.beust.jcommander.Parameter;
-import com.tibco.as.io.Export;
+import com.tibco.as.io.AbstractExport;
 import com.tibco.as.io.IMetaspaceTransfer;
 import com.tibco.as.io.ITransfer;
 import com.tibco.as.space.ASException;
@@ -140,7 +140,7 @@ public abstract class AbstractCommandExport extends AbstractCommand implements M
 		filter = context.getString(FIELD_FILTER);
 	}
 
-	public void configure(Export transfer) {
+	public void configure(AbstractExport transfer) {
 		super.configure(transfer);
 		transfer.setTimeScope(timeScope);
 		transfer.setDistributionScope(distributionScope);

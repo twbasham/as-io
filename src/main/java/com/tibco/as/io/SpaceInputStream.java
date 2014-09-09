@@ -19,7 +19,7 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 
 	private String spaceName;
 
-	private Export export;
+	private AbstractExport export;
 
 	private Browser browser;
 
@@ -29,7 +29,7 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 
 	private long size = IInputStream.UNKNOWN_SIZE;
 
-	public SpaceInputStream(Metaspace metaspace, String spaceName, Export export) {
+	public SpaceInputStream(Metaspace metaspace, String spaceName, AbstractExport export) {
 		this.metaspace = metaspace;
 		this.spaceName = spaceName;
 		this.export = export;

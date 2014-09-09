@@ -3,7 +3,7 @@ package com.tibco.as.io;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
-public class Export extends Transfer implements Cloneable {
+public abstract class AbstractExport extends AbstractTransfer {
 
 	private TimeScope timeScope;
 
@@ -16,13 +16,6 @@ public class Export extends Transfer implements Cloneable {
 	private Long queryLimit;
 
 	private String filter;
-
-	@Override
-	public Export clone() {
-		Export export = new Export();
-		copyTo(export);
-		return export;
-	}
 
 	public TimeScope getTimeScope() {
 		return timeScope;
@@ -72,7 +65,7 @@ public class Export extends Transfer implements Cloneable {
 		this.queryLimit = queryLimit;
 	}
 
-	public void copyTo(Export export) {
+	public void copyTo(AbstractExport export) {
 		export.distributionScope = distributionScope;
 		export.filter = filter;
 		export.prefetch = prefetch;

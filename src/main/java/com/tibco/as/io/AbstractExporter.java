@@ -10,15 +10,15 @@ import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 
-public abstract class Exporter<T> extends MetaspaceTransfer<Tuple, T> {
+public abstract class AbstractExporter<T> extends AbstractMetaspaceTransfer<Tuple, T> {
 
-	public Exporter(Metaspace metaspace) {
+	public AbstractExporter(Metaspace metaspace) {
 		super(metaspace);
 	}
 
 	@Override
-	protected Collection<Transfer> getTransfers(Metaspace metaspace) {
-		Collection<Transfer> transfers = new ArrayList<Transfer>();
+	protected Collection<AbstractTransfer> getTransfers(Metaspace metaspace) {
+		Collection<AbstractTransfer> transfers = new ArrayList<AbstractTransfer>();
 		try {
 			for (String spaceName : metaspace.getUserSpaceNames()) {
 				addExport(spaceName);
@@ -32,9 +32,9 @@ public abstract class Exporter<T> extends MetaspaceTransfer<Tuple, T> {
 	}
 
 	@Override
-	protected SpaceDef getSpaceDef(Metaspace metaspace, Transfer transfer)
+	protected SpaceDef getSpaceDef(Metaspace metaspace, AbstractTransfer transfer)
 			throws ASException {
-		String spaceName = ((Export) transfer).getSpaceName();
+		String spaceName = ((AbstractExport) transfer).getSpaceName();
 		SpaceDef spaceDef = metaspace.getSpaceDef(spaceName);
 		if (spaceDef == null) {
 			throw new ASException(ASStatus.NOT_FOUND, MessageFormat.format(
@@ -45,21 +45,21 @@ public abstract class Exporter<T> extends MetaspaceTransfer<Tuple, T> {
 
 	@Override
 	protected IInputStream<Tuple> getInputStream(Metaspace metaspace,
-			Transfer transfer, SpaceDef spaceDef) {
-		Export export = (Export) transfer;
+			AbstractTransfer transfer, SpaceDef spaceDef) {
+		AbstractExport export = (AbstractExport) transfer;
 		return new SpaceInputStream(metaspace, spaceDef.getName(), export);
 	}
 
-	public Export addExport(String spaceName) {
-		Export export = (Export) getDefaultTransfer().clone();
+	public AbstractExport addExport(String spaceName) {
+		AbstractExport export = (AbstractExport) getDefaultTransfer().clone();
 		export.setSpaceName(spaceName);
 		addTransfer(export);
 		return export;
 	}
 
 	@Override
-	protected int getBatchSize(Transfer transfer) {
-		Export export = (Export) transfer;
+	protected int getBatchSize(AbstractTransfer transfer) {
+		AbstractExport export = (AbstractExport) transfer;
 		Integer batchSize = transfer.getBatchSize();
 		if (batchSize == null || batchSize == 0) {
 			if (export.isAllOrNew()) {

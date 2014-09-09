@@ -14,11 +14,11 @@ public interface IMetaspaceTransfer {
 
 	void execute() throws TransferException;
 
-	void addTransfer(Transfer transfer);
+	void addTransfer(AbstractTransfer transfer);
 
 	Metaspace getMetaspace();
 
-	void setDefaultTransfer(Transfer transfer);
+	void setDefaultTransfer(AbstractTransfer transfer);
 
 	Collection<ITransfer> getExecutors();
 

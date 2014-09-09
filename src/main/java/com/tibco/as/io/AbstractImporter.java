@@ -8,16 +8,16 @@ import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 
-public abstract class Importer<T> extends MetaspaceTransfer<T, Tuple> {
+public abstract class AbstractImporter<T> extends AbstractMetaspaceTransfer<T, Tuple> {
 
-	public Importer(Metaspace metaspace) {
+	public AbstractImporter(Metaspace metaspace) {
 		super(metaspace);
 	}
 
 	@Override
-	protected SpaceDef getSpaceDef(Metaspace metaspace, Transfer transfer)
+	protected SpaceDef getSpaceDef(Metaspace metaspace, AbstractTransfer transfer)
 			throws Exception {
-		Import config = (Import) transfer;
+		AbstractImport config = (AbstractImport) transfer;
 		String spaceName = getSpaceName(config);
 		SpaceDef spaceDef = metaspace.getSpaceDef(spaceName);
 		if (spaceDef == null) {
@@ -34,17 +34,17 @@ public abstract class Importer<T> extends MetaspaceTransfer<T, Tuple> {
 		return spaceDef;
 	}
 
-	protected abstract void populateSpaceDef(SpaceDef spaceDef, Import config)
+	protected abstract void populateSpaceDef(SpaceDef spaceDef, AbstractImport config)
 			throws Exception;
 
 	@Override
 	protected IOutputStream<Tuple> getOutputStream(Metaspace metaspace,
-			Transfer transfer, SpaceDef spaceDef) {
-		Import config = (Import) transfer;
+			AbstractTransfer transfer, SpaceDef spaceDef) {
+		AbstractImport config = (AbstractImport) transfer;
 		return new SpaceOutputStream(metaspace, spaceDef.getName(), config);
 	}
 
-	protected String getSpaceName(Import config) {
+	protected String getSpaceName(AbstractImport config) {
 		String spaceName = config.getSpaceName();
 		if (spaceName == null) {
 			return getInputSpaceName(config);
@@ -52,7 +52,7 @@ public abstract class Importer<T> extends MetaspaceTransfer<T, Tuple> {
 		return spaceName;
 	}
 
-	protected abstract String getInputSpaceName(Import config);
+	protected abstract String getInputSpaceName(AbstractImport config);
 
 	protected FieldDef[] getFieldDefs(String[] names, FieldType[] types) {
 		int length = Math.max(names.length, types == null ? 0 : types.length);
