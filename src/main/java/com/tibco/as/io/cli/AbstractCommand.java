@@ -6,7 +6,7 @@ import com.beust.jcommander.Parameter;
 import com.tibco.as.io.IMetaspaceTransfer;
 import com.tibco.as.io.IMetaspaceTransferListener;
 import com.tibco.as.io.ITransfer;
-import com.tibco.as.io.Transfer;
+import com.tibco.as.io.AbstractTransfer;
 import com.tibco.as.io.TransferException;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
@@ -23,7 +23,7 @@ public abstract class AbstractCommand implements IMetaspaceTransferListener {
 	@Parameter(description = "Number of writer threads", names = { "-writer_thread_count" })
 	private Integer workerCount;
 
-	public void configure(Transfer transfer) {
+	public void configure(AbstractTransfer transfer) {
 		transfer.setBatchSize(batchSize);
 		transfer.setWorkerCount(workerCount);
 	}

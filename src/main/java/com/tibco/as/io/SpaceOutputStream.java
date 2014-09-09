@@ -30,10 +30,10 @@ public class SpaceOutputStream implements IOutputStream<Tuple> {
 
 	private String spaceName;
 
-	private Import config;
+	private AbstractImport config;
 
 	public SpaceOutputStream(Metaspace metaspace, String spaceName,
-			Import config) {
+			AbstractImport config) {
 		this.metaspace = metaspace;
 		this.spaceName = spaceName;
 		this.config = config;

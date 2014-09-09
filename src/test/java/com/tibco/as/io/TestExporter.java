@@ -79,17 +79,17 @@ public class TestExporter extends TestBase {
 				DistributionRole.SEEDER);
 		space2.putAll(list);
 		List<String[]> outList = new Vector<String[]>();
-		Exporter<String[]> exporter = new Exporter<String[]>(metaspace) {
+		AbstractExporter<String[]> exporter = new AbstractExporter<String[]>(metaspace) {
 			@Override
 			protected IOutputStream<String[]> getOutputStream(
-					Metaspace metaspace, Transfer transfer, SpaceDef spaceDef) {
+					Metaspace metaspace, AbstractTransfer transfer, SpaceDef spaceDef) {
 				return null;
 			}
 
 			@SuppressWarnings("rawtypes")
 			@Override
 			protected IConverter<Tuple, String[]> getConverter(
-					Transfer transfer, SpaceDef spaceDef)
+					AbstractTransfer transfer, SpaceDef spaceDef)
 					throws UnsupportedConversionException {
 				Field[] fields = new Field[4];
 				fields[0] = new Field("guid");
@@ -113,13 +113,13 @@ public class TestExporter extends TestBase {
 			}
 
 			@Override
-			protected Transfer createTransfer() {
-				return new Export();
+			protected AbstractTransfer createTransfer() {
+				return new TestExport();
 			}
 		};
 		ListOutputStream<String[]> out = new ListOutputStream<String[]>(outList);
 		out.setSleep(140);
-		Export export = new Export();
+		TestExport export = new TestExport();
 		export.setSpaceName(spaceName);
 		exporter.setOutputStream(out);
 		exporter.addTransfer(export);

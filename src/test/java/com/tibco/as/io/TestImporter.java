@@ -61,23 +61,23 @@ public class TestImporter extends TestBase {
 				DistributionRole.SEEDER);
 		ListInputStream<String[]> in = new ListInputStream<String[]>(list);
 		in.setSleep(103);
-		Importer<String[]> importer = new Importer<String[]>(metaspace) {
+		AbstractImporter<String[]> importer = new AbstractImporter<String[]>(metaspace) {
 
 			@Override
-			protected String getInputSpaceName(Import config) {
+			protected String getInputSpaceName(AbstractImport config) {
 				return null;
 			}
 
 			@Override
 			protected IInputStream<String[]> getInputStream(
-					Metaspace metaspace, Transfer transfer, SpaceDef spaceDef) {
+					Metaspace metaspace, AbstractTransfer transfer, SpaceDef spaceDef) {
 				return null;
 			}
 
 			@SuppressWarnings("rawtypes")
 			@Override
 			protected IConverter<String[], Tuple> getConverter(
-					Transfer transfer, SpaceDef spaceDef)
+					AbstractTransfer transfer, SpaceDef spaceDef)
 					throws UnsupportedConversionException {
 				FieldDef[] fieldDefs = Utils.getFieldDefs(spaceDef);
 				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
@@ -93,21 +93,21 @@ public class TestImporter extends TestBase {
 			}
 
 			@Override
-			protected void populateSpaceDef(SpaceDef spaceDef, Import config) {
+			protected void populateSpaceDef(SpaceDef spaceDef, AbstractImport config) {
 			}
 
 			@Override
-			protected Transfer createTransfer() {
-				return new Import();
+			protected AbstractTransfer createTransfer() {
+				return new TestImport();
 			}
 
 			@Override
-			protected Collection<Transfer> getTransfers(Metaspace metaspace)
+			protected Collection<AbstractTransfer> getTransfers(Metaspace metaspace)
 					throws TransferException {
-				return new ArrayList<Transfer>();
+				return new ArrayList<AbstractTransfer>();
 			}
 		};
-		Import config = new Import();
+		TestImport config = new TestImport();
 		config.setSpaceName(spaceName);
 		importer.setInputStream(in);
 		importer.addTransfer(config);

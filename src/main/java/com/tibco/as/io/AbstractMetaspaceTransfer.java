@@ -15,7 +15,7 @@ import com.tibco.as.io.transfer.SimpleWorker;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceDef;
 
-public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
+public abstract class AbstractMetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 
 	private static final int DEFAULT_BATCH_SIZE = 1000;
 
@@ -27,7 +27,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 
 	private boolean stopped;
 
-	private Collection<Transfer> transfers = new ArrayList<Transfer>();
+	private Collection<AbstractTransfer> transfers = new ArrayList<AbstractTransfer>();
 
 	private Collection<ITransfer> executors = new ArrayList<ITransfer>();
 
@@ -35,20 +35,20 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 
 	private IOutputStream<U> outputStream;
 
-	private Transfer defaultTransfer = createTransfer();
+	private AbstractTransfer defaultTransfer = createTransfer();
 
 	@Override
-	public void setDefaultTransfer(Transfer transfer) {
+	public void setDefaultTransfer(AbstractTransfer transfer) {
 		this.defaultTransfer = transfer;
 	}
 
-	public Transfer getDefaultTransfer() {
+	public AbstractTransfer getDefaultTransfer() {
 		return defaultTransfer;
 	}
 
-	protected abstract Transfer createTransfer();
+	protected abstract AbstractTransfer createTransfer();
 
-	public MetaspaceTransfer(Metaspace metaspace) {
+	public AbstractMetaspaceTransfer(Metaspace metaspace) {
 		this.metaspace = metaspace;
 	}
 
@@ -71,7 +71,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 		if (transfers.isEmpty()) {
 			transfers.addAll(getTransfers(metaspace));
 		}
-		for (Transfer transfer : transfers) {
+		for (AbstractTransfer transfer : transfers) {
 			SpaceDef spaceDef;
 			try {
 				spaceDef = getSpaceDef(transfer);
@@ -150,7 +150,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 		return executors;
 	}
 
-	private int getQueueCapacity(Transfer transfer, int batchSize,
+	private int getQueueCapacity(AbstractTransfer transfer, int batchSize,
 			int workerCount) {
 		Integer queueCapacity = transfer.getQueueCapacity();
 		if (queueCapacity == null || queueCapacity == 0) {
@@ -159,7 +159,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 		return queueCapacity;
 	}
 
-	protected int getBatchSize(Transfer transfer) {
+	protected int getBatchSize(AbstractTransfer transfer) {
 		Integer batchSize = transfer.getBatchSize();
 		if (batchSize == null || batchSize == 0) {
 			return DEFAULT_BATCH_SIZE;
@@ -167,7 +167,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 		return batchSize;
 	}
 
-	protected Integer getWorkerCount(Transfer transfer) {
+	protected Integer getWorkerCount(AbstractTransfer transfer) {
 		Integer workerCount = transfer.getWorkerCount();
 		if (workerCount == null || workerCount == 0) {
 			return DEFAULT_WORKER_COUNT;
@@ -175,7 +175,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 		return workerCount;
 	}
 
-	protected abstract IConverter<T, U> getConverter(Transfer transfer,
+	protected abstract IConverter<T, U> getConverter(AbstractTransfer transfer,
 			SpaceDef spaceDef) throws UnsupportedConversionException;
 
 	private AbstractWorker<T, U> createWorker(Executor<T, U> executor,
@@ -186,7 +186,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 		return new SimpleWorker<T, U>(executor, converter);
 	}
 
-	private IInputStream<T> getInputStream(Transfer transfer, SpaceDef spaceDef)
+	private IInputStream<T> getInputStream(AbstractTransfer transfer, SpaceDef spaceDef)
 			throws TransferException {
 		if (inputStream == null) {
 			return getInputStream(metaspace, transfer, spaceDef);
@@ -194,7 +194,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 		return inputStream;
 	}
 
-	private IOutputStream<U> getOutputStream(Transfer transfer,
+	private IOutputStream<U> getOutputStream(AbstractTransfer transfer,
 			SpaceDef spaceDef) throws TransferException {
 		if (outputStream == null) {
 			return getOutputStream(metaspace, transfer, spaceDef);
@@ -202,21 +202,21 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 		return outputStream;
 	}
 
-	protected abstract Collection<Transfer> getTransfers(Metaspace metaspace)
+	protected abstract Collection<AbstractTransfer> getTransfers(Metaspace metaspace)
 			throws TransferException;
 
-	public SpaceDef getSpaceDef(Transfer transfer) throws Exception {
+	public SpaceDef getSpaceDef(AbstractTransfer transfer) throws Exception {
 		return getSpaceDef(metaspace, transfer);
 	}
 
 	protected abstract SpaceDef getSpaceDef(Metaspace metaspace,
-			Transfer transfer) throws Exception;
+			AbstractTransfer transfer) throws Exception;
 
 	protected abstract IInputStream<T> getInputStream(Metaspace metaspace,
-			Transfer transfer, SpaceDef spaceDef) throws TransferException;
+			AbstractTransfer transfer, SpaceDef spaceDef) throws TransferException;
 
 	protected abstract IOutputStream<U> getOutputStream(Metaspace metaspace,
-			Transfer transfer, SpaceDef spaceDef) throws TransferException;
+			AbstractTransfer transfer, SpaceDef spaceDef) throws TransferException;
 
 	@Override
 	public void stop() throws Exception {
@@ -232,7 +232,7 @@ public abstract class MetaspaceTransfer<T, U> implements IMetaspaceTransfer {
 	}
 
 	@Override
-	public void addTransfer(Transfer transfer) {
+	public void addTransfer(AbstractTransfer transfer) {
 		transfers.add(transfer);
 	}
 
