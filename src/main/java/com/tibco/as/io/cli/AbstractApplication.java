@@ -14,7 +14,7 @@ import com.tibco.as.space.MemberDef;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Utils;
 
-public abstract class AbstractCLIApplication implements IEventListener {
+public abstract class AbstractApplication implements IEventListener {
 
 	@Parameter(names = { "-?", "-help" }, description = "Print this help message", help = true)
 	private Boolean help;
@@ -37,8 +37,12 @@ public abstract class AbstractCLIApplication implements IEventListener {
 	@Parameter(names = { "-security_token" }, description = "Security token path")
 	private String securityToken;
 
-	protected AbstractCLIApplication() {
+	protected AbstractApplication() {
 		EventManager.addListener(this);
+	}
+	
+	public String getMetaspaceName() {
+		return metaspaceName;
 	}
 
 	@Override
