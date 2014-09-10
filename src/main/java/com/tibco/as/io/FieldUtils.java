@@ -109,8 +109,7 @@ public class FieldUtils {
 		return field;
 	}
 
-	public static SpaceDef createSpaceDef(String spaceName, Field[] fields) {
-		SpaceDef spaceDef = SpaceDef.create(spaceName);
+	public static SpaceDef populateSpaceDef(SpaceDef spaceDef, Field[] fields) {
 		for (FieldDef fieldDef : getFieldDefs(fields)) {
 			if (fieldDef != null) {
 				spaceDef.getFieldDefs().add(fieldDef);
