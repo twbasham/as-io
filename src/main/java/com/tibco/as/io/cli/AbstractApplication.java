@@ -36,11 +36,13 @@ public abstract class AbstractApplication implements IEventListener {
 	private Boolean noExit;
 	@Parameter(names = { "-security_token" }, description = "Security token path")
 	private String securityToken;
+	@Parameter(names = { "-identity_password" }, description = "Identity password")
+	private String identityPassword;
 
 	protected AbstractApplication() {
 		EventManager.addListener(this);
 	}
-	
+
 	public String getMetaspaceName() {
 		return metaspaceName;
 	}
@@ -123,6 +125,9 @@ public abstract class AbstractApplication implements IEventListener {
 			}
 			if (securityToken != null) {
 				memberDef.setSecurityTokenFile(securityToken);
+			}
+			if (identityPassword != null) {
+				memberDef.setIdentityPassword(identityPassword.toCharArray());
 			}
 			try {
 				metaspace = Metaspace.connect(metaspaceName, memberDef);
