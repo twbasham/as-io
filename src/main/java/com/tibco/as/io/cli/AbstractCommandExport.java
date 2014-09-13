@@ -13,13 +13,17 @@ import com.tibco.as.space.InvokeOptions;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.Tuple;
+import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 import com.tibco.as.space.remote.InvokeResult;
 import com.tibco.as.space.remote.InvokeResultList;
 import com.tibco.as.space.remote.MemberInvocable;
 
-public abstract class AbstractCommandExport extends AbstractCommand implements MemberInvocable {
+public abstract class AbstractCommandExport extends AbstractCommand implements
+		MemberInvocable {
+
+	private static final String FIELD_BROWSER_TYPE = "browserType";
 
 	private static final String FIELD_TIME_SCOPE = "timeScope";
 
@@ -35,6 +39,9 @@ public abstract class AbstractCommandExport extends AbstractCommand implements M
 
 	@Parameter(description = "The list of spaces to export")
 	private Collection<String> spaceNames = new ArrayList<String>();
+
+	@Parameter(description = "Browser type", names = { "-browser_type" }, converter = BrowserTypeConverter.class, validateWith = BrowserTypeConverter.class)
+	private BrowserType browserType;
 
 	@Parameter(description = "Browser time scope", names = { "-time_scope" }, converter = BrowserTimeScopeConverter.class, validateWith = BrowserTimeScopeConverter.class)
 	private TimeScope timeScope;
@@ -100,6 +107,9 @@ public abstract class AbstractCommandExport extends AbstractCommand implements M
 	@Override
 	protected void configure(Tuple context) {
 		super.configure(context);
+		if (browserType != null) {
+			context.putString(FIELD_BROWSER_TYPE, browserType.name());
+		}
 		if (timeScope != null) {
 			context.putString(FIELD_TIME_SCOPE, timeScope.name());
 		}
@@ -122,6 +132,10 @@ public abstract class AbstractCommandExport extends AbstractCommand implements M
 	@Override
 	protected void initialize(Space space, Tuple context) {
 		super.initialize(space, context);
+		String browserTypeName = context.getString(FIELD_BROWSER_TYPE);
+		if (browserTypeName != null) {
+			browserType = BrowserType.valueOf(browserTypeName);
+		}
 		String timeScopeName = context.getString(FIELD_TIME_SCOPE);
 		if (timeScopeName != null) {
 			timeScope = TimeScope.valueOf(timeScopeName);
@@ -142,6 +156,7 @@ public abstract class AbstractCommandExport extends AbstractCommand implements M
 
 	public void configure(AbstractExport transfer) {
 		super.configure(transfer);
+		transfer.setBrowserType(browserType);
 		transfer.setTimeScope(timeScope);
 		transfer.setDistributionScope(distributionScope);
 		transfer.setTimeout(timeout);

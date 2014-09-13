@@ -29,7 +29,8 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 
 	private long size = IInputStream.UNKNOWN_SIZE;
 
-	public SpaceInputStream(Metaspace metaspace, String spaceName, AbstractExport export) {
+	public SpaceInputStream(Metaspace metaspace, String spaceName,
+			AbstractExport export) {
 		this.metaspace = metaspace;
 		this.spaceName = spaceName;
 		this.export = export;
@@ -42,9 +43,15 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 
 	@Override
 	public void open() throws ASException {
+		BrowserType browserType = export.getBrowserType();
+		if (browserType == null) {
+			browserType = BrowserType.GET;
+		}
 		BrowserDef browserDef = BrowserDef.create();
-		if (export.getTimeScope() != null) {
-			browserDef.setTimeScope(export.getTimeScope());
+		if (browserType == BrowserType.GET) {
+			if (export.getTimeScope() != null) {
+				browserDef.setTimeScope(export.getTimeScope());
+			}
 		}
 		if (export.getDistributionScope() != null) {
 			browserDef.setDistributionScope(export.getDistributionScope());
@@ -63,9 +70,9 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 		String filter = export.getFilter();
 		long start = System.nanoTime();
 		if (filter == null) {
-			browser = metaspace.browse(spaceName, BrowserType.GET, browserDef);
+			browser = metaspace.browse(spaceName, browserType, browserDef);
 		} else {
-			browser = metaspace.browse(spaceName, BrowserType.GET, browserDef,
+			browser = metaspace.browse(spaceName, browserType, browserDef,
 					filter);
 		}
 		browseTime = System.nanoTime() - start;
