@@ -1,10 +1,13 @@
 package com.tibco.as.io;
 
+import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
 public abstract class AbstractExport extends AbstractTransfer {
 
+	private BrowserType browserType;
+	
 	private TimeScope timeScope;
 
 	private DistributionScope distributionScope;
@@ -16,6 +19,14 @@ public abstract class AbstractExport extends AbstractTransfer {
 	private Long queryLimit;
 
 	private String filter;
+	
+	public BrowserType getBrowserType() {
+		return browserType;
+	}
+	
+	public void setBrowserType(BrowserType browserType) {
+		this.browserType = browserType;
+	}
 
 	public TimeScope getTimeScope() {
 		return timeScope;
@@ -66,6 +77,7 @@ public abstract class AbstractExport extends AbstractTransfer {
 	}
 
 	public void copyTo(AbstractExport export) {
+		export.browserType = browserType;
 		export.distributionScope = distributionScope;
 		export.filter = filter;
 		export.prefetch = prefetch;
