@@ -167,7 +167,7 @@ public abstract class AbstractExportCommand extends AbstractCommand implements
 
 	@Override
 	protected Collection<IMetaspaceTransfer> getMetaspaceTransfers(
-			Metaspace metaspace) {
+			Metaspace metaspace) throws Exception {
 		return getMetaspaceTransfers(metaspace, spaceNames);
 	}
 
@@ -189,7 +189,8 @@ public abstract class AbstractExportCommand extends AbstractCommand implements
 	}
 
 	protected abstract Collection<IMetaspaceTransfer> getMetaspaceTransfers(
-			Metaspace metaspace, Collection<String> spaceNames);
+			Metaspace metaspace, Collection<String> spaceNames)
+			throws Exception;
 
 	@Override
 	public Tuple invoke(Space space, Tuple context) {
