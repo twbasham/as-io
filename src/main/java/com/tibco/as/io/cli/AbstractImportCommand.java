@@ -9,7 +9,7 @@ import com.tibco.as.io.AbstractImport;
 import com.tibco.as.io.Operation;
 import com.tibco.as.space.Member.DistributionRole;
 
-public abstract class AbstractCommandImport extends AbstractCommand {
+public abstract class AbstractImportCommand extends AbstractCommand {
 
 	@Parameter(description = "Distribution role (none, leech, seeder)", names = { "-distribution_role" }, converter = DistributionRoleConverter.class, validateWith = DistributionRoleConverter.class)
 	private DistributionRole distributionRole;

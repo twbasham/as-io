@@ -29,7 +29,13 @@ public abstract class AbstractCommand implements IMetaspaceTransferListener {
 	}
 
 	public void execute(Metaspace metaspace) {
-		Collection<IMetaspaceTransfer> transfers = getMetaspaceTransfers(metaspace);
+		Collection<IMetaspaceTransfer> transfers;
+		try {
+			transfers = getMetaspaceTransfers(metaspace);
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			return;
+		}
 		for (IMetaspaceTransfer transfer : transfers) {
 			transfer.addListener(this);
 			try {
@@ -45,7 +51,7 @@ public abstract class AbstractCommand implements IMetaspaceTransferListener {
 	}
 
 	protected abstract Collection<IMetaspaceTransfer> getMetaspaceTransfers(
-			Metaspace metaspace);
+			Metaspace metaspace) throws Exception;
 
 	@Override
 	public void opening(Collection<ITransfer> transfers) {
