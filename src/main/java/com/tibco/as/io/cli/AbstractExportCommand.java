@@ -20,7 +20,7 @@ import com.tibco.as.space.remote.InvokeResult;
 import com.tibco.as.space.remote.InvokeResultList;
 import com.tibco.as.space.remote.MemberInvocable;
 
-public abstract class AbstractCommandExport extends AbstractCommand implements
+public abstract class AbstractExportCommand extends AbstractCommand implements
 		MemberInvocable {
 
 	private static final String FIELD_BROWSER_TYPE = "browserType";
