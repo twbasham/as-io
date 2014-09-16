@@ -29,8 +29,7 @@ public abstract class AbstractCommand implements IMetaspaceTransferListener {
 	}
 
 	public void execute(Metaspace metaspace) {
-		Collection<IMetaspaceTransfer> transfers = getMetaspaceTransfers(metaspace);
-		for (IMetaspaceTransfer transfer : transfers) {
+		for (IMetaspaceTransfer transfer : getMetaspaceTransfers(metaspace)) {
 			transfer.addListener(this);
 			try {
 				transfer.execute();

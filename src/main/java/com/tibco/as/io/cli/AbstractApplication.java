@@ -32,7 +32,7 @@ public abstract class AbstractApplication implements IEventListener {
 	private Integer workerThreadCount;
 	@Parameter(names = { "-data_store" }, description = "Directory path for data store")
 	private String dataStore;
-	@Parameter(names = { "-no_exit" }, description = "Do not shut down after the Eclipse application has ended")
+	@Parameter(names = { "-no_exit" }, description = "Do not shut down after application execution")
 	private Boolean noExit;
 	@Parameter(names = { "-security_token" }, description = "Security token path")
 	private String securityToken;
