@@ -1,5 +1,6 @@
 package com.tibco.as.io;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -15,7 +16,8 @@ import com.tibco.as.io.transfer.SimpleWorker;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceDef;
 
-public abstract class AbstractMetaspaceTransfer<T, U> implements IMetaspaceTransfer {
+public abstract class AbstractMetaspaceTransfer<T, U> implements
+		IMetaspaceTransfer {
 
 	private static final int DEFAULT_BATCH_SIZE = 1000;
 
@@ -97,7 +99,10 @@ public abstract class AbstractMetaspaceTransfer<T, U> implements IMetaspaceTrans
 				try {
 					converter = getConverter(transfer, spaceDef);
 				} catch (UnsupportedConversionException e) {
-					throw new TransferException("Unsupported conversion", e);
+					throw new TransferException(MessageFormat.format(
+							"Unsupported conversion: {0} -> {1}", e
+									.getFromType().getName(), e.getToType()
+									.getName()), e);
 				}
 				IWorker worker = createWorker(executor, batchSize, converter);
 				executor.addWorker(worker);
@@ -186,8 +191,8 @@ public abstract class AbstractMetaspaceTransfer<T, U> implements IMetaspaceTrans
 		return new SimpleWorker<T, U>(executor, converter);
 	}
 
-	private IInputStream<T> getInputStream(AbstractTransfer transfer, SpaceDef spaceDef)
-			throws TransferException {
+	private IInputStream<T> getInputStream(AbstractTransfer transfer,
+			SpaceDef spaceDef) throws TransferException {
 		if (inputStream == null) {
 			return getInputStream(metaspace, transfer, spaceDef);
 		}
@@ -202,8 +207,8 @@ public abstract class AbstractMetaspaceTransfer<T, U> implements IMetaspaceTrans
 		return outputStream;
 	}
 
-	protected abstract Collection<AbstractTransfer> getTransfers(Metaspace metaspace)
-			throws TransferException;
+	protected abstract Collection<AbstractTransfer> getTransfers(
+			Metaspace metaspace) throws TransferException;
 
 	public SpaceDef getSpaceDef(AbstractTransfer transfer) throws Exception {
 		return getSpaceDef(metaspace, transfer);
@@ -213,10 +218,12 @@ public abstract class AbstractMetaspaceTransfer<T, U> implements IMetaspaceTrans
 			AbstractTransfer transfer) throws Exception;
 
 	protected abstract IInputStream<T> getInputStream(Metaspace metaspace,
-			AbstractTransfer transfer, SpaceDef spaceDef) throws TransferException;
+			AbstractTransfer transfer, SpaceDef spaceDef)
+			throws TransferException;
 
 	protected abstract IOutputStream<U> getOutputStream(Metaspace metaspace,
-			AbstractTransfer transfer, SpaceDef spaceDef) throws TransferException;
+			AbstractTransfer transfer, SpaceDef spaceDef)
+			throws TransferException;
 
 	@Override
 	public void stop() throws Exception {
