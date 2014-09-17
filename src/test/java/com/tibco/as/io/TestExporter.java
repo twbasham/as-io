@@ -25,6 +25,7 @@ import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
+import com.tibco.as.util.Field;
 
 public class TestExporter extends TestBase {
 
@@ -79,10 +80,12 @@ public class TestExporter extends TestBase {
 				DistributionRole.SEEDER);
 		space2.putAll(list);
 		List<String[]> outList = new Vector<String[]>();
-		AbstractExporter<String[]> exporter = new AbstractExporter<String[]>(metaspace) {
+		AbstractExporter<String[]> exporter = new AbstractExporter<String[]>(
+				metaspace) {
 			@Override
 			protected IOutputStream<String[]> getOutputStream(
-					Metaspace metaspace, AbstractTransfer transfer, SpaceDef spaceDef) {
+					Metaspace metaspace, AbstractTransfer transfer,
+					SpaceDef spaceDef) {
 				return null;
 			}
 
@@ -95,8 +98,7 @@ public class TestExporter extends TestBase {
 				fields[0] = new Field("guid");
 				fields[1] = new Field("last-payment");
 				fields[2] = new Field("average-spend");
-				fields[3] = new Field("unused");
-				fields[3].setSkip(true);
+				fields[3] = null;
 				FieldDef[] fieldDefs = FieldUtils
 						.getFieldDefs(spaceDef, fields);
 				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);

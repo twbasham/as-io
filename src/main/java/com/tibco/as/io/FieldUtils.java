@@ -18,6 +18,8 @@ import com.tibco.as.convert.array.TupleToArrayConverter;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
 import com.tibco.as.space.SpaceDef;
+import com.tibco.as.util.Field;
+import com.tibco.as.util.FieldFormat;
 
 public class FieldUtils {
 
@@ -25,9 +27,6 @@ public class FieldUtils {
 
 	public static FieldDef getFieldDef(Field field) {
 		if (field.getName() == null) {
-			return null;
-		}
-		if (field.isSkip()) {
 			return null;
 		}
 		FieldType type = field.getType();
@@ -77,9 +76,6 @@ public class FieldUtils {
 			}
 		} else {
 			for (Field field : fields) {
-				if (field.isSkip()) {
-					continue;
-				}
 				result.add(field);
 			}
 		}
