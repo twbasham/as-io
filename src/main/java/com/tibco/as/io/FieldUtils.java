@@ -26,6 +26,9 @@ public class FieldUtils {
 	private static Logger logger = Logger.getLogger(FieldUtils.class.getName());
 
 	public static FieldDef getFieldDef(Field field) {
+		if (field == null) {
+			return null;
+		}
 		if (field.getName() == null) {
 			return null;
 		}
@@ -80,6 +83,9 @@ public class FieldUtils {
 			}
 		}
 		for (Field field : result) {
+			if (field == null) {
+				continue;
+			}
 			if (field.getName() == null) {
 				continue;
 			}
