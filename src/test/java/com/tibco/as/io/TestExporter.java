@@ -94,11 +94,10 @@ public class TestExporter extends TestBase {
 			protected IConverter<Tuple, String[]> getConverter(
 					AbstractTransfer transfer, SpaceDef spaceDef)
 					throws UnsupportedConversionException {
-				Field[] fields = new Field[4];
+				Field[] fields = new Field[3];
 				fields[0] = new Field("guid");
 				fields[1] = new Field("last-payment");
 				fields[2] = new Field("average-spend");
-				fields[3] = null;
 				FieldDef[] fieldDefs = FieldUtils
 						.getFieldDefs(spaceDef, fields);
 				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
