@@ -18,16 +18,18 @@ import com.tibco.as.convert.array.TupleToArrayConverter;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
 import com.tibco.as.space.SpaceDef;
+import com.tibco.as.util.Field;
+import com.tibco.as.util.FieldFormat;
 
 public class FieldUtils {
 
 	private static Logger logger = Logger.getLogger(FieldUtils.class.getName());
 
 	public static FieldDef getFieldDef(Field field) {
-		if (field.getName() == null) {
+		if (field == null) {
 			return null;
 		}
-		if (field.isSkip()) {
+		if (field.getName() == null) {
 			return null;
 		}
 		FieldType type = field.getType();
@@ -77,13 +79,13 @@ public class FieldUtils {
 			}
 		} else {
 			for (Field field : fields) {
-				if (field.isSkip()) {
-					continue;
-				}
 				result.add(field);
 			}
 		}
 		for (Field field : result) {
+			if (field == null) {
+				continue;
+			}
 			if (field.getName() == null) {
 				continue;
 			}
