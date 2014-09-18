@@ -1,6 +1,7 @@
 package com.tibco.as.io.cli;
 
 import java.util.Collection;
+import java.util.logging.Logger;
 
 import com.beust.jcommander.Parameter;
 import com.tibco.as.io.IMetaspaceTransfer;
@@ -17,6 +18,8 @@ public abstract class AbstractCommand implements IMetaspaceTransferListener {
 	private static final String FIELD_BATCH_SIZE = "batchSize";
 
 	private static final String FIELD_WORKER_COUNT = "workerCount";
+
+	private Logger log = Logger.getLogger(AbstractCommand.class.getName());
 
 	@Parameter(description = "Transfer output batch size", names = { "-batch_size" })
 	private Integer batchSize;
@@ -55,7 +58,7 @@ public abstract class AbstractCommand implements IMetaspaceTransferListener {
 
 	@Override
 	public void opening(Collection<ITransfer> transfers) {
-		System.out.println(getExecutingMessage(transfers));
+		log.info(getExecutingMessage(transfers));
 	}
 
 	@Override
