@@ -1,7 +1,11 @@
 package com.tibco.as.io.cli;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -18,6 +22,8 @@ public abstract class AbstractApplication implements IEventListener {
 
 	@Parameter(names = { "-?", "-help" }, description = "Print this help message", help = true)
 	private Boolean help;
+	@Parameter(names = "-log_level", converter = LogLevelConverter.class, validateWith = LogLevelConverter.class, description = "Log level (ERROR, WARNING, INFO, DEBUG or VERBOSE)")
+	private LogLevel logLevel = LogLevel.INFO;
 	@Parameter(names = { "-metaspace" }, description = "Metaspace name")
 	private String metaspaceName;
 	@Parameter(names = { "-member_name" }, description = "Member name")
@@ -39,8 +45,18 @@ public abstract class AbstractApplication implements IEventListener {
 	@Parameter(names = { "-identity_password" }, description = "Identity password")
 	private String identityPassword;
 
+	private Logger log;
+
 	protected AbstractApplication() {
+		ClassLoader classLoader = getClass().getClassLoader();
+		InputStream in = classLoader.getResourceAsStream("logging.properties");
+		try {
+			LogManager.getLogManager().readConfiguration(in);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		EventManager.addListener(this);
+		log = Logger.getLogger(AbstractApplication.class.getName());
 	}
 
 	public String getMetaspaceName() {
@@ -51,15 +67,16 @@ public abstract class AbstractApplication implements IEventListener {
 	public void onEvent(IEvent event) {
 		switch (event.getSeverity()) {
 		case DEBUG:
+			log.fine(event.getMessage());
+			break;
 		case INFO:
-			System.out.println(event.getMessage());
+			log.info(event.getMessage());
 			break;
 		case WARN:
+			log.warning(event.getMessage());
+			break;
 		case ERROR:
-			System.err.println(event.getMessage());
-			if (event.getException() != null) {
-				event.getException().printStackTrace();
-			}
+			log.log(Level.SEVERE, event.getMessage(), event.getException());
 			break;
 		}
 	}
@@ -78,12 +95,13 @@ public abstract class AbstractApplication implements IEventListener {
 			jc.usage();
 			return;
 		}
+		setLogLevel();
 		List<AbstractCommand> commands = new ArrayList<AbstractCommand>();
 		String parsedCommand = jc.getParsedCommand();
 		if (parsedCommand == null) {
 			AbstractCommand defaultCommand = getDefaultCommand();
 			if (defaultCommand == null) {
-				System.out.println("No command specified");
+				log.warning("No command specified");
 				jc.usage();
 				return;
 			}
@@ -148,6 +166,13 @@ public abstract class AbstractApplication implements IEventListener {
 				}
 			}
 		}
+	}
+
+	private void setLogLevel() {
+		if (logLevel == null) {
+			return;
+		}
+		Logger.getLogger("").setLevel(logLevel.getLevel());
 	}
 
 	protected AbstractCommand getDefaultCommand() {
