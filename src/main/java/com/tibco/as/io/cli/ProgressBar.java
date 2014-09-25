@@ -1,13 +1,10 @@
 package com.tibco.as.io.cli;
 
 import java.text.DecimalFormat;
-import java.util.logging.Logger;
 
 import com.tibco.as.io.IInputStream;
-import com.tibco.as.io.ITransfer;
-import com.tibco.as.io.ITransferListener;
 
-public abstract class AbstractTransferListener implements ITransferListener {
+public class ProgressBar {
 
 	private DecimalFormat decimalFormat = new DecimalFormat("###,###");
 
@@ -17,19 +14,13 @@ public abstract class AbstractTransferListener implements ITransferListener {
 
 	private static final char PROGRESS_BLANK = ' ';
 
-	private Logger log = Logger.getLogger(AbstractTransferListener.class
-			.getName());
+	private long size;
 
-	private ITransfer transfer;
-
-	public AbstractTransferListener(ITransfer transfer) {
-		this.transfer = transfer;
+	public ProgressBar(long size) {
+		this.size = size;
 	}
 
-	@Override
-	public void transferred(int count) {
-		long position = getPosition();
-		long size = transfer.size();
+	public void update(long position) {
 		if (size == IInputStream.UNKNOWN_SIZE) {
 			printProgBar(position, (int) position % 100, false);
 		} else {
@@ -37,26 +28,6 @@ public abstract class AbstractTransferListener implements ITransferListener {
 					/ (double) size * 100), true);
 		}
 	}
-
-	private long getPosition() {
-		return transfer.getInputStream().getPosition();
-	}
-
-	@Override
-	public void opened() {
-		log.info(getOpenedMessage(transfer));
-	}
-
-	protected abstract String getOpenedMessage(ITransfer transfer);
-
-	@Override
-	public void closed() {
-		printProgBar(getPosition(), 100, true);
-		System.out.println();
-		log.info(getClosedMessage(transfer));
-	}
-
-	protected abstract String getClosedMessage(ITransfer transfer);
 
 	private void printProgBar(long position, int percent, boolean showPercent) {
 		int half = percent / 2;

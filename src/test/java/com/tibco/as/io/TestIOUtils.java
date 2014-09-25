@@ -7,13 +7,13 @@ public class TestIOUtils {
 
 	@Test
 	public void testGetExtension() {
-		Assert.assertEquals("xls", IOUtils.getExtension("report.sdfsdf.xls"));
+		Assert.assertEquals("xls", Utils.getExtension("report.sdfsdf.xls"));
 	}
 
 	@Test
 	public void testGetBaseName() {
 		Assert.assertEquals("report.sdfsdf",
-				IOUtils.getBaseName("report.sdfsdf.xls"));
+				Utils.getBaseName("report.sdfsdf.xls"));
 	}
 
 }

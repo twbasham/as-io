@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.tibco.as</groupId>
   <artifactId>as-io</artifactId>
@@ -33,7 +34,7 @@
     <dependency>
       <groupId>com.tibco.as</groupId>
       <artifactId>as-util</artifactId>
-      <version>2.0.10</version>
+      <version>2.0.12</version>
     </dependency>
     <dependency>
       <groupId>com.beust</groupId>
@@ -68,7 +69,7 @@
           <manifestLocation>META-INF</manifestLocation>
           <instructions>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Export-Package>com.tibco.as.io,com.tibco.as.io.cli,com.tibco.as.io.operation,com.tibco.as.io.transfer</Export-Package>
+            <Export-Package>com.tibco.as.io,com.tibco.as.io.cli,com.tibco.as.io.operation,com.tibco.as.io.work</Export-Package>
           </instructions>
         </configuration>
       </plugin>

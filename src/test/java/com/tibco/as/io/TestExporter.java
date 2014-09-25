@@ -29,7 +29,7 @@ import com.tibco.as.util.Field;
 
 public class TestExporter extends TestBase {
 
-	private ConverterFactory factory = new ConverterFactory();
+	private ConverterFactory converterFactory = new ConverterFactory();
 
 	@Test
 	public void testExporter() throws Exception {
@@ -80,19 +80,19 @@ public class TestExporter extends TestBase {
 				DistributionRole.SEEDER);
 		space2.putAll(list);
 		List<String[]> outList = new Vector<String[]>();
-		AbstractExporter<String[]> exporter = new AbstractExporter<String[]>(
-				metaspace) {
-			@Override
-			protected IOutputStream<String[]> getOutputStream(
-					Metaspace metaspace, AbstractTransfer transfer,
-					SpaceDef spaceDef) {
-				return null;
-			}
+		final ListOutputStream<String[]> out = new ListOutputStream<String[]>(
+				outList);
+		out.setSleep(140);
+		final DestinationConfig export = new DestinationConfig();
+		export.setDirection(Direction.EXPORT);
+		export.setSpaceName(spaceName);
+		TestChannel channel = new TestChannel(getMetaspace());
+		AbstractDestination<String[]> exporter = new AbstractDestination<String[]>(
+				channel, export) {
 
-			@SuppressWarnings("rawtypes")
 			@Override
-			protected IConverter<Tuple, String[]> getConverter(
-					AbstractTransfer transfer, SpaceDef spaceDef)
+			protected IConverter<Tuple, String[]> getExportConverter(
+					DestinationConfig config, SpaceDef spaceDef)
 					throws UnsupportedConversionException {
 				Field[] fields = new Field[3];
 				fields[0] = new Field("guid");
@@ -101,10 +101,11 @@ public class TestExporter extends TestBase {
 				FieldDef[] fieldDefs = FieldUtils
 						.getFieldDefs(spaceDef, fields);
 				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
+				@SuppressWarnings("rawtypes")
 				IConverter[] converters;
 				try {
-					converters = factory.getConverters(
-							transfer.getAttributes(), fieldDefs, String.class);
+					converters = converterFactory.getConverters(
+							export.getAttributes(), fieldDefs, String.class);
 				} catch (Exception e) {
 					throw new UnsupportedConversionException(Tuple.class,
 							String[].class);
@@ -114,17 +115,34 @@ public class TestExporter extends TestBase {
 			}
 
 			@Override
-			protected AbstractTransfer createTransfer() {
-				return new TestExport();
+			protected IConverter<String[], Tuple> getImportConverter(
+					DestinationConfig config, SpaceDef spaceDef)
+					throws UnsupportedConversionException {
+				return null;
 			}
+
+			@Override
+			protected IInputStream<String[]> getInputStream(
+					DestinationConfig config) throws Exception {
+				return null;
+			}
+
+			@Override
+			protected IOutputStream<String[]> getOutputStream(
+					DestinationConfig config, SpaceDef spaceDef)
+					throws Exception {
+				return out;
+			}
+
+			@Override
+			protected void populateSpaceDef(SpaceDef spaceDef,
+					DestinationConfig config) throws Exception {
+
+			}
+
 		};
-		ListOutputStream<String[]> out = new ListOutputStream<String[]>(outList);
-		out.setSleep(140);
-		TestExport export = new TestExport();
-		export.setSpaceName(spaceName);
-		exporter.setOutputStream(out);
-		exporter.addTransfer(export);
-		exporter.execute();
+		exporter.open();
+		exporter.close();
 		Assert.assertEquals(3, outList.size());
 		for (String[] line : outList) {
 			Assert.assertEquals(3, line.length);

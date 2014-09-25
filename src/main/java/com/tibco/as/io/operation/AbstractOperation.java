@@ -1,81 +1,36 @@
 package com.tibco.as.io.operation;
 
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.tibco.as.io.EventManager;
+import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.ASException;
-import com.tibco.as.space.Member.DistributionRole;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.Tuple;
 
 public abstract class AbstractOperation implements IOperation {
 
-	private static final long DEFAULT_WAIT_FOR_READY_TIMEOUT = 30000;
+	private Logger log = LogFactory.getLog(AbstractOperation.class);
 
 	private Space space;
-
-	private boolean keepSpaceOpen;
-
+	private boolean keepOpen;
 	private boolean closed;
+	private long timeout;
 
-	private Metaspace metaspace;
-
-	private String spaceName;
-
-	private DistributionRole distributionRole;
-
-	private Long waitForReadyTimeout;
-
-	public AbstractOperation(Metaspace metaspace, String spaceName) {
-		this.metaspace = metaspace;
-		this.spaceName = spaceName;
+	public AbstractOperation(Space space, long timeout, boolean keepOpen) {
+		this.space = space;
+		this.timeout = timeout;
+		this.keepOpen = keepOpen;
 	}
 
-	public DistributionRole getDistributionRole() {
-		return distributionRole;
-	}
-
-	@Override
-	public void setDistributionRole(DistributionRole distributionRole) {
-		this.distributionRole = distributionRole;
-	}
-
-	public boolean isKeepSpaceOpen() {
-		return keepSpaceOpen;
-	}
-
-	@Override
-	public void setKeepSpaceOpen(boolean keepSpaceOpen) {
-		this.keepSpaceOpen = keepSpaceOpen;
-	}
-
-	private long getWaitForReadyTimeout() {
-		if (waitForReadyTimeout == null) {
-			return DEFAULT_WAIT_FOR_READY_TIMEOUT;
-		}
-		return waitForReadyTimeout;
-	}
-
-	@Override
-	public void setWaitForReadyTimeout(Long timeout) {
-		this.waitForReadyTimeout = timeout;
-	}
-
-	public void open() throws Exception {
-		if (distributionRole == null) {
-			space = metaspace.getSpace(spaceName);
-		} else {
-			space = metaspace.getSpace(spaceName, distributionRole);
-		}
+	public void open() throws ASException {
 		if (space.isReady()) {
 			return;
 		}
-		Long timeout = getWaitForReadyTimeout();
-		EventManager
-				.info("Waiting until space is ready using timeout of {0} ms",
-						timeout);
+		log.log(Level.INFO, "Waiting {0} ms for space ''{1}'' readiness",
+				new Object[] { timeout, space.getName() });
 		space.waitForReady(timeout);
 	}
 
@@ -100,7 +55,7 @@ public abstract class AbstractOperation implements IOperation {
 		if (isClosed()) {
 			return;
 		}
-		if (!keepSpaceOpen) {
+		if (!keepOpen) {
 			if (space == null) {
 				return;
 			}
@@ -110,7 +65,6 @@ public abstract class AbstractOperation implements IOperation {
 		closed = true;
 	}
 
-	@Override
 	public boolean isClosed() {
 		return closed;
 	}

@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.GetOptions;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.Tuple;
@@ -14,9 +13,9 @@ public class GetOperation extends AbstractOperation {
 
 	private GetOptions options;
 
-	public GetOperation(Metaspace metaspace, String spaceName,
+	public GetOperation(Space space, long timeout, boolean keepOpen,
 			GetOptions options) {
-		super(metaspace, spaceName);
+		super(space, timeout, keepOpen);
 		this.options = options;
 	}
 

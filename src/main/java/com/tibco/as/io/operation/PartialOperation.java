@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.tibco.as.space.ASException;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.PutOptions;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceResultList;
@@ -15,9 +14,9 @@ public class PartialOperation extends AbstractOperation {
 
 	private PutOptions options;
 
-	public PartialOperation(Metaspace metaspace, String spaceName,
+	public PartialOperation(Space space, long timeout, boolean keepOpen,
 			PutOptions options) {
-		super(metaspace, spaceName);
+		super(space, timeout, keepOpen);
 		this.options = options;
 	}
 

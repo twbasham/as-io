@@ -1,5 +1,6 @@
 package com.tibco.as.io;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListOutputStream<T> implements IOutputStream<T> {
@@ -7,6 +8,10 @@ public class ListOutputStream<T> implements IOutputStream<T> {
 	private List<T> list;
 
 	private Long sleep;
+
+	public ListOutputStream() {
+		this(new ArrayList<T>());
+	}
 
 	public ListOutputStream(List<T> list) {
 		this.list = list;
@@ -39,7 +44,6 @@ public class ListOutputStream<T> implements IOutputStream<T> {
 		sleep();
 	}
 
-	@Override
 	public boolean isClosed() {
 		return list == null;
 	}

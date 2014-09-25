@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.ASStatus;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.SpaceResultList;
@@ -24,8 +23,8 @@ public class CalculateTupleSize extends AbstractOperation {
 
 	private ASEncoder encoder = new ASEncoder();
 
-	public CalculateTupleSize(Metaspace metaspace, String spaceName) {
-		super(metaspace, spaceName);
+	public CalculateTupleSize(Space space, long timeout, boolean keepOpen) {
+		super(space, timeout, keepOpen);
 	}
 
 	@Override

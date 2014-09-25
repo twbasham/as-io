@@ -15,6 +15,7 @@ import com.tibco.as.convert.IConverter;
 import com.tibco.as.convert.UnsupportedConversionException;
 import com.tibco.as.convert.array.ArrayToTupleConverter;
 import com.tibco.as.convert.array.TupleToArrayConverter;
+import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
 import com.tibco.as.space.SpaceDef;
@@ -23,7 +24,7 @@ import com.tibco.as.util.FieldFormat;
 
 public class FieldUtils {
 
-	private static Logger logger = Logger.getLogger(FieldUtils.class.getName());
+	private static Logger logger = LogFactory.getLog(FieldUtils.class);
 
 	public static FieldDef getFieldDef(Field field) {
 		if (field == null) {

@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.MessageFormat;
 
-public class IOUtils {
+public class Utils {
 
 	public static final char EXTENSION_SEPARATOR = '.';
 
@@ -55,7 +55,7 @@ public class IOUtils {
 	}
 
 	public static File createTempDirectory() throws IOException {
-		File dir = File.createTempFile(IOUtils.class.getName(),
+		File dir = File.createTempFile(Utils.class.getName(),
 				String.valueOf(System.currentTimeMillis()));
 		if (!dir.delete()) {
 			throw new IOException(MessageFormat.format(
@@ -85,7 +85,7 @@ public class IOUtils {
 				throw new FileNotFoundException(resource);
 			}
 			try {
-				IOUtils.copy(in, out);
+				Utils.copy(in, out);
 			} finally {
 				in.close();
 			}
