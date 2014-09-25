@@ -4,7 +4,6 @@ import java.text.MessageFormat;
 import java.util.Collection;
 
 import com.tibco.as.space.ASException;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.TakeOptions;
@@ -14,9 +13,9 @@ public class TakeOperation extends AbstractOperation {
 
 	TakeOptions options;
 
-	public TakeOperation(Metaspace metaspace, String spaceName,
+	public TakeOperation(Space space, long timeout, boolean keepOpen,
 			TakeOptions options) {
-		super(metaspace, spaceName);
+		super(space, timeout, keepOpen);
 		this.options = options;
 	}
 

@@ -1,11 +1,11 @@
 package com.tibco.as.io;
 
-public interface ICloseable {
+public interface IDestination {
 
 	void open() throws Exception;
-	
-	void close() throws Exception;
-	
-	boolean isClosed();
 
+	void close() throws Exception;
+
+	void stop() throws Exception;
+	
 }

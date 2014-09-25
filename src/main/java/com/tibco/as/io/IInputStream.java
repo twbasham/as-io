@@ -1,8 +1,14 @@
 package com.tibco.as.io;
 
-public interface IInputStream<T> extends ICloseable {
+public interface IInputStream<T> {
 
 	public static final long UNKNOWN_SIZE = -1;
+
+	void open() throws Exception;
+
+	void close() throws Exception;
+
+	boolean isClosed();
 
 	/**
 	 * @return next element in the stream

@@ -1,17 +1,17 @@
 package com.tibco.as.io.cli;
 
-import com.tibco.as.io.Operation;
+import com.tibco.as.io.OperationType;
 
-public class OperationTypeConverter extends AbstractEnumConverter<Operation> {
+public class OperationTypeConverter extends AbstractEnumConverter<OperationType> {
 
 	@Override
-	protected Operation valueOf(String name) {
-		return Operation.valueOf(name);
+	protected OperationType valueOf(String name) {
+		return OperationType.valueOf(name);
 	}
 
 	@Override
-	protected Operation[] getValues() {
-		return Operation.values();
+	protected OperationType[] getValues() {
+		return OperationType.values();
 	}
 
 }

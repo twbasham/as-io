@@ -63,7 +63,7 @@ public class ListInputStream<T> implements IInputStream<T> {
 	public String getName() {
 		return "list";
 	}
-	
+
 	@Override
 	public long getOpenTime() {
 		return 0;

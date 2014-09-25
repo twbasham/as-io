@@ -2,7 +2,6 @@ package com.tibco.as.io.operation;
 
 import java.util.Collection;
 
-import com.tibco.as.space.Member.DistributionRole;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.Tuple;
 import com.tibco.as.space.impl.data.ASSpaceResultList;
@@ -12,7 +11,7 @@ public class NoOperation implements IOperation {
 	private boolean closed;
 
 	@Override
-	public void open() throws Exception {
+	public void open() {
 		closed = false;
 	}
 
@@ -36,21 +35,8 @@ public class NoOperation implements IOperation {
 		closed = true;
 	}
 
-	@Override
 	public boolean isClosed() {
 		return closed;
-	}
-
-	@Override
-	public void setDistributionRole(DistributionRole distributionRole) {
-	}
-
-	@Override
-	public void setKeepSpaceOpen(boolean keepSpaceOpen) {
-	}
-
-	@Override
-	public void setWaitForReadyTimeout(Long waitTimeout) {
 	}
 
 }

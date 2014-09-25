@@ -21,11 +21,6 @@ public class LimitedInputStream<T> implements IInputStream<T> {
 	}
 
 	@Override
-	public boolean isClosed() {
-		return in.isClosed();
-	}
-
-	@Override
 	public T read() throws Exception {
 		if (getPosition() < limit) {
 			return in.read();
@@ -51,6 +46,11 @@ public class LimitedInputStream<T> implements IInputStream<T> {
 	@Override
 	public long getOpenTime() {
 		return in.getOpenTime();
+	}
+
+	@Override
+	public boolean isClosed() {
+		return in.isClosed();
 	}
 
 }

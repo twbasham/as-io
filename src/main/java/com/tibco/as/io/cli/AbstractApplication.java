@@ -1,29 +1,40 @@
 package com.tibco.as.io.cli;
 
-import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-import com.tibco.as.io.EventManager;
-import com.tibco.as.io.IEvent;
-import com.tibco.as.io.IEventListener;
+import com.tibco.as.io.IChannel;
+import com.tibco.as.log.LogFactory;
+import com.tibco.as.log.LogLevel;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.MemberDef;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Utils;
 
-public abstract class AbstractApplication implements IEventListener {
+public abstract class AbstractApplication {
+
+	private Logger log = LogFactory.getLog(AbstractApplication.class);
 
 	@Parameter(names = { "-?", "-help" }, description = "Print this help message", help = true)
 	private Boolean help;
 	@Parameter(names = "-log_level", converter = LogLevelConverter.class, validateWith = LogLevelConverter.class, description = "Log level (ERROR, WARNING, INFO, DEBUG or VERBOSE)")
 	private LogLevel logLevel = LogLevel.INFO;
+	@Parameter(names = "-log_file", description = "Write logs to file")
+	private boolean logFile;
+	@Parameter(names = "-log_file_pattern", description = "Log file name pattern")
+	private String logFilePattern;
+	@Parameter(names = "-log_file_limit", description = "Approximate maximum amount to write (in bytes) to any log file")
+	private Integer logFileLimit;
+	@Parameter(names = "-log_file_count", description = "Number of log files to cycle through")
+	private int logFileCount = 1;
+	@Parameter(names = "-log_file_append", description = "Append logs onto any existing files")
+	private boolean logFileAppend;
 	@Parameter(names = { "-metaspace" }, description = "Metaspace name")
 	private String metaspaceName;
 	@Parameter(names = { "-member_name" }, description = "Member name")
@@ -45,40 +56,11 @@ public abstract class AbstractApplication implements IEventListener {
 	@Parameter(names = { "-identity_password" }, description = "Identity password")
 	private String identityPassword;
 
-	private Logger log;
-
 	protected AbstractApplication() {
-		ClassLoader classLoader = getClass().getClassLoader();
-		InputStream in = classLoader.getResourceAsStream("logging.properties");
-		try {
-			LogManager.getLogManager().readConfiguration(in);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		EventManager.addListener(this);
-		log = Logger.getLogger(AbstractApplication.class.getName());
 	}
 
 	public String getMetaspaceName() {
 		return metaspaceName;
-	}
-
-	@Override
-	public void onEvent(IEvent event) {
-		switch (event.getSeverity()) {
-		case DEBUG:
-			log.fine(event.getMessage());
-			break;
-		case INFO:
-			log.info(event.getMessage());
-			break;
-		case WARN:
-			log.warning(event.getMessage());
-			break;
-		case ERROR:
-			log.log(Level.SEVERE, event.getMessage(), event.getException());
-			break;
-		}
 	}
 
 	public void execute(String[] args) {
@@ -88,20 +70,29 @@ public abstract class AbstractApplication implements IEventListener {
 		try {
 			jc.parse(args);
 		} catch (ParameterException e) {
-			System.err.println(e.getLocalizedMessage());
+			System.err.println(MessageFormat.format(
+					"Could not parse command: {0}", e.getLocalizedMessage()));
 			return;
 		}
 		if (args.length == 0 || Boolean.TRUE.equals(help)) {
 			jc.usage();
 			return;
 		}
-		setLogLevel();
-		List<AbstractCommand> commands = new ArrayList<AbstractCommand>();
+		try {
+			LogFactory.getRootLogger(logLevel, logFile, logFilePattern,
+					logFileLimit, logFileCount, logFileAppend);
+		} catch (Exception e) {
+			System.err.println(MessageFormat.format(
+					"Could not initialize logging: {0}",
+					e.getLocalizedMessage()));
+		}
+		List<ICommand> commands = new ArrayList<ICommand>();
 		String parsedCommand = jc.getParsedCommand();
 		if (parsedCommand == null) {
-			AbstractCommand defaultCommand = getDefaultCommand();
+			ICommand defaultCommand = getDefaultCommand();
 			if (defaultCommand == null) {
-				log.warning("No command specified");
+				LogFactory.getLog(AbstractApplication.class).warning(
+						"No command specified");
 				jc.usage();
 				return;
 			}
@@ -109,15 +100,7 @@ public abstract class AbstractApplication implements IEventListener {
 		} else {
 			JCommander commandJC = jc.getCommands().get(parsedCommand);
 			for (Object command : commandJC.getObjects()) {
-				commands.add((AbstractCommand) command);
-			}
-		}
-		for (AbstractCommand command : commands) {
-			try {
-				command.prepare();
-			} catch (Exception e) {
-				System.err.println(e.getLocalizedMessage());
-				return;
+				commands.add((ICommand) command);
 			}
 		}
 		Metaspace metaspace = Utils.getMetaspace(metaspaceName);
@@ -154,28 +137,46 @@ public abstract class AbstractApplication implements IEventListener {
 				return;
 			}
 		}
-		for (AbstractCommand command : commands) {
-			command.execute(metaspace);
+		IChannel channel;
+		try {
+			channel = getChannel(metaspace);
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Could not create channel", e);
+			return;
+		}
+		for (ICommand command : commands) {
+			try {
+				command.configure(channel);
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not run command", e);
+			}
+		}
+		try {
+			channel.open();
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Could not open channel", e);
+		} finally {
+			try {
+				channel.close();
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not close channel", e);
+			}
 		}
 		if (Boolean.TRUE.equals(noExit)) {
 			while (true) {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					log.log(Level.SEVERE, "Interrupted", e);
 				}
 			}
 		}
 	}
 
-	private void setLogLevel() {
-		if (logLevel == null) {
-			return;
-		}
-		Logger.getLogger("").setLevel(logLevel.getLevel());
-	}
+	protected abstract IChannel getChannel(Metaspace metaspace)
+			throws Exception;
 
-	protected AbstractCommand getDefaultCommand() {
+	protected ICommand getDefaultCommand() {
 		return null;
 	}
 

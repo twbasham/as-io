@@ -1,6 +1,6 @@
 package com.tibco.as.io;
 
-public enum Operation {
+public enum OperationType {
 
 	GET, LOAD, NONE, PARTIAL, PUT, TAKE
 	

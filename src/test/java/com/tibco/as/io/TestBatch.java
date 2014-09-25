@@ -10,12 +10,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.tibco.as.accessors.AccessorFactory;
-import com.tibco.as.accessors.ITupleAccessor;
-import com.tibco.as.convert.ConverterFactory;
-import com.tibco.as.convert.IConverter;
-import com.tibco.as.convert.UnsupportedConversionException;
-import com.tibco.as.convert.array.TupleToArrayConverter;
+import com.tibco.as.log.LogFactory;
+import com.tibco.as.log.LogLevel;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.DateTime;
 import com.tibco.as.space.FieldDef;
@@ -26,11 +22,8 @@ import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
-import com.tibco.as.util.Utils;
 
 public class TestBatch extends TestBase {
-
-	private ConverterFactory factory = new ConverterFactory();
 
 	private Space space;
 
@@ -58,47 +51,19 @@ public class TestBatch extends TestBase {
 
 	@Test
 	public void testBatch() throws Exception {
-		final List<String[]> list = new Vector<String[]>();
-		AbstractExporter<String[]> exporter = new AbstractExporter<String[]>(getMetaspace()) {
-
-			@Override
-			protected IOutputStream<String[]> getOutputStream(
-					Metaspace metaspace, AbstractTransfer transfer, SpaceDef spaceDef) {
-				return new ListOutputStream<String[]>(list);
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			protected IConverter<Tuple, String[]> getConverter(
-					AbstractTransfer transfer, SpaceDef spaceDef)
-					throws UnsupportedConversionException {
-				FieldDef[] fieldDefs = Utils.getFieldDefs(spaceDef);
-				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
-				IConverter[] converters;
-				try {
-					converters = factory.getConverters(
-							transfer.getAttributes(), fieldDefs, String.class);
-				} catch (Exception e) {
-					throw new UnsupportedConversionException(Tuple.class,
-							String[].class);
-				}
-				return new TupleToArrayConverter<String>(accessors, converters,
-						String.class);
-			}
-
-			@Override
-			protected AbstractTransfer createTransfer() {
-				return new TestExport();
-			}
-
-		};
-		TestExport defaultExport = new TestExport();
-		defaultExport.setWorkerCount(5);
-		defaultExport.setBatchSize(7000);
-		defaultExport.setQueueCapacity(35000);
-		defaultExport.setQueryLimit(100000L);
-		exporter.setDefaultTransfer(defaultExport);
-		exporter.execute();
+		List<String[]> list = new Vector<String[]>();
+		TestConfig export = new TestConfig();
+		export.setDirection(Direction.EXPORT);
+		export.setWorkerCount(5);
+		export.setBatchSize(7000);
+		export.setQueueCapacity(35000);
+		export.setQueryLimit(100000L);
+		export.setSpaceName(space.getName());
+		export.setOutputStream(new ListOutputStream<String[]>(list));
+		TestChannel channel = new TestChannel(getMetaspace());
+		channel.addConfig(export);
+		channel.open();
+		channel.close();
 		Assert.assertEquals(space.size(), list.size());
 		for (String[] line : list) {
 			Assert.assertNotNull(line);
@@ -111,78 +76,36 @@ public class TestBatch extends TestBase {
 
 	@Test
 	public void testStopTransfer() throws Exception {
+		LogFactory.getRootLogger(LogLevel.VERBOSE);
 		List<String[]> list = new Vector<String[]>();
 		ListOutputStream<String[]> out = new ListOutputStream<String[]>(list);
 		out.setSleep(100);
-		final AbstractExporter<String[]> exporter = new AbstractExporter<String[]>(
-				getMetaspace()) {
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			protected IConverter<Tuple, String[]> getConverter(
-					AbstractTransfer transfer, SpaceDef spaceDef)
-					throws UnsupportedConversionException {
-				FieldDef[] fieldDefs = Utils.getFieldDefs(spaceDef);
-				ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
-				IConverter[] converters = factory.getConverters(
-						transfer.getAttributes(), fieldDefs, String.class);
-				return new TupleToArrayConverter<String>(accessors, converters,
-						String.class);
-			}
-
-			@Override
-			protected AbstractTransfer createTransfer() {
-				return new TestExport();
-			}
-
-			@Override
-			protected IOutputStream<String[]> getOutputStream(
-					Metaspace metaspace, AbstractTransfer transfer, SpaceDef spaceDef)
-					throws TransferException {
-				return null;
-			}
-
-		};
-		TestExport export = new TestExport();
+		TestConfig export = new TestConfig();
+		export.setDirection(Direction.EXPORT);
 		export.setSpaceName(space.getName());
 		export.setTimeScope(TimeScope.ALL);
 		export.setTimeout(100L);
 		export.setWorkerCount(1);
 		export.setBatchSize(1);
 		export.setQueueCapacity(1);
-		exporter.setOutputStream(out);
-		exporter.addTransfer(export);
-		exporter.addListener(new IMetaspaceTransferListener() {
+		export.setOutputStream(out);
+		TestChannel channel = new TestChannel(getMetaspace());
+		channel.addListener(new IChannelListener() {
 
 			@Override
-			public void opening(Collection<ITransfer> transfers) {
+			public void opened(IDestination destination) {
+				try {
+					destination.stop();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 
 			@Override
-			public void executing(ITransfer transfer) {
-				transfer.addListener(new ITransferListener() {
-
-					@Override
-					public void transferred(int count) {
-						try {
-							exporter.stop();
-						} catch (Exception e) {
-							Assert.fail("Got exception on stop()");
-						}
-					}
-
-					@Override
-					public void opened() {
-					}
-
-					@Override
-					public void closed() {
-					}
-				});
+			public void closed(IDestination destination) {
 			}
-
 		});
-		exporter.execute();
+		channel.open();
 		Assert.assertTrue(list.size() <= 15);
 	}
 
