@@ -1,9 +1,9 @@
 package com.tibco.as.io.cli;
 
-import com.tibco.as.io.IChannel;
+import com.tibco.as.io.ChannelConfig;
 
 public interface ICommand {
 
-	void configure(IChannel channel) throws Exception;
+	void configure(ChannelConfig config) throws Exception;
 
 }

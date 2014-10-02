@@ -17,7 +17,7 @@ import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 
-public class TestImporter extends TestBase {
+public class TestImport extends TestBase {
 
 	@Test
 	public void testListImporter() throws Exception {
@@ -50,12 +50,13 @@ public class TestImporter extends TestBase {
 				DistributionRole.SEEDER);
 		ListInputStream<String[]> in = new ListInputStream<String[]>(list);
 		in.setSleep(103);
+		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig config = new TestConfig();
 		config.setDirection(Direction.IMPORT);
-		config.setSpaceName(spaceName);
+		config.setSpace(spaceName);
 		config.setInputStream(in);
-		TestChannel channel = new TestChannel(metaspace);
-		channel.addConfig(config);
+		channelConfig.getDestinations().add(config);
+		TestChannel channel = new TestChannel(channelConfig);
 		channel.open();
 		channel.close();
 		Assert.assertEquals(3, space.size());

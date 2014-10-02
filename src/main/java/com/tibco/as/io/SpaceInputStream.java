@@ -39,7 +39,7 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 
 	@Override
 	public void open() throws ASException {
-		String spaceName = export.getSpaceName();
+		String spaceName = export.getSpace();
 		BrowserType browserType = export.getBrowserType();
 		if (browserType == null) {
 			browserType = BrowserType.GET;
@@ -134,7 +134,7 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 
 	@Override
 	public String getName() {
-		return MessageFormat.format("space ''{0}''", export.getSpaceName());
+		return MessageFormat.format("space ''{0}''", export.getSpace());
 	}
 
 }

@@ -52,16 +52,17 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testBatch() throws Exception {
 		List<String[]> list = new Vector<String[]>();
+		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig export = new TestConfig();
 		export.setDirection(Direction.EXPORT);
 		export.setWorkerCount(5);
 		export.setBatchSize(7000);
 		export.setQueueCapacity(35000);
 		export.setQueryLimit(100000L);
-		export.setSpaceName(space.getName());
+		export.setSpace(space.getName());
 		export.setOutputStream(new ListOutputStream<String[]>(list));
-		TestChannel channel = new TestChannel(getMetaspace());
-		channel.addConfig(export);
+		channelConfig.getDestinations().add(export);
+		TestChannel channel = new TestChannel(channelConfig);
 		channel.open();
 		channel.close();
 		Assert.assertEquals(space.size(), list.size());
@@ -80,17 +81,23 @@ public class TestBatch extends TestBase {
 		List<String[]> list = new Vector<String[]>();
 		ListOutputStream<String[]> out = new ListOutputStream<String[]>(list);
 		out.setSleep(100);
+		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig export = new TestConfig();
 		export.setDirection(Direction.EXPORT);
-		export.setSpaceName(space.getName());
+		export.setSpace(space.getName());
 		export.setTimeScope(TimeScope.ALL);
 		export.setTimeout(100L);
 		export.setWorkerCount(1);
 		export.setBatchSize(1);
 		export.setQueueCapacity(1);
 		export.setOutputStream(out);
-		TestChannel channel = new TestChannel(getMetaspace());
+		channelConfig.getDestinations().add(export);
+		TestChannel channel = new TestChannel(channelConfig);
 		channel.addListener(new IChannelListener() {
+
+			@Override
+			public void opening(IDestination destination) {
+			}
 
 			@Override
 			public void opened(IDestination destination) {
@@ -99,6 +106,10 @@ public class TestBatch extends TestBase {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+			}
+
+			@Override
+			public void closing(IDestination destination) {
 			}
 
 			@Override

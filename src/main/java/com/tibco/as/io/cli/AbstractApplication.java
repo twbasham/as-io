@@ -9,13 +9,10 @@ import java.util.logging.Logger;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.IChannel;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.log.LogLevel;
-import com.tibco.as.space.ASException;
-import com.tibco.as.space.MemberDef;
-import com.tibco.as.space.Metaspace;
-import com.tibco.as.util.Utils;
 
 public abstract class AbstractApplication {
 
@@ -59,10 +56,6 @@ public abstract class AbstractApplication {
 	protected AbstractApplication() {
 	}
 
-	public String getMetaspaceName() {
-		return metaspaceName;
-	}
-
 	public void execute(String[] args) {
 		JCommander jc = new JCommander(this);
 		jc.setProgramName(getProgramName());
@@ -103,53 +96,25 @@ public abstract class AbstractApplication {
 				commands.add((ICommand) command);
 			}
 		}
-		Metaspace metaspace = Utils.getMetaspace(metaspaceName);
-		if (metaspace == null) {
-			MemberDef memberDef = MemberDef.create();
-			if (memberName != null) {
-				memberDef.setMemberName(memberName);
-			}
-			if (discovery != null) {
-				memberDef.setDiscovery(discovery);
-			}
-			if (listen != null) {
-				memberDef.setListen(listen);
-			}
-			if (dataStore != null) {
-				memberDef.setDataStore(dataStore);
-			}
-			if (rxBufferSize != null) {
-				memberDef.setRxBufferSize(rxBufferSize);
-			}
-			if (workerThreadCount != null) {
-				memberDef.setWorkerThreadCount(workerThreadCount);
-			}
-			if (securityToken != null) {
-				memberDef.setSecurityTokenFile(securityToken);
-			}
-			if (identityPassword != null) {
-				memberDef.setIdentityPassword(identityPassword.toCharArray());
-			}
-			try {
-				metaspace = Metaspace.connect(metaspaceName, memberDef);
-			} catch (ASException e) {
-				System.err.println(e.getLocalizedMessage());
-				return;
-			}
-		}
 		IChannel channel;
 		try {
-			channel = getChannel(metaspace);
+			ChannelConfig config = getChannelConfig();
+			config.setDataStore(dataStore);
+			config.setDiscovery(discovery);
+			config.setIdentityPassword(identityPassword);
+			config.setListen(listen);
+			config.setMember(memberName);
+			config.setMetaspace(metaspaceName);
+			config.setRxBufferSize(rxBufferSize);
+			config.setSecurityTokenFile(securityToken);
+			config.setWorkerThreadCount(workerThreadCount);
+			for (ICommand command : commands) {
+				command.configure(config);
+			}
+			channel = getChannel(config);
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not create channel", e);
 			return;
-		}
-		for (ICommand command : commands) {
-			try {
-				command.configure(channel);
-			} catch (Exception e) {
-				log.log(Level.SEVERE, "Could not run command", e);
-			}
 		}
 		try {
 			channel.open();
@@ -173,8 +138,9 @@ public abstract class AbstractApplication {
 		}
 	}
 
-	protected abstract IChannel getChannel(Metaspace metaspace)
-			throws Exception;
+	protected abstract ChannelConfig getChannelConfig() throws Exception;
+
+	protected abstract IChannel getChannel(ChannelConfig config);
 
 	protected ICommand getDefaultCommand() {
 		return null;

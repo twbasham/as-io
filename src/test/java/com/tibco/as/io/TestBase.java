@@ -9,16 +9,24 @@ import com.tibco.as.space.Metaspace;
 
 public class TestBase {
 
+	private static final String DISCOVERY = "tcp";
+
 	private Metaspace metaspace;
+
+	protected ChannelConfig getChannelConfig() {
+		ChannelConfig config = new ChannelConfig();
+		config.setDiscovery(DISCOVERY);
+		config.setConnectTimeout(10000L);
+		return config;
+	}
 
 	@Before
 	public void connectMetaspace() throws ASException {
-		MemberDef memberDef = MemberDef.create(null, "tcp", null);
-		memberDef.setConnectTimeout(10000);
-		metaspace = Metaspace.connect(null, memberDef);
+		metaspace = Metaspace.connect(null,
+				MemberDef.create(null, DISCOVERY, null));
 	}
 
-	protected Metaspace getMetaspace() {
+	protected Metaspace getMetaspace() throws ASException {
 		return metaspace;
 	}
 

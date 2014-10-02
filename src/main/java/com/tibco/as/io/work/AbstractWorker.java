@@ -25,14 +25,15 @@ public abstract class AbstractWorker<T, U> implements Runnable {
 		try {
 			execute();
 		} catch (InterruptedException e) {
-			log.log(Level.INFO, "Worker interrupted");
+			log.log(Level.INFO, "Interrupted");
 		} catch (Exception e) {
-			log.log(Level.SEVERE, "Worker could not execute", e);
+			log.log(Level.SEVERE, "Could not execute", e);
 		}
 	}
 
 	protected void execute() throws Exception {
-		log.fine("Worker starting");
+		log.log(Level.FINE, "Worker starting in thread ''{0}''", Thread
+				.currentThread().getName());
 		T element;
 		while ((element = in.read()) != null) {
 			try {
@@ -48,7 +49,8 @@ public abstract class AbstractWorker<T, U> implements Runnable {
 				log.log(Level.SEVERE, "Could not convert", e);
 			}
 		}
-		log.fine("Worker finished");
+		log.log(Level.FINE, "Worker finished in thread ''{0}''", Thread
+				.currentThread().getName());
 	}
 
 	protected abstract void write(U element) throws Exception;

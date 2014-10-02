@@ -6,6 +6,8 @@ public class TestConfig extends DestinationConfig {
 
 	private IOutputStream<String[]> outputStream;
 
+	private int importBatchSize = 1;
+
 	public IInputStream<String[]> getInputStream() {
 		return inputStream;
 	}
@@ -21,4 +23,13 @@ public class TestConfig extends DestinationConfig {
 	public void setOutputStream(IOutputStream<String[]> outputStream) {
 		this.outputStream = outputStream;
 	}
+
+	public int getImportBatchSize() {
+		return importBatchSize;
+	}
+
+	public void setImportBatchSize(int importBatchSize) {
+		this.importBatchSize = importBatchSize;
+	}
+
 }

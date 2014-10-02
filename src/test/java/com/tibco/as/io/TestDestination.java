@@ -15,27 +15,26 @@ import com.tibco.as.util.Utils;
 public class TestDestination extends AbstractDestination<String[]> {
 
 	private ConverterFactory converterFactory = new ConverterFactory();
+	private TestConfig config;
 
 	public TestDestination(TestChannel channel, TestConfig config) {
 		super(channel, config);
+		this.config = config;
 	}
 
 	@Override
-	protected IInputStream<String[]> getInputStream(DestinationConfig config)
-			throws Exception {
-		return ((TestConfig) config).getInputStream();
+	protected IInputStream<String[]> getInputStream() throws Exception {
+		return config.getInputStream();
 	}
 
 	@Override
-	protected IOutputStream<String[]> getOutputStream(DestinationConfig config,
-			SpaceDef spaceDef) throws Exception {
-		return ((TestConfig) config).getOutputStream();
+	protected IOutputStream<String[]> getOutputStream() {
+		return config.getOutputStream();
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	protected IConverter<Tuple, String[]> getExportConverter(
-			DestinationConfig config, SpaceDef spaceDef)
+	protected IConverter<Tuple, String[]> getExportConverter(SpaceDef spaceDef)
 			throws UnsupportedConversionException {
 		FieldDef[] fieldDefs = Utils.getFieldDefs(spaceDef);
 		ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
@@ -46,8 +45,7 @@ public class TestDestination extends AbstractDestination<String[]> {
 	}
 
 	@Override
-	protected IConverter<String[], Tuple> getImportConverter(
-			DestinationConfig config, SpaceDef spaceDef)
+	protected IConverter<String[], Tuple> getImportConverter(SpaceDef spaceDef)
 			throws UnsupportedConversionException {
 		FieldDef[] fieldDefs = Utils.getFieldDefs(spaceDef);
 		ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
@@ -64,8 +62,8 @@ public class TestDestination extends AbstractDestination<String[]> {
 	}
 
 	@Override
-	protected void populateSpaceDef(SpaceDef spaceDef, DestinationConfig config)
-			throws Exception {
+	protected int getImportBatchSize() {
+		return config.getImportBatchSize();
 	}
 
 }

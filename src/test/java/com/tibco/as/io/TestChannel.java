@@ -1,17 +1,23 @@
 package com.tibco.as.io;
 
-import com.tibco.as.space.Metaspace;
+import java.util.Arrays;
+import java.util.Collection;
 
 public class TestChannel extends AbstractChannel {
 
-	protected TestChannel(Metaspace metaspace) {
-		super(metaspace);
+	protected TestChannel(ChannelConfig config) {
+		super(config);
 	}
 
 	@Override
-	protected IDestination getDestination(DestinationConfig config)
-			throws Exception {
+	protected IDestination createDestination(DestinationConfig config) {
 		return new TestDestination(this, (TestConfig) config);
+	}
+
+	@Override
+	protected Collection<DestinationConfig> getImportConfigs(
+			DestinationConfig config) throws Exception {
+		return Arrays.asList(config);
 	}
 
 }
