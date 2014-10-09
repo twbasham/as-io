@@ -1,23 +1,25 @@
-package com.tibco.as.io.work;
+package com.tibco.as.io;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.tibco.as.convert.ConvertException;
 import com.tibco.as.convert.IConverter;
-import com.tibco.as.io.IInputStream;
 import com.tibco.as.log.LogFactory;
 
-public abstract class AbstractWorker<T, U> implements Runnable {
+public class Worker<T, U> implements Runnable {
 
-	private Logger log = LogFactory.getLog(AbstractWorker.class);
+	private Logger log = LogFactory.getLog(Worker.class);
 
 	private IInputStream<T> in;
 	private IConverter<T, U> converter;
+	private IOutputStream<U> out;
 
-	public AbstractWorker(IInputStream<T> in, IConverter<T, U> converter) {
+	public Worker(IInputStream<T> in, IConverter<T, U> converter,
+			IOutputStream<U> out) {
 		this.in = in;
 		this.converter = converter;
+		this.out = out;
 	}
 
 	@Override
@@ -32,8 +34,7 @@ public abstract class AbstractWorker<T, U> implements Runnable {
 	}
 
 	protected void execute() throws Exception {
-		log.log(Level.FINE, "Worker starting in thread ''{0}''", Thread
-				.currentThread().getName());
+		open();
 		T element;
 		while ((element = in.read()) != null) {
 			try {
@@ -49,11 +50,20 @@ public abstract class AbstractWorker<T, U> implements Runnable {
 				log.log(Level.SEVERE, "Could not convert", e);
 			}
 		}
-		log.log(Level.FINE, "Worker finished in thread ''{0}''", Thread
-				.currentThread().getName());
+		close();
 	}
 
-	protected abstract void write(U element) throws Exception;
+	protected void open() throws Exception {
+		out.open();
+	}
+
+	protected void close() throws Exception {
+		out.close();
+	}
+
+	protected void write(U element) throws Exception {
+		out.write(element);
+	}
 
 	protected boolean isClosed() {
 		return in.isClosed();

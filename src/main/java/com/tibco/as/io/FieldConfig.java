@@ -1,5 +1,6 @@
 package com.tibco.as.io;
 
+import com.tibco.as.convert.ConverterFactory;
 import com.tibco.as.space.FieldDef.FieldType;
 
 public class FieldConfig implements Cloneable {
@@ -53,6 +54,10 @@ public class FieldConfig implements Cloneable {
 
 	public void setFieldType(FieldType fieldType) {
 		this.fieldType = fieldType;
+	}
+
+	public Class<?> getJavaType() {
+		return ConverterFactory.getType(getFieldType());
 	}
 
 }

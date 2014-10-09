@@ -1,4 +1,4 @@
-package com.tibco.as.io.cli;
+package com.tibco.as.io.cli.converters;
 
 import com.tibco.as.convert.ConverterFactory.Blob;
 

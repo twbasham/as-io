@@ -8,4 +8,10 @@ public interface ITransfer {
 
 	void stop() throws Exception;
 
+	long size();
+
+	long getPosition();
+
+	String getName();
+
 }

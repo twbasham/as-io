@@ -6,15 +6,14 @@ import com.beust.jcommander.Parameter;
 import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.DestinationConfig;
 
-public abstract class AbstractCommand implements ICommand {
+public class Command implements ICommand {
 
-	@Parameter(description = "Number of writer threads", names = { "-writer_thread_count" })
+	@Parameter(names = { "-writer_thread_count" }, description = "Number of writer threads")
 	private Integer workerCount;
 
 	@Override
 	public void configure(ChannelConfig config) throws Exception {
 		Collection<DestinationConfig> destinations = config.getDestinations();
-		configure(destinations);
 		for (DestinationConfig destination : destinations) {
 			configure(destination);
 		}
@@ -24,13 +23,4 @@ public abstract class AbstractCommand implements ICommand {
 		config.setWorkerCount(workerCount);
 	}
 
-	public Integer getWorkerCount() {
-		return workerCount;
-	}
-
-	public void setWorkerCount(Integer workerCount) {
-		this.workerCount = workerCount;
-	}
-
-	protected abstract void configure(Collection<DestinationConfig> destinations);
 }

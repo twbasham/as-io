@@ -51,7 +51,7 @@ public class TestBatch extends TestBase {
 
 	@Test
 	public void testBatch() throws Exception {
-		List<String[]> list = new Vector<String[]>();
+		List<Object[]> list = new Vector<Object[]>();
 		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig export = new TestConfig();
 		export.setDirection(Direction.EXPORT);
@@ -60,13 +60,13 @@ public class TestBatch extends TestBase {
 		export.setQueueCapacity(35000);
 		export.setQueryLimit(100000L);
 		export.setSpace(space.getName());
-		export.setOutputStream(new ListOutputStream<String[]>(list));
+		export.setOutputStream(new ListOutputStream<Object[]>(list));
 		channelConfig.getDestinations().add(export);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.open();
 		channel.close();
 		Assert.assertEquals(space.size(), list.size());
-		for (String[] line : list) {
+		for (Object[] line : list) {
 			Assert.assertNotNull(line);
 			Assert.assertEquals(3, line.length);
 			Assert.assertNotNull(line[0]);
@@ -78,8 +78,8 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testStopTransfer() throws Exception {
 		LogFactory.getRootLogger(LogLevel.VERBOSE);
-		List<String[]> list = new Vector<String[]>();
-		ListOutputStream<String[]> out = new ListOutputStream<String[]>(list);
+		List<Object[]> list = new Vector<Object[]>();
+		ListOutputStream<Object[]> out = new ListOutputStream<Object[]>(list);
 		out.setSleep(100);
 		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig export = new TestConfig();
@@ -93,11 +93,7 @@ public class TestBatch extends TestBase {
 		export.setOutputStream(out);
 		channelConfig.getDestinations().add(export);
 		TestChannel channel = new TestChannel(channelConfig);
-		channel.addListener(new IChannelListener() {
-
-			@Override
-			public void opening(IDestination destination) {
-			}
+		channel.addListener(new ChannelAdapter() {
 
 			@Override
 			public void opened(IDestination destination) {
@@ -108,13 +104,6 @@ public class TestBatch extends TestBase {
 				}
 			}
 
-			@Override
-			public void closing(IDestination destination) {
-			}
-
-			@Override
-			public void closed(IDestination destination) {
-			}
 		});
 		channel.open();
 		Assert.assertTrue(list.size() <= 15);

@@ -2,25 +2,25 @@ package com.tibco.as.io;
 
 public class TestConfig extends DestinationConfig {
 
-	private IInputStream<String[]> inputStream;
+	private IInputStream<Object[]> inputStream;
 
-	private IOutputStream<String[]> outputStream;
+	private IOutputStream<Object[]> outputStream;
 
 	private int importBatchSize = 1;
 
-	public IInputStream<String[]> getInputStream() {
+	public IInputStream<Object[]> getInputStream() {
 		return inputStream;
 	}
 
-	public void setInputStream(IInputStream<String[]> inputStream) {
+	public void setInputStream(IInputStream<Object[]> inputStream) {
 		this.inputStream = inputStream;
 	}
 
-	public IOutputStream<String[]> getOutputStream() {
+	public IOutputStream<Object[]> getOutputStream() {
 		return outputStream;
 	}
 
-	public void setOutputStream(IOutputStream<String[]> outputStream) {
+	public void setOutputStream(IOutputStream<Object[]> outputStream) {
 		this.outputStream = outputStream;
 	}
 
@@ -30,6 +30,11 @@ public class TestConfig extends DestinationConfig {
 
 	public void setImportBatchSize(int importBatchSize) {
 		this.importBatchSize = importBatchSize;
+	}
+
+	@Override
+	public FieldConfig createFieldConfig() {
+		return new TestFieldConfig();
 	}
 
 }

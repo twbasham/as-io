@@ -4,13 +4,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.beust.jcommander.Parameter;
+import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.DestinationConfig;
 import com.tibco.as.io.Direction;
+import com.tibco.as.io.cli.converters.BrowserDistributionScopeConverter;
+import com.tibco.as.io.cli.converters.BrowserTimeScopeConverter;
+import com.tibco.as.io.cli.converters.BrowserTypeConverter;
 import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
-public abstract class AbstractExportCommand extends AbstractCommand {
+public abstract class AbstractExportCommand extends Command {
 
 	@Parameter(description = "The list of spaces to export")
 	private Collection<String> spaceNames = new ArrayList<String>();
@@ -30,15 +34,16 @@ public abstract class AbstractExportCommand extends AbstractCommand {
 	private String filter;
 
 	@Override
-	protected void configure(Collection<DestinationConfig> destinations) {
+	public void configure(ChannelConfig config) throws Exception {
 		for (String spaceName : spaceNames) {
 			DestinationConfig destination = createDestinationConfig();
 			destination.setSpace(spaceName);
-			destinations.add(destination);
+			config.getDestinations().add(destination);
 		}
-		if (destinations.isEmpty()) {
-			destinations.add(createDestinationConfig());
+		if (config.getDestinations().isEmpty()) {
+			config.getDestinations().add(createDestinationConfig());
 		}
+		super.configure(config);
 	}
 
 	protected abstract DestinationConfig createDestinationConfig();

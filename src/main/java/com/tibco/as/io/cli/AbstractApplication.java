@@ -11,6 +11,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.IChannel;
+import com.tibco.as.io.cli.converters.LogLevelConverter;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.log.LogLevel;
 
@@ -52,6 +53,8 @@ public abstract class AbstractApplication {
 	private String securityToken;
 	@Parameter(names = { "-identity_password" }, description = "Identity password")
 	private String identityPassword;
+	@Parameter(names = { "-parallel" }, description = "Enable parallel destinations")
+	private boolean parallel;
 
 	protected AbstractApplication() {
 	}
@@ -108,10 +111,14 @@ public abstract class AbstractApplication {
 			config.setRxBufferSize(rxBufferSize);
 			config.setSecurityTokenFile(securityToken);
 			config.setWorkerThreadCount(workerThreadCount);
+			config.setParallel(parallel);
 			for (ICommand command : commands) {
 				command.configure(config);
 			}
 			channel = getChannel(config);
+			if (!config.getParallel()) {
+				channel.addListener(new ProgressMonitor());
+			}
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not create channel", e);
 			return;

@@ -1,7 +1,5 @@
 package com.tibco.as.io;
 
-import java.text.MessageFormat;
-
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.ASStatus;
 import com.tibco.as.space.Metaspace;
@@ -85,9 +83,7 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 			return null;
 		}
 		try {
-			Tuple tuple = browser.next();
-			position++;
-			return tuple;
+			return next();
 		} catch (RuntimeASException e) {
 			if (e.getCause() instanceof ASException) {
 				ASException ase = (ASException) e.getCause();
@@ -106,6 +102,15 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 			}
 			throw e;
 		}
+	}
+
+	private Tuple next() throws ASException {
+		Tuple tuple = browser.next();
+		if (tuple == null) {
+			return null;
+		}
+		position++;
+		return tuple;
 	}
 
 	@Override
@@ -130,11 +135,6 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 	@Override
 	public boolean isClosed() {
 		return browser == null;
-	}
-
-	@Override
-	public String getName() {
-		return MessageFormat.format("space ''{0}''", export.getSpace());
 	}
 
 }

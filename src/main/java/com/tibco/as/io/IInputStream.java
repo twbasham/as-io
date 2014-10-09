@@ -23,8 +23,6 @@ public interface IInputStream<T> {
 
 	long getPosition();
 
-	String getName();
-
 	/**
 	 * 
 	 * @return time it took for input stream to open, in nanos

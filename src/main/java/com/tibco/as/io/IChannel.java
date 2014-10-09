@@ -5,5 +5,7 @@ public interface IChannel {
 	void open() throws Exception;
 
 	void close() throws Exception;
+	
+	void addListener(IChannelListener listener);
 
 }

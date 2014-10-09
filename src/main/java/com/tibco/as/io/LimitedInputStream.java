@@ -39,11 +39,6 @@ public class LimitedInputStream<T> implements IInputStream<T> {
 	}
 
 	@Override
-	public String getName() {
-		return in.getName();
-	}
-
-	@Override
 	public long getOpenTime() {
 		return in.getOpenTime();
 	}

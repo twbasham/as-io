@@ -1,13 +1,11 @@
-package com.tibco.as.io.work;
+package com.tibco.as.io;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.tibco.as.convert.IConverter;
-import com.tibco.as.io.IInputStream;
-import com.tibco.as.io.IOutputStream;
 
-public class BatchWorker<T, U> extends AbstractWorker<T, U> {
+public class BatchWorker<T, U> extends Worker<T, U> {
 
 	private int batchSize;
 	private List<U> elements;
@@ -15,7 +13,7 @@ public class BatchWorker<T, U> extends AbstractWorker<T, U> {
 
 	public BatchWorker(IInputStream<T> in, IConverter<T, U> converter,
 			IOutputStream<U> out, int batchSize) {
-		super(in, converter);
+		super(in, converter, out);
 		this.out = out;
 		this.batchSize = batchSize;
 		this.elements = new ArrayList<U>(batchSize);
@@ -30,12 +28,11 @@ public class BatchWorker<T, U> extends AbstractWorker<T, U> {
 	}
 
 	@Override
-	protected void execute() throws Exception {
-		super.execute();
-		if (isClosed() || elements.isEmpty()) {
-			return;
+	protected void close() throws Exception {
+		if (!isClosed() && !elements.isEmpty()) {
+			write();
 		}
-		write();
+		super.close();
 	}
 
 	private void write() throws Exception {

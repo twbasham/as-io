@@ -38,24 +38,24 @@ public class TestImport extends TestBase {
 		Calendar calendar3 = Calendar.getInstance();
 		calendar3.clear();
 		calendar3.set(2013, 10, 3);
-		List<String[]> list = Arrays.asList(new String[] { "1",
+		List<Object[]> list = Arrays.asList(new Object[] { "1",
 				DatatypeConverter.printDateTime(calendar1), "1.11" },
-				new String[] { "2", DatatypeConverter.printDateTime(calendar2),
+				new Object[] { "2", DatatypeConverter.printDateTime(calendar2),
 						"2.22" },
-				new String[] { "3", DatatypeConverter.printDateTime(calendar3),
+				new Object[] { "3", DatatypeConverter.printDateTime(calendar3),
 						"3.33" });
 		Metaspace metaspace = getMetaspace();
 		metaspace.defineSpace(spaceDef);
 		Space space = metaspace.getSpace(spaceDef.getName(),
 				DistributionRole.SEEDER);
-		ListInputStream<String[]> in = new ListInputStream<String[]>(list);
+		ListInputStream<Object[]> in = new ListInputStream<Object[]>(list);
 		in.setSleep(103);
 		ChannelConfig channelConfig = getChannelConfig();
-		TestConfig config = new TestConfig();
-		config.setDirection(Direction.IMPORT);
-		config.setSpace(spaceName);
-		config.setInputStream(in);
-		channelConfig.getDestinations().add(config);
+		TestConfig destination = new TestConfig();
+		destination.setDirection(Direction.IMPORT);
+		destination.setSpace(spaceName);
+		destination.setInputStream(in);
+		channelConfig.getDestinations().add(destination);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.open();
 		channel.close();

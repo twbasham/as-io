@@ -20,7 +20,6 @@ public class DestinationConfig implements Cloneable {
 	private String space;
 	private Attributes attributes = new Attributes();
 	private DistributionRole distributionRole;
-	private Boolean keepSpaceOpen;
 	private OperationType operation;
 	private Long waitForReadyTimeout;
 	private BrowserType browserType;
@@ -35,6 +34,10 @@ public class DestinationConfig implements Cloneable {
 
 	public List<FieldConfig> getFields() {
 		return fields;
+	}
+
+	public void setFields(List<FieldConfig> fields) {
+		this.fields = fields;
 	}
 
 	protected FieldConfig getField(String name) {
@@ -138,14 +141,6 @@ public class DestinationConfig implements Cloneable {
 		this.waitForReadyTimeout = waitForReadyTimeout;
 	}
 
-	public Boolean getKeepSpaceOpen() {
-		return keepSpaceOpen;
-	}
-
-	public void setKeepSpaceOpen(Boolean keepSpaceOpen) {
-		this.keepSpaceOpen = keepSpaceOpen;
-	}
-
 	public OperationType getOperation() {
 		return operation;
 	}
@@ -216,7 +211,6 @@ public class DestinationConfig implements Cloneable {
 		target.distributionRole = distributionRole;
 		target.distributionScope = distributionScope;
 		target.filter = filter;
-		target.keepSpaceOpen = keepSpaceOpen;
 		target.limit = limit;
 		target.operation = operation;
 		target.prefetch = prefetch;

@@ -1,4 +1,4 @@
-package com.tibco.as.io.cli;
+package com.tibco.as.io.cli.converters;
 
 import java.text.MessageFormat;
 import java.util.Arrays;

@@ -68,8 +68,8 @@ public class TestExport extends TestBase {
 		Space space2 = metaspace.getSpace(spaceDef2.getName(),
 				DistributionRole.SEEDER);
 		space2.putAll(list);
-		List<String[]> outList = new Vector<String[]>();
-		ListOutputStream<String[]> out = new ListOutputStream<String[]>(outList);
+		List<Object[]> outList = new Vector<Object[]>();
+		ListOutputStream<Object[]> out = new ListOutputStream<Object[]>(outList);
 		out.setSleep(140);
 		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig export = new TestConfig();
@@ -81,10 +81,10 @@ public class TestExport extends TestBase {
 		channel.open();
 		channel.close();
 		Assert.assertEquals(3, outList.size());
-		for (String[] line : outList) {
+		for (Object[] line : outList) {
 			Assert.assertEquals(3, line.length);
 			Calendar calendar = Calendar.getInstance();
-			String guid = line[0];
+			Object guid = line[0];
 			if (guid.equals("1")) {
 				calendar = calendar1;
 			}
@@ -95,7 +95,7 @@ public class TestExport extends TestBase {
 				calendar = calendar3;
 			}
 			Assert.assertEquals(calendar.getTimeInMillis(), DatatypeConverter
-					.parseDateTime(line[1]).getTimeInMillis());
+					.parseDateTime((String) line[1]).getTimeInMillis());
 		}
 	}
 }

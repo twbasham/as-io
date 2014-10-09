@@ -21,7 +21,16 @@ public class ChannelConfig {
 	private String remoteDiscovery;
 	private String remoteListen;
 	private Integer transportThreadCount;
+	private boolean parallel;
 	private List<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
+
+	public boolean getParallel() {
+		return parallel;
+	}
+
+	public void setParallel(boolean parallel) {
+		this.parallel = parallel;
+	}
 
 	public String getMetaspace() {
 		return metaspace;

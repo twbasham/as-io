@@ -1,39 +1,39 @@
 package com.tibco.as.io;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.tibco.as.convert.IConverter;
-import com.tibco.as.io.work.AbstractWorker;
-import com.tibco.as.io.work.BatchWorker;
-import com.tibco.as.io.work.SimpleWorker;
+public class Transfer implements ITransfer {
 
-public class Transfer<T, U> implements ITransfer {
-
-	private IInputStream<T> in;
-	private Collection<IConverter<T, U>> converters;
-	private IOutputStream<U> out;
-	private int batchSize;
+	private String name;
+	private IInputStream<?> in;
+	private List<Runnable> workers;
 	private ExecutorService service;
 
-	public Transfer(IInputStream<T> in,
-			Collection<IConverter<T, U>> converters, IOutputStream<U> out,
-			int batchSize) {
+	public Transfer(String name, IInputStream<?> in, List<Runnable> workers) {
+		this.name = name;
 		this.in = in;
-		this.converters = converters;
-		this.out = out;
-		this.batchSize = batchSize;
+		this.workers = workers;
+	}
+
+	@Override
+	public long size() {
+		return in.size();
+	}
+
+	@Override
+	public long getPosition() {
+		return in.getPosition();
 	}
 
 	@Override
 	public void open() throws Exception {
 		in.open();
-		out.open();
-		service = Executors.newFixedThreadPool(converters.size());
-		for (IConverter<T, U> converter : converters) {
-			service.execute(createWorker(converter));
+		service = Executors.newFixedThreadPool(workers.size());
+		for (Runnable worker : workers) {
+			service.execute(worker);
 		}
 	}
 
@@ -47,32 +47,16 @@ public class Transfer<T, U> implements ITransfer {
 		} catch (InterruptedException e) {
 			throw new Exception("Could not finish transfers", e);
 		}
-		try {
-			if (in != null) {
-				in.close();
-			}
-			in = null;
-		} finally {
-			if (out != null) {
-				out.close();
-			}
-			out = null;
-		}
-	}
-
-	private AbstractWorker<T, U> createWorker(IConverter<T, U> converter)
-			throws Exception {
-		if (batchSize > 1) {
-			return new BatchWorker<T, U>(in, converter, out, batchSize);
-		}
-		return new SimpleWorker<T, U>(in, converter, out);
+		in.close();
 	}
 
 	@Override
 	public void stop() throws Exception {
-		if (in == null) {
-			return;
-		}
 		in.close();
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 }

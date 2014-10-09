@@ -1,51 +1,80 @@
 package com.tibco.as.io.cli;
 
-import java.text.DecimalFormat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.tibco.as.io.IInputStream;
+import com.tibco.as.io.ITransfer;
+import com.tibco.as.log.LogFactory;
 
-public class ProgressBar {
+public class ProgressBar implements Runnable {
 
-	private DecimalFormat decimalFormat = new DecimalFormat("###,###");
+	private static final int WIDTH = 40;
 
-	private long size;
+	private Logger log = LogFactory.getLog(ProgressBar.class);
+	private ITransfer transfer;
+	private boolean stopped = false;
+	private int unknownProgress = 0;
 
-	public ProgressBar(long size) {
-		this.size = size;
+	public ProgressBar(ITransfer transfer) {
+		this.transfer = transfer;
 	}
 
-	public void update(long position) {
-		if (size == IInputStream.UNKNOWN_SIZE) {
-			printProgBar(position, (int) position % 100);
-		} else {
-			printProgBar(position, (int) ((double) (position - 1)
-					/ (double) size * 100));
+	@Override
+	public void run() {
+		long size = transfer.size();
+		while (!stopped) {
+			long position = transfer.getPosition();
+			if (size == IInputStream.UNKNOWN_SIZE) {
+				printProgBar(size, position, unknownProgress++ % 100);
+			} else {
+				printProgBar(size, position, getPercent(size, position));
+			}
+			sleep();
+		}
+		printProgBar(size, transfer.getPosition(), 100);
+		System.out.println();
+	}
+
+	private long getPercent(long size, long position) {
+		return position * 100 / size;
+	}
+
+	private void sleep() {
+		for (int index = 0; index < 3; index++) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				log.log(Level.FINE, "Progress bar interruped", e);
+			}
+			if (stopped) {
+				return;
+			}
 		}
 	}
 
-	private void printProgBar(long position, int percent) {
-		int half = percent / 2;
-		StringBuilder bar = new StringBuilder("\r[");
-		for (int i = 0; i < 50; i++) {
-			bar.append(getChar(i, half));
+	private void printProgBar(long size, long position, long percent) {
+		StringBuilder bar = new StringBuilder("\r%1$-20s [");
+		long progress = percent * WIDTH / 100;
+		for (int i = 0; i < WIDTH; i++) {
+			if (i < progress) {
+				bar.append('=');
+			} else if (i == progress) {
+				bar.append('>');
+			} else {
+				bar.append(' ');
+			}
 		}
-		bar.append("] ");
-		bar.append(decimalFormat.format(position - 1));
+		bar.append("] %2$d%% %3$,d");
 		if (size != IInputStream.UNKNOWN_SIZE) {
-			bar.append('/');
-			bar.append(decimalFormat.format(size));
+			bar.append("/%4$,d");
 		}
-		System.out.print(bar.toString());
+		System.out.printf(bar.toString(), transfer.getName(), percent,
+				position, size);
 	}
 
-	private char getChar(int index, int half) {
-		if (index < half) {
-			return '=';
-		}
-		if (index == half) {
-			return '>';
-		}
-		return ' ';
+	public void stop() {
+		stopped = true;
 	}
 
 }
