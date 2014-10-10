@@ -51,22 +51,22 @@ public class TestBatch extends TestBase {
 
 	@Test
 	public void testBatch() throws Exception {
-		List<Object[]> list = new Vector<Object[]>();
+		List<Object> list = new Vector<Object>();
 		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig export = new TestConfig();
 		export.setDirection(Direction.EXPORT);
 		export.setWorkerCount(5);
-		export.setBatchSize(7000);
 		export.setQueueCapacity(35000);
 		export.setQueryLimit(100000L);
 		export.setSpace(space.getName());
-		export.setOutputStream(new ListOutputStream<Object[]>(list));
+		export.setOutputStream(new ListOutputStream(list));
 		channelConfig.getDestinations().add(export);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.open();
 		channel.close();
 		Assert.assertEquals(space.size(), list.size());
-		for (Object[] line : list) {
+		for (Object element : list) {
+			Object[] line = (Object[]) element;
 			Assert.assertNotNull(line);
 			Assert.assertEquals(3, line.length);
 			Assert.assertNotNull(line[0]);
@@ -78,8 +78,8 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testStopTransfer() throws Exception {
 		LogFactory.getRootLogger(LogLevel.VERBOSE);
-		List<Object[]> list = new Vector<Object[]>();
-		ListOutputStream<Object[]> out = new ListOutputStream<Object[]>(list);
+		List<Object> list = new Vector<Object>();
+		ListOutputStream out = new ListOutputStream(list);
 		out.setSleep(100);
 		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig export = new TestConfig();
@@ -88,7 +88,6 @@ public class TestBatch extends TestBase {
 		export.setTimeScope(TimeScope.ALL);
 		export.setTimeout(100L);
 		export.setWorkerCount(1);
-		export.setBatchSize(1);
 		export.setQueueCapacity(1);
 		export.setOutputStream(out);
 		channelConfig.getDestinations().add(export);

@@ -1,6 +1,6 @@
 package com.tibco.as.io;
 
-public interface IInputStream<T> {
+public interface IInputStream {
 
 	public static final long UNKNOWN_SIZE = -1;
 
@@ -17,7 +17,7 @@ public interface IInputStream<T> {
 	 * @throws ReadException
 	 *             if a problem occurs during read
 	 */
-	T read() throws Exception;
+	Object read() throws Exception;
 
 	long size();
 

@@ -11,11 +11,11 @@ import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.impl.ASBrowser;
 import com.tibco.as.util.Utils;
 
-public class SpaceInputStream implements IInputStream<Tuple> {
+public class SpaceInputStream implements IInputStream {
 
 	private Metaspace metaspace;
 
-	private DestinationConfig export;
+	private DestinationConfig config;
 
 	private Browser browser;
 
@@ -25,9 +25,9 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 
 	private long size = IInputStream.UNKNOWN_SIZE;
 
-	public SpaceInputStream(Metaspace metaspace, DestinationConfig export) {
+	public SpaceInputStream(Metaspace metaspace, DestinationConfig config) {
 		this.metaspace = metaspace;
-		this.export = export;
+		this.config = config;
 	}
 
 	@Override
@@ -37,32 +37,32 @@ public class SpaceInputStream implements IInputStream<Tuple> {
 
 	@Override
 	public void open() throws ASException {
-		String spaceName = export.getSpace();
-		BrowserType browserType = export.getBrowserType();
+		String spaceName = config.getSpace();
+		BrowserType browserType = config.getBrowserType();
 		if (browserType == null) {
 			browserType = BrowserType.GET;
 		}
 		BrowserDef browserDef = BrowserDef.create();
 		if (browserType == BrowserType.GET) {
-			if (export.getTimeScope() != null) {
-				browserDef.setTimeScope(export.getTimeScope());
+			if (config.getTimeScope() != null) {
+				browserDef.setTimeScope(config.getTimeScope());
 			}
 		}
-		if (export.getDistributionScope() != null) {
-			browserDef.setDistributionScope(export.getDistributionScope());
+		if (config.getDistributionScope() != null) {
+			browserDef.setDistributionScope(config.getDistributionScope());
 		}
-		if (export.getTimeout() != null) {
-			browserDef.setTimeout(export.getTimeout());
+		if (config.getTimeout() != null) {
+			browserDef.setTimeout(config.getTimeout());
 		}
-		if (export.getPrefetch() != null) {
-			browserDef.setPrefetch(export.getPrefetch());
+		if (config.getPrefetch() != null) {
+			browserDef.setPrefetch(config.getPrefetch());
 		}
-		if (export.getQueryLimit() != null) {
+		if (config.getQueryLimit() != null) {
 			if (Utils.hasMethod(BrowserDef.class, "setQueryLimit")) {
-				browserDef.setQueryLimit(export.getQueryLimit());
+				browserDef.setQueryLimit(config.getQueryLimit());
 			}
 		}
-		String filter = export.getFilter();
+		String filter = config.getFilter();
 		long start = System.nanoTime();
 		if (filter == null) {
 			browser = metaspace.browse(spaceName, browserType, browserDef);

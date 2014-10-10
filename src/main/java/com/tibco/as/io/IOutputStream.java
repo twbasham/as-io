@@ -1,15 +1,11 @@
 package com.tibco.as.io;
 
-import java.util.List;
-
-public interface IOutputStream<T> {
+public interface IOutputStream {
 
 	void open() throws Exception;
 
 	void close() throws Exception;
 
-	void write(List<T> elements) throws Exception;
-
-	void write(T element) throws Exception;
+	void write(Object element) throws Exception;
 
 }

@@ -1,11 +1,11 @@
 package com.tibco.as.io;
 
-public class LimitedInputStream<T> implements IInputStream<T> {
+public class LimitedInputStream<T> implements IInputStream {
 
-	private IInputStream<T> in;
+	private IInputStream in;
 	private long limit;
 
-	public LimitedInputStream(IInputStream<T> in, long limit) {
+	public LimitedInputStream(IInputStream in, long limit) {
 		this.in = in;
 		this.limit = limit;
 	}
@@ -21,7 +21,7 @@ public class LimitedInputStream<T> implements IInputStream<T> {
 	}
 
 	@Override
-	public T read() throws Exception {
+	public Object read() throws Exception {
 		if (getPosition() < limit) {
 			return in.read();
 		}

@@ -3,7 +3,9 @@ package com.tibco.as.io.operation;
 import java.text.MessageFormat;
 import java.util.Collection;
 
+import com.tibco.as.io.DestinationConfig;
 import com.tibco.as.space.ASException;
+import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.PutOptions;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceResultList;
@@ -11,11 +13,10 @@ import com.tibco.as.space.Tuple;
 
 public class PutOperation extends AbstractOperation {
 
-	private PutOptions options;
+	private PutOptions options = PutOptions.create().setForget(true);
 
-	public PutOperation(Space space, long timeout, boolean keepOpen, PutOptions options) {
-		super(space, timeout, keepOpen);
-		this.options = options;
+	public PutOperation(Metaspace metaspace, DestinationConfig config) {
+		super(metaspace, config);
 	}
 
 	@Override

@@ -1,56 +1,67 @@
 package com.tibco.as.io;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.tibco.as.io.operation.GetOperation;
 import com.tibco.as.io.operation.IOperation;
-import com.tibco.as.log.LogFactory;
+import com.tibco.as.io.operation.LoadOperation;
+import com.tibco.as.io.operation.NoOperation;
+import com.tibco.as.io.operation.PartialOperation;
+import com.tibco.as.io.operation.PutOperation;
+import com.tibco.as.io.operation.TakeOperation;
 import com.tibco.as.space.ASException;
-import com.tibco.as.space.SpaceResult;
-import com.tibco.as.space.SpaceResultList;
+import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Tuple;
 
-public class SpaceOutputStream implements IOutputStream<Tuple> {
+public class SpaceOutputStream implements IOutputStream {
 
-	private Logger log = LogFactory.getLog(SpaceOutputStream.class);
-
+	private Metaspace metaspace;
+	private DestinationConfig config;
 	private IOperation operation;
 	private long position;
 
-	public SpaceOutputStream(IOperation operation) {
-		this.operation = operation;
+	public SpaceOutputStream(Metaspace metaspace, DestinationConfig config) {
+		this.metaspace = metaspace;
+		this.config = config;
 	}
 
 	@Override
 	public void open() throws Exception {
+		operation = getOperation(metaspace);
 		operation.open();
 	}
 
-	@Override
-	public void write(List<Tuple> tuples) {
-		SpaceResultList resultList = operation.execute(tuples);
-		if (resultList.hasError()) {
-			Iterator<SpaceResult> resultIterator = resultList.iterator();
-			while (resultIterator.hasNext()) {
-				SpaceResult result = resultIterator.next();
-				if (result.hasError()) {
-					log.log(Level.SEVERE, "Could not perform operation",
-							result.getError());
-				} else {
-					position++;
-				}
-			}
-		} else {
-			position += tuples.size();
+	private IOperation getOperation(Metaspace metaspace) throws ASException {
+		switch (getOperationType()) {
+		case GET:
+			return new GetOperation(metaspace, config);
+		case LOAD:
+			return new LoadOperation(metaspace, config);
+		case NONE:
+			return new NoOperation();
+		case PARTIAL:
+			return new PartialOperation(metaspace, config);
+		case PUT:
+			return new PutOperation(metaspace, config);
+		case TAKE:
+			return new TakeOperation(metaspace, config);
 		}
+		throw new RuntimeException("Invalid operation");
+	}
+
+	private OperationType getOperationType() {
+		if (config.getOperation() == null) {
+			return OperationType.PUT;
+		}
+		return config.getOperation();
 	}
 
 	@Override
-	public void write(Tuple tuple) throws ASException {
+	public void write(Object tuple) throws ASException {
+		position += execute(operation, (Tuple) tuple);
+	}
+
+	protected int execute(IOperation operation, Tuple tuple) throws ASException {
 		operation.execute(tuple);
-		position++;
+		return 1;
 	}
 
 	public long getPosition() {
@@ -59,6 +70,10 @@ public class SpaceOutputStream implements IOutputStream<Tuple> {
 
 	@Override
 	public void close() throws ASException {
+		close(operation);
+	}
+
+	protected void close(IOperation operation) throws ASException {
 		operation.close();
 	}
 

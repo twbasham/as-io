@@ -12,8 +12,12 @@ import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
 public class DestinationConfig implements Cloneable {
 
+	private static final int DEFAULT_BATCH_SIZE = 1000;
+	private static final int DEFAULT_BATCH_SIZE_CONTINUOUS = 1;
+	private static final long DEFAULT_WAIT_FOR_READY_TIMEOUT = 30000;
+
 	private Direction direction;
-	private Integer putBatchSize;
+	private Integer spaceBatchSize;
 	private Integer workerCount;
 	private Integer queueCapacity;
 	private Long limit;
@@ -121,10 +125,6 @@ public class DestinationConfig implements Cloneable {
 		this.queryLimit = queryLimit;
 	}
 
-	public boolean isAllOrNew() {
-		return TimeScope.ALL == timeScope || TimeScope.NEW == timeScope;
-	}
-
 	public DistributionRole getDistributionRole() {
 		return distributionRole;
 	}
@@ -133,7 +133,10 @@ public class DestinationConfig implements Cloneable {
 		this.distributionRole = distributionRole;
 	}
 
-	public Long getWaitForReadyTimeout() {
+	public long getWaitForReadyTimeout() {
+		if (waitForReadyTimeout == null) {
+			return DEFAULT_WAIT_FOR_READY_TIMEOUT;
+		}
 		return waitForReadyTimeout;
 	}
 
@@ -173,12 +176,18 @@ public class DestinationConfig implements Cloneable {
 		this.limit = limit;
 	}
 
-	public Integer getPutBatchSize() {
-		return putBatchSize;
+	public Integer getSpaceBatchSize() {
+		if (spaceBatchSize == null) {
+			if (timeScope == TimeScope.ALL || timeScope == TimeScope.NEW) {
+				return DEFAULT_BATCH_SIZE_CONTINUOUS;
+			}
+			return DEFAULT_BATCH_SIZE;
+		}
+		return spaceBatchSize;
 	}
 
-	public void setBatchSize(Integer batchSize) {
-		this.putBatchSize = batchSize;
+	public void setSpaceBatchSize(Integer spaceBatchSize) {
+		this.spaceBatchSize = spaceBatchSize;
 	}
 
 	public Integer getWorkerCount() {
@@ -214,7 +223,7 @@ public class DestinationConfig implements Cloneable {
 		target.limit = limit;
 		target.operation = operation;
 		target.prefetch = prefetch;
-		target.putBatchSize = putBatchSize;
+		target.spaceBatchSize = spaceBatchSize;
 		target.queryLimit = queryLimit;
 		target.queueCapacity = queueCapacity;
 		target.space = space;

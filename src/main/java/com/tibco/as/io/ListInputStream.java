@@ -2,15 +2,15 @@ package com.tibco.as.io;
 
 import java.util.List;
 
-public class ListInputStream<T> implements IInputStream<T> {
+public class ListInputStream implements IInputStream {
 
-	private List<T> list;
+	private List<?> list;
 
 	private int position = 0;
 
 	private Long sleep;
 
-	public ListInputStream(List<T> list) {
+	public ListInputStream(List<?> list) {
 		this.list = list;
 	}
 
@@ -19,7 +19,7 @@ public class ListInputStream<T> implements IInputStream<T> {
 	}
 
 	@Override
-	public T read() throws Exception {
+	public Object read() throws Exception {
 		if (list == null) {
 			return null;
 		}

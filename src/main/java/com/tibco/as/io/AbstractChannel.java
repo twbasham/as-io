@@ -154,6 +154,11 @@ public abstract class AbstractChannel implements IChannel {
 		for (IDestination destination : destinations) {
 			close(destination);
 		}
+		for (IDestination destination : destinations) {
+			while (!destination.isClosed()) {
+				Thread.sleep(100);
+			}
+		}
 		metaspace.close();
 		metaspace = null;
 	}

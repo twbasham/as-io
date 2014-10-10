@@ -2,8 +2,10 @@ package com.tibco.as.io.operation;
 
 import java.util.Collection;
 
+import com.tibco.as.io.DestinationConfig;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.ASStatus;
+import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.SpaceResultList;
@@ -23,8 +25,8 @@ public class CalculateTupleSize extends AbstractOperation {
 
 	private ASEncoder encoder = new ASEncoder();
 
-	public CalculateTupleSize(Space space, long timeout, boolean keepOpen) {
-		super(space, timeout, keepOpen);
+	public CalculateTupleSize(Metaspace metaspace, DestinationConfig config) {
+		super(metaspace, config);
 	}
 
 	@Override

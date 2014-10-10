@@ -7,14 +7,6 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.accessors.AccessorFactory;
-import com.tibco.as.accessors.ITupleAccessor;
-import com.tibco.as.convert.Attributes;
-import com.tibco.as.convert.ConverterFactory;
-import com.tibco.as.convert.IConverter;
-import com.tibco.as.convert.UnsupportedConversionException;
-import com.tibco.as.convert.array.ArrayToTupleConverter;
-import com.tibco.as.convert.array.TupleToArrayConverter;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
@@ -143,31 +135,6 @@ public class FieldUtils {
 			fields[index] = field;
 		}
 		return fields;
-	}
-
-	@SuppressWarnings("rawtypes")
-	public static <T> TupleToArrayConverter<T> getTupleToArrayConverter(
-			ConverterFactory converterFactory, SpaceDef spaceDef,
-			Field[] fields, Class<T> componentType, Attributes attributes,
-			Class[] types) throws UnsupportedConversionException {
-		ITupleAccessor[] accessors = AccessorFactory.create(getFieldDefs(
-				spaceDef, fields));
-		IConverter[] converters = converterFactory.getConverters(attributes,
-				getFieldDefs(spaceDef, fields), types);
-		return new TupleToArrayConverter<T>(accessors, converters,
-				componentType);
-	}
-
-	@SuppressWarnings("rawtypes")
-	public static <T> ArrayToTupleConverter<T> getArrayToTupleConverter(
-			ConverterFactory converterFactory, SpaceDef spaceDef,
-			Field[] fields, Class<T> componentType, Attributes attributes)
-			throws UnsupportedConversionException {
-		FieldDef[] fieldDefs = getFieldDefs(spaceDef, fields);
-		ITupleAccessor[] accessors = AccessorFactory.create(fieldDefs);
-		IConverter[] converters = converterFactory.getConverters(attributes,
-				componentType, fieldDefs);
-		return new ArrayToTupleConverter<T>(accessors, converters);
 	}
 
 	public static String[] format(Field[] fields) {

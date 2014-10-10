@@ -3,17 +3,17 @@ package com.tibco.as.io;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListOutputStream<T> implements IOutputStream<T> {
+public class ListOutputStream implements IOutputStream {
 
-	private List<T> list;
+	private List<Object> list;
 
 	private Long sleep;
 
 	public ListOutputStream() {
-		this(new ArrayList<T>());
+		this(new ArrayList<Object>());
 	}
 
-	public ListOutputStream(List<T> list) {
+	public ListOutputStream(List<Object> list) {
 		this.list = list;
 	}
 
@@ -26,12 +26,6 @@ public class ListOutputStream<T> implements IOutputStream<T> {
 		list = null;
 	}
 
-	@Override
-	public void write(List<T> elements) throws InterruptedException {
-		list.addAll(elements);
-		sleep();
-	}
-
 	private void sleep() throws InterruptedException {
 		if (sleep != null) {
 			Thread.sleep(sleep);
@@ -39,7 +33,7 @@ public class ListOutputStream<T> implements IOutputStream<T> {
 	}
 
 	@Override
-	public void write(T element) throws InterruptedException {
+	public void write(Object element) throws InterruptedException {
 		list.add(element);
 		sleep();
 	}

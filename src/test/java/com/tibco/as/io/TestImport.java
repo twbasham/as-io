@@ -48,7 +48,7 @@ public class TestImport extends TestBase {
 		metaspace.defineSpace(spaceDef);
 		Space space = metaspace.getSpace(spaceDef.getName(),
 				DistributionRole.SEEDER);
-		ListInputStream<Object[]> in = new ListInputStream<Object[]>(list);
+		ListInputStream in = new ListInputStream(list);
 		in.setSleep(103);
 		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig destination = new TestConfig();

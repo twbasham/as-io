@@ -10,12 +10,12 @@ public class TestDestination extends AbstractDestination {
 	}
 
 	@Override
-	protected IInputStream<Object[]> getInputStream() throws Exception {
+	protected IInputStream getInputStream() throws Exception {
 		return config.getInputStream();
 	}
 
 	@Override
-	protected IOutputStream<Object[]> getOutputStream() {
+	protected IOutputStream getOutputStream() {
 		return config.getOutputStream();
 	}
 

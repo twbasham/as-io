@@ -10,8 +10,8 @@ import com.tibco.as.space.Member.DistributionRole;
 
 public class ImportCommand extends Command {
 
-	@Parameter(names = { "-batch_size" }, description = "Batch size")
-	private Integer batchSize;
+	@Parameter(names = { "-space_batch_size" }, description = "Batch size for space operations")
+	private Integer spaceBatchSize;
 	@Parameter(names = { "-distribution_role" }, description = "Distribution role (none, leech, seeder)", converter = DistributionRoleConverter.class, validateWith = DistributionRoleConverter.class)
 	private DistributionRole distributionRole;
 	@Parameter(names = { "-operation" }, description = "Space operation (get, load, none, partial, put, take)", converter = OperationTypeConverter.class, validateWith = OperationTypeConverter.class)
@@ -22,7 +22,7 @@ public class ImportCommand extends Command {
 	@Override
 	protected void configure(DestinationConfig config) {
 		config.setDirection(Direction.IMPORT);
-		config.setBatchSize(batchSize);
+		config.setSpaceBatchSize(spaceBatchSize);
 		config.setDistributionRole(distributionRole);
 		config.setOperation(operation);
 		config.setWaitForReadyTimeout(waitForReadyTimeout);

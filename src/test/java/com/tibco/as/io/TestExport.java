@@ -68,8 +68,8 @@ public class TestExport extends TestBase {
 		Space space2 = metaspace.getSpace(spaceDef2.getName(),
 				DistributionRole.SEEDER);
 		space2.putAll(list);
-		List<Object[]> outList = new Vector<Object[]>();
-		ListOutputStream<Object[]> out = new ListOutputStream<Object[]>(outList);
+		List<Object> outList = new Vector<Object>();
+		ListOutputStream out = new ListOutputStream(outList);
 		out.setSleep(140);
 		ChannelConfig channelConfig = getChannelConfig();
 		TestConfig export = new TestConfig();
@@ -81,7 +81,8 @@ public class TestExport extends TestBase {
 		channel.open();
 		channel.close();
 		Assert.assertEquals(3, outList.size());
-		for (Object[] line : outList) {
+		for (Object element : outList) {
+			Object[] line = (Object[]) element;
 			Assert.assertEquals(3, line.length);
 			Calendar calendar = Calendar.getInstance();
 			Object guid = line[0];

@@ -1,6 +1,6 @@
 package com.tibco.as.io;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
 public class Transfer implements ITransfer {
 
 	private String name;
-	private IInputStream<?> in;
-	private List<Runnable> workers;
+	private IInputStream in;
+	private Collection<Worker> workers;
 	private ExecutorService service;
 
-	public Transfer(String name, IInputStream<?> in, List<Runnable> workers) {
+	public Transfer(String name, IInputStream in, Collection<Worker> workers) {
 		this.name = name;
 		this.in = in;
 		this.workers = workers;
@@ -32,7 +32,7 @@ public class Transfer implements ITransfer {
 	public void open() throws Exception {
 		in.open();
 		service = Executors.newFixedThreadPool(workers.size());
-		for (Runnable worker : workers) {
+		for (Worker worker : workers) {
 			service.execute(worker);
 		}
 	}

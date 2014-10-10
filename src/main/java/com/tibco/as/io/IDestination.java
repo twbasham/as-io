@@ -10,4 +10,6 @@ public interface IDestination {
 
 	void stop() throws Exception;
 
+	boolean isClosed();
+
 }

@@ -2,25 +2,30 @@ package com.tibco.as.io;
 
 public class TestConfig extends DestinationConfig {
 
-	private IInputStream<Object[]> inputStream;
-
-	private IOutputStream<Object[]> outputStream;
-
+	private IInputStream inputStream;
+	private IOutputStream outputStream;
 	private int importBatchSize = 1;
 
-	public IInputStream<Object[]> getInputStream() {
+	@Override
+	public TestConfig clone() {
+		TestConfig clone = new TestConfig();
+		copyTo(clone);
+		return clone;
+	}
+
+	public IInputStream getInputStream() {
 		return inputStream;
 	}
 
-	public void setInputStream(IInputStream<Object[]> inputStream) {
+	public void setInputStream(IInputStream inputStream) {
 		this.inputStream = inputStream;
 	}
 
-	public IOutputStream<Object[]> getOutputStream() {
+	public IOutputStream getOutputStream() {
 		return outputStream;
 	}
 
-	public void setOutputStream(IOutputStream<Object[]> outputStream) {
+	public void setOutputStream(IOutputStream outputStream) {
 		this.outputStream = outputStream;
 	}
 

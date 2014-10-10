@@ -3,7 +3,9 @@ package com.tibco.as.io.operation;
 import java.text.MessageFormat;
 import java.util.Collection;
 
+import com.tibco.as.io.DestinationConfig;
 import com.tibco.as.space.ASException;
+import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.TakeOptions;
@@ -11,12 +13,10 @@ import com.tibco.as.space.Tuple;
 
 public class TakeOperation extends AbstractOperation {
 
-	TakeOptions options;
+	private TakeOptions options = TakeOptions.create().setForget(true);
 
-	public TakeOperation(Space space, long timeout, boolean keepOpen,
-			TakeOptions options) {
-		super(space, timeout, keepOpen);
-		this.options = options;
+	public TakeOperation(Metaspace metaspace, DestinationConfig config) {
+		super(metaspace, config);
 	}
 
 	@Override

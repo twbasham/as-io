@@ -7,16 +7,14 @@ import com.tibco.as.convert.ConvertException;
 import com.tibco.as.convert.IConverter;
 import com.tibco.as.log.LogFactory;
 
-public class Worker<T, U> implements Runnable {
+public class Worker implements Runnable {
 
 	private Logger log = LogFactory.getLog(Worker.class);
+	private IInputStream in;
+	private IConverter converter;
+	private IOutputStream out;
 
-	private IInputStream<T> in;
-	private IConverter<T, U> converter;
-	private IOutputStream<U> out;
-
-	public Worker(IInputStream<T> in, IConverter<T, U> converter,
-			IOutputStream<U> out) {
+	public Worker(IInputStream in, IConverter converter, IOutputStream out) {
 		this.in = in;
 		this.converter = converter;
 		this.out = out;
@@ -35,16 +33,17 @@ public class Worker<T, U> implements Runnable {
 
 	protected void execute() throws Exception {
 		open();
-		T element;
+		Object element;
 		while ((element = in.read()) != null) {
 			try {
-				U converted = converter.convert(element);
-				if (converted != null) {
-					try {
-						write(converted);
-					} catch (Exception e) {
-						log.log(Level.SEVERE, "Could not write to output", e);
-					}
+				Object converted = converter.convert(element);
+				if (converted == null) {
+					continue;
+				}
+				try {
+					out.write(converted);
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "Could not write to output", e);
 				}
 			} catch (ConvertException e) {
 				log.log(Level.SEVERE, "Could not convert", e);
@@ -59,10 +58,6 @@ public class Worker<T, U> implements Runnable {
 
 	protected void close() throws Exception {
 		out.close();
-	}
-
-	protected void write(U element) throws Exception {
-		out.write(element);
 	}
 
 	protected boolean isClosed() {
