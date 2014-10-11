@@ -19,14 +19,4 @@ public class TestDestination extends AbstractDestination {
 		return config.getOutputStream();
 	}
 
-	@Override
-	protected String getExportName() {
-		return "test";
-	}
-
-	@Override
-	protected String getImportName() {
-		return "test";
-	}
-
 }

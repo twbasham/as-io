@@ -18,20 +18,4 @@ public class ChannelAdapter implements IChannelListener {
 	public void closed(IDestination destination) {
 	}
 
-	@Override
-	public void opening(ITransfer transfer) {
-	}
-
-	@Override
-	public void opened(ITransfer transfer) {
-	}
-
-	@Override
-	public void closing(ITransfer transfer) {
-	}
-
-	@Override
-	public void closed(ITransfer transfer) {
-	}
-
 }

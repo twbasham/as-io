@@ -177,28 +177,4 @@ public abstract class AbstractChannel implements IChannel {
 		}
 	}
 
-	public void opening(ITransfer transfer) {
-		for (IChannelListener listener : listeners) {
-			listener.opening(transfer);
-		}
-	}
-
-	public void opened(ITransfer transfer) {
-		for (IChannelListener listener : listeners) {
-			listener.opened(transfer);
-		}
-	}
-
-	public void closing(ITransfer transfer) {
-		for (IChannelListener listener : listeners) {
-			listener.closing(transfer);
-		}
-	}
-
-	public void closed(ITransfer transfer) {
-		for (IChannelListener listener : listeners) {
-			listener.closed(transfer);
-		}
-	}
-
 }

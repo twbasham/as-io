@@ -3,8 +3,8 @@ package com.tibco.as.io.cli;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.tibco.as.io.IDestination;
 import com.tibco.as.io.IInputStream;
-import com.tibco.as.io.ITransfer;
 import com.tibco.as.log.LogFactory;
 
 public class ProgressBar implements Runnable {
@@ -12,19 +12,19 @@ public class ProgressBar implements Runnable {
 	private static final int WIDTH = 40;
 
 	private Logger log = LogFactory.getLog(ProgressBar.class);
-	private ITransfer transfer;
+	private IDestination destination;
 	private boolean stopped = false;
 	private int unknownProgress = 0;
 
-	public ProgressBar(ITransfer transfer) {
-		this.transfer = transfer;
+	public ProgressBar(IDestination destination) {
+		this.destination = destination;
 	}
 
 	@Override
 	public void run() {
-		long size = transfer.size();
+		long size = destination.size();
 		while (!stopped) {
-			long position = transfer.getPosition();
+			long position = destination.getPosition();
 			if (size == IInputStream.UNKNOWN_SIZE) {
 				printProgBar(size, position, unknownProgress++ % 100);
 			} else {
@@ -32,7 +32,7 @@ public class ProgressBar implements Runnable {
 			}
 			sleep();
 		}
-		printProgBar(size, transfer.getPosition(), 100);
+		printProgBar(size, destination.getPosition(), 100);
 		System.out.println();
 	}
 
@@ -69,7 +69,7 @@ public class ProgressBar implements Runnable {
 		if (size != IInputStream.UNKNOWN_SIZE) {
 			bar.append("/%4$,d");
 		}
-		System.out.printf(bar.toString(), transfer.getName(), percent,
+		System.out.printf(bar.toString(), destination.getName(), percent,
 				position, size);
 	}
 

@@ -9,28 +9,28 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.tibco.as.io.ChannelAdapter;
-import com.tibco.as.io.ITransfer;
+import com.tibco.as.io.IDestination;
 import com.tibco.as.log.LogFactory;
 
 public class ProgressMonitor extends ChannelAdapter {
 
 	private Logger log = LogFactory.getLog(ProgressMonitor.class);
 
-	private Map<ITransfer, ProgressBar> progressBars = new HashMap<ITransfer, ProgressBar>();
+	private Map<IDestination, ProgressBar> progressBars = new HashMap<IDestination, ProgressBar>();
 	private ExecutorService executor;
 
 	@Override
-	public void opened(ITransfer transfer) {
-		ProgressBar progressBar = new ProgressBar(transfer);
-		progressBars.put(transfer, progressBar);
+	public void opened(IDestination destination) {
+		ProgressBar progressBar = new ProgressBar(destination);
+		progressBars.put(destination, progressBar);
 		executor = Executors.newSingleThreadExecutor();
 		executor.execute(progressBar);
 	}
 
 	@Override
-	public void closed(ITransfer transfer) {
-		if (progressBars.containsKey(transfer)) {
-			progressBars.remove(transfer).stop();
+	public void closed(IDestination destination) {
+		if (progressBars.containsKey(destination)) {
+			progressBars.remove(destination).stop();
 			executor.shutdown();
 			try {
 				executor.awaitTermination(3, TimeUnit.SECONDS);

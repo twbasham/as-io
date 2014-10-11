@@ -1,9 +1,12 @@
 package com.tibco.as.io;
 
+import java.text.MessageFormat;
+
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.ASStatus;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.RuntimeASException;
+import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 import com.tibco.as.space.browser.Browser;
 import com.tibco.as.space.browser.BrowserDef;
@@ -36,8 +39,14 @@ public class SpaceInputStream implements IInputStream {
 	}
 
 	@Override
-	public void open() throws ASException {
+	public void open() throws Exception {
 		String spaceName = config.getSpace();
+		SpaceDef spaceDef = metaspace.getSpaceDef(config.getSpace());
+		if (spaceDef == null) {
+			throw new Exception(MessageFormat.format("No space named ''{0}''",
+					spaceName));
+		}
+		config.setSpaceDef(spaceDef);
 		BrowserType browserType = config.getBrowserType();
 		if (browserType == null) {
 			browserType = BrowserType.GET;

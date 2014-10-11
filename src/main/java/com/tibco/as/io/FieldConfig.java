@@ -1,6 +1,7 @@
 package com.tibco.as.io;
 
 import com.tibco.as.convert.ConverterFactory;
+import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
 
 public class FieldConfig implements Cloneable {
@@ -58,6 +59,26 @@ public class FieldConfig implements Cloneable {
 
 	public Class<?> getJavaType() {
 		return ConverterFactory.getType(getFieldType());
+	}
+
+	public FieldDef getFieldDef() {
+		FieldDef fieldDef = FieldDef.create(getFieldName(), getFieldType());
+		Boolean encrypted = getFieldEncrypted();
+		if (encrypted != null) {
+			fieldDef.setEncrypted(encrypted);
+		}
+		Boolean nullable = getFieldNullable();
+		if (nullable != null) {
+			fieldDef.setNullable(nullable);
+		}
+		return fieldDef;
+	}
+
+	public void setFieldDef(FieldDef fieldDef) {
+		setFieldName(fieldDef.getName());
+		setFieldType(fieldDef.getType());
+		setFieldNullable(fieldDef.isNullable());
+		setFieldEncrypted(fieldDef.isEncrypted());
 	}
 
 }

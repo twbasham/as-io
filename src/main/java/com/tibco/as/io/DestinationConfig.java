@@ -2,10 +2,14 @@ package com.tibco.as.io;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.tibco.as.convert.Attributes;
+import com.tibco.as.log.LogFactory;
+import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.Member.DistributionRole;
+import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
@@ -15,7 +19,9 @@ public class DestinationConfig implements Cloneable {
 	private static final int DEFAULT_BATCH_SIZE = 1000;
 	private static final int DEFAULT_BATCH_SIZE_CONTINUOUS = 1;
 	private static final long DEFAULT_WAIT_FOR_READY_TIMEOUT = 30000;
+	private static final int DEFAULT_WORKER_COUNT = 1;
 
+	private Logger log = LogFactory.getLog(DestinationConfig.class);
 	private Direction direction;
 	private Integer spaceBatchSize;
 	private Integer workerCount;
@@ -33,14 +39,14 @@ public class DestinationConfig implements Cloneable {
 	private Long prefetch;
 	private Long queryLimit;
 	private String filter;
-	private List<FieldConfig> fields = new ArrayList<FieldConfig>();
+	private Collection<FieldConfig> fields = new ArrayList<FieldConfig>();
 	private Collection<String> keys;
 
-	public List<FieldConfig> getFields() {
+	public Collection<FieldConfig> getFields() {
 		return fields;
 	}
 
-	public void setFields(List<FieldConfig> fields) {
+	public void setFields(Collection<FieldConfig> fields) {
 		this.fields = fields;
 	}
 
@@ -190,7 +196,10 @@ public class DestinationConfig implements Cloneable {
 		this.spaceBatchSize = spaceBatchSize;
 	}
 
-	public Integer getWorkerCount() {
+	public int getWorkerCount() {
+		if (workerCount == null) {
+			return DEFAULT_WORKER_COUNT;
+		}
 		return workerCount;
 	}
 
@@ -242,4 +251,37 @@ public class DestinationConfig implements Cloneable {
 		return new FieldConfig();
 	}
 
+	public void setSpaceDef(SpaceDef spaceDef) {
+		setSpace(spaceDef.getName());
+		setKeys(spaceDef.getKeyDef().getFieldNames());
+		if (fields.isEmpty()) {
+			for (FieldDef fieldDef : spaceDef.getFieldDefs()) {
+				FieldConfig field = createFieldConfig();
+				field.setFieldDef(fieldDef);
+				fields.add(field);
+			}
+		}
+		for (FieldConfig field : fields) {
+			String fieldName = field.getFieldName();
+			FieldDef fieldDef = spaceDef.getFieldDef(fieldName);
+			if (fieldDef == null) {
+				log.log(Level.WARNING,
+						"No field named ''{0}'' in space ''{1}''",
+						new Object[] { fieldName, spaceDef.getName() });
+			} else {
+				field.setFieldDef(fieldDef);
+			}
+		}
+		setKeys(spaceDef.getKeyDef().getFieldNames());
+	}
+
+	public SpaceDef getSpaceDef() {
+		SpaceDef spaceDef = SpaceDef.create(getSpace());
+		for (FieldConfig field : fields) {
+			spaceDef.getFieldDefs().add(field.getFieldDef());
+		}
+		Collection<String> keys = getKeys();
+		spaceDef.setKey(keys.toArray(new String[keys.size()]));
+		return spaceDef;
+	}
 }

@@ -2,8 +2,9 @@ package com.tibco.as.io;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.tibco.as.accessors.AccessorFactory;
 import com.tibco.as.accessors.ITupleAccessor;
@@ -13,21 +14,16 @@ import com.tibco.as.convert.IConverter;
 import com.tibco.as.convert.UnsupportedConversionException;
 import com.tibco.as.convert.array.ArrayToTupleConverter;
 import com.tibco.as.convert.array.TupleToArrayConverter;
-import com.tibco.as.log.LogFactory;
-import com.tibco.as.space.FieldDef;
-import com.tibco.as.space.Member.DistributionRole;
+import com.tibco.as.space.FieldDef.FieldType;
 import com.tibco.as.space.Metaspace;
-import com.tibco.as.space.SpaceDef;
 
 public abstract class AbstractDestination implements IDestination {
 
-	private static final int DEFAULT_WORKER_COUNT = 1;
-
-	private Logger log = LogFactory.getLog(AbstractDestination.class);
 	private ConverterFactory converterFactory = new ConverterFactory();
 	private AbstractChannel channel;
 	private DestinationConfig config;
-	private Collection<ITransfer> transfers = new ArrayList<ITransfer>();
+	private IInputStream in;
+	private ExecutorService service;
 	private boolean closed;
 
 	protected AbstractDestination(AbstractChannel channel,
@@ -46,74 +42,17 @@ public abstract class AbstractDestination implements IDestination {
 
 	@Override
 	public void open(Metaspace metaspace) throws Exception {
-		closed = false;
-		ITransfer transfer = getTransfer(metaspace);
-		channel.opening(transfer);
-		transfer.open();
-		channel.opened(transfer);
-		transfers.add(transfer);
-	}
-
-	private ITransfer getTransfer(Metaspace metaspace) throws Exception {
-		String name = getTransferName();
-		SpaceDef spaceDef = metaspace.getSpaceDef(config.getSpace());
-		if (spaceDef != null) {
-			config.setSpace(spaceDef.getName());
-			config.setKeys(spaceDef.getKeyDef().getFieldNames());
-			if (config.getFields().isEmpty()) {
-				for (FieldDef fieldDef : spaceDef.getFieldDefs()) {
-					FieldConfig field = config.createFieldConfig();
-					field.setFieldName(fieldDef.getName());
-					config.getFields().add(field);
-				}
-			}
-			for (FieldConfig field : config.getFields()) {
-				String fieldName = field.getFieldName();
-				FieldDef fieldDef = spaceDef.getFieldDef(fieldName);
-				if (fieldDef == null) {
-					log.log(Level.WARNING,
-							"No field named ''{0}'' in space ''{0}''",
-							new Object[] { fieldName, spaceDef.getName() });
-				} else {
-					field.setFieldType(fieldDef.getType());
-					field.setFieldNullable(fieldDef.isNullable());
-					field.setFieldEncrypted(fieldDef.isEncrypted());
-				}
-			}
-			config.setKeys(spaceDef.getKeyDef().getFieldNames());
-		}
-		IInputStream in = getInputStream(metaspace);
-		if (spaceDef == null) {
-			spaceDef = SpaceDef.create(config.getSpace());
-			for (FieldConfig field : config.getFields()) {
-				FieldDef fieldDef = FieldDef.create(field.getFieldName(),
-						field.getFieldType());
-				if (field.getFieldEncrypted() != null) {
-					fieldDef.setEncrypted(field.getFieldEncrypted());
-				}
-				if (field.getFieldNullable() != null) {
-					fieldDef.setNullable(field.getFieldNullable());
-				}
-				spaceDef.getFieldDefs().add(fieldDef);
-			}
-			spaceDef.setKey(config.getKeys().toArray(
-					new String[config.getKeys().size()]));
-			metaspace.defineSpace(spaceDef);
-		}
-		Collection<Worker> workers = new ArrayList<Worker>();
-		for (int index = 0; index < getWorkerCount(); index++) {
+		in = getInputStream(metaspace);
+		in.open();
+		int workerCount = config.getWorkerCount();
+		service = Executors.newFixedThreadPool(workerCount);
+		for (int index = 0; index < workerCount; index++) {
 			IOutputStream out = getOutputStream(metaspace);
-			IConverter converter = getConverter(spaceDef);
-			workers.add(new Worker(in, converter, out));
+			out.open();
+			IConverter converter = getConverter();
+			service.execute(new Worker(in, converter, out));
 		}
-		return new Transfer(name, in, workers);
-	}
-
-	private String getTransferName() {
-		if (isImport()) {
-			return getImportName();
-		}
-		return getExportName();
+		closed = false;
 	}
 
 	private IInputStream getInputStream(Metaspace metaspace) throws Exception {
@@ -134,44 +73,28 @@ public abstract class AbstractDestination implements IDestination {
 		return getOutputStream();
 	}
 
-	protected String getExportName() {
-		return config.getSpace();
-	}
-
-	protected String getImportName() {
-		return config.getSpace();
-	}
-
-	private IConverter getConverter(SpaceDef spaceDef)
-			throws UnsupportedConversionException {
-		Collection<ITupleAccessor> accessors = new ArrayList<ITupleAccessor>();
-		Collection<IConverter> converters = new ArrayList<IConverter>();
+	private IConverter getConverter() throws UnsupportedConversionException {
+		Collection<ITupleAccessor> al = new ArrayList<ITupleAccessor>();
+		Collection<IConverter> cl = new ArrayList<IConverter>();
 		for (FieldConfig field : config.getFields()) {
-			FieldDef fieldDef = spaceDef.getFieldDef(field.getFieldName());
-			accessors.add(AccessorFactory.create(fieldDef));
-			converters.add(getConverter(fieldDef, field.getJavaType()));
+			String fieldName = field.getFieldName();
+			FieldType fieldType = field.getFieldType();
+			al.add(AccessorFactory.create(fieldName, fieldType));
+			cl.add(getConverter(fieldName, fieldType, field.getJavaType()));
 		}
-		return getConverter(accessors, converters);
-	}
-
-	private IConverter getConverter(Collection<ITupleAccessor> accessors,
-			Collection<IConverter> converters) {
-		ITupleAccessor[] accessorArray = accessors
-				.toArray(new ITupleAccessor[accessors.size()]);
-		IConverter[] converterArray = converters
-				.toArray(new IConverter[converters.size()]);
+		ITupleAccessor[] accessors = al.toArray(new ITupleAccessor[al.size()]);
+		IConverter[] converters = cl.toArray(new IConverter[cl.size()]);
 		if (isImport()) {
-			return new ArrayToTupleConverter(accessorArray, converterArray);
+			return new ArrayToTupleConverter(accessors, converters);
 		}
-		return new TupleToArrayConverter(accessorArray, converterArray);
+		return new TupleToArrayConverter(accessors, converters);
 	}
 
-	private IConverter getConverter(FieldDef fieldDef, Class<?> type)
-			throws UnsupportedConversionException {
-		Attributes attributes = config.getAttributes().getAttributes(
-				fieldDef.getName());
-		Class<?> from = isImport() ? type : ConverterFactory.getType(fieldDef);
-		Class<?> to = isImport() ? ConverterFactory.getType(fieldDef) : type;
+	private IConverter getConverter(String fieldName, FieldType fieldType,
+			Class<?> type) throws UnsupportedConversionException {
+		Attributes attributes = config.getAttributes().getAttributes(fieldName);
+		Class<?> from = isImport() ? type : ConverterFactory.getType(fieldType);
+		Class<?> to = isImport() ? ConverterFactory.getType(fieldType) : type;
 		return converterFactory.getConverter(attributes, from, to);
 	}
 
@@ -185,23 +108,24 @@ public abstract class AbstractDestination implements IDestination {
 
 	@Override
 	public void close() throws Exception {
-		for (ITransfer transfer : transfers) {
-			channel.closing(transfer);
-			transfer.close();
-			channel.closed(transfer);
+		service.shutdown();
+		try {
+			while (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+				// do nothing
+			}
+		} catch (InterruptedException e) {
+			throw new Exception("Could not finish transfers", e);
 		}
+		in.close();
 		closed = true;
-		if (config.getDistributionRole() == DistributionRole.SEEDER) {
-			return;
-		}
-		transfers.clear();
+		// if (config.getDistributionRole() == DistributionRole.SEEDER) {
+		// return;
+		// }
 	}
 
 	@Override
 	public void stop() throws Exception {
-		for (ITransfer transfer : transfers) {
-			transfer.stop();
-		}
+		in.close();
 	}
 
 	@Override
@@ -209,11 +133,25 @@ public abstract class AbstractDestination implements IDestination {
 		return closed;
 	}
 
-	protected int getWorkerCount() {
-		if (config.getWorkerCount() == null) {
-			return DEFAULT_WORKER_COUNT;
+	@Override
+	public long size() {
+		if (in == null) {
+			return IInputStream.UNKNOWN_SIZE;
 		}
-		return config.getWorkerCount();
+		return in.size();
+	}
+
+	@Override
+	public long getPosition() {
+		if (in == null) {
+			return 0;
+		}
+		return in.getPosition();
+	}
+
+	@Override
+	public String getName() {
+		return config.getSpace();
 	}
 
 }

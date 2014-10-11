@@ -48,7 +48,7 @@ public abstract class AbstractApplication {
 	@Parameter(names = { "-data_store" }, description = "Directory path for data store")
 	private String dataStore;
 	@Parameter(names = { "-no_exit" }, description = "Do not shut down after application execution")
-	private Boolean noExit;
+	private boolean noExit;
 	@Parameter(names = { "-security_token" }, description = "Security token path")
 	private String securityToken;
 	@Parameter(names = { "-identity_password" }, description = "Identity password")
@@ -134,7 +134,7 @@ public abstract class AbstractApplication {
 				log.log(Level.SEVERE, "Could not close channel", e);
 			}
 		}
-		if (Boolean.TRUE.equals(noExit)) {
+		if (noExit) {
 			while (true) {
 				try {
 					Thread.sleep(100);

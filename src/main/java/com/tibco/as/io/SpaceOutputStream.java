@@ -9,6 +9,7 @@ import com.tibco.as.io.operation.PutOperation;
 import com.tibco.as.io.operation.TakeOperation;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.Metaspace;
+import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 
 public class SpaceOutputStream implements IOutputStream {
@@ -25,6 +26,13 @@ public class SpaceOutputStream implements IOutputStream {
 
 	@Override
 	public void open() throws Exception {
+		SpaceDef spaceDef = metaspace.getSpaceDef(config.getSpace());
+		if (spaceDef == null) {
+			spaceDef = config.getSpaceDef();
+			metaspace.defineSpace(spaceDef);
+		} else {
+			config.setSpaceDef(spaceDef);
+		}
 		operation = getOperation(metaspace);
 		operation.open();
 	}

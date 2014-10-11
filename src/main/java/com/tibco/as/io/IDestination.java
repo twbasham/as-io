@@ -12,4 +12,10 @@ public interface IDestination {
 
 	boolean isClosed();
 
+	long size();
+
+	long getPosition();
+
+	String getName();
+
 }

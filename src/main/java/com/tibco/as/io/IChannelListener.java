@@ -10,12 +10,4 @@ public interface IChannelListener {
 
 	void closed(IDestination destination);
 
-	void opening(ITransfer transfer);
-	
-	void opened(ITransfer transfer);
-	
-	void closing(ITransfer transfer);
-	
-	void closed(ITransfer transfer);
-
 }
