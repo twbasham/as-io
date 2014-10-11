@@ -15,6 +15,7 @@ import com.tibco.as.convert.UnsupportedConversionException;
 import com.tibco.as.convert.array.ArrayToTupleConverter;
 import com.tibco.as.convert.array.TupleToArrayConverter;
 import com.tibco.as.space.FieldDef.FieldType;
+import com.tibco.as.space.Member.DistributionRole;
 import com.tibco.as.space.Metaspace;
 
 public abstract class AbstractDestination implements IDestination {
@@ -25,6 +26,7 @@ public abstract class AbstractDestination implements IDestination {
 	private IInputStream in;
 	private ExecutorService service;
 	private boolean closed;
+	private Collection<Worker> workers = new ArrayList<Worker>();
 
 	protected AbstractDestination(AbstractChannel channel,
 			DestinationConfig config) {
@@ -50,7 +52,9 @@ public abstract class AbstractDestination implements IDestination {
 			IOutputStream out = getOutputStream(metaspace);
 			out.open();
 			IConverter converter = getConverter();
-			service.execute(new Worker(in, converter, out));
+			Worker worker = new Worker(in, converter, out);
+			workers.add(worker);
+			service.execute(worker);
 		}
 		closed = false;
 	}
@@ -118,9 +122,10 @@ public abstract class AbstractDestination implements IDestination {
 		}
 		in.close();
 		closed = true;
-		// if (config.getDistributionRole() == DistributionRole.SEEDER) {
-		// return;
-		// }
+		if (config.getDistributionRole() == DistributionRole.SEEDER) {
+			return;
+		}
+		workers.clear();
 	}
 
 	@Override
