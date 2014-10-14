@@ -1,6 +1,6 @@
 package com.tibco.as.io;
 
-public class LimitedInputStream<T> implements IInputStream {
+public class LimitedInputStream implements IInputStream {
 
 	private IInputStream in;
 	private long limit;
@@ -29,12 +29,15 @@ public class LimitedInputStream<T> implements IInputStream {
 	}
 
 	@Override
-	public long size() {
+	public Long size() {
+		if (in.size() == null) {
+			return limit;
+		}
 		return Math.min(in.size(), limit);
 	}
 
 	@Override
-	public long getPosition() {
+	public Long getPosition() {
 		return in.getPosition();
 	}
 

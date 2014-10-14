@@ -2,11 +2,12 @@ package com.tibco.as.io.cli;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.beust.jcommander.Parameter;
+import com.tibco.as.convert.Direction;
 import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.DestinationConfig;
-import com.tibco.as.io.Direction;
 import com.tibco.as.io.cli.converters.BrowserDistributionScopeConverter;
 import com.tibco.as.io.cli.converters.BrowserTimeScopeConverter;
 import com.tibco.as.io.cli.converters.BrowserTypeConverter;
@@ -14,7 +15,7 @@ import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
-public abstract class AbstractExportCommand extends Command {
+public abstract class AbstractExportCommand extends AbstractCommand {
 
 	@Parameter(description = "The list of spaces to export")
 	private Collection<String> spaceNames = new ArrayList<String>();
@@ -35,13 +36,14 @@ public abstract class AbstractExportCommand extends Command {
 
 	@Override
 	public void configure(ChannelConfig config) throws Exception {
+		List<DestinationConfig> destinations = config.getDestinations();
 		for (String spaceName : spaceNames) {
 			DestinationConfig destination = createDestinationConfig();
 			destination.setSpace(spaceName);
-			config.getDestinations().add(destination);
+			destinations.add(destination);
 		}
-		if (config.getDestinations().isEmpty()) {
-			config.getDestinations().add(createDestinationConfig());
+		if (destinations.isEmpty()) {
+			destinations.add(createDestinationConfig());
 		}
 		super.configure(config);
 	}
@@ -51,13 +53,27 @@ public abstract class AbstractExportCommand extends Command {
 	@Override
 	protected void configure(DestinationConfig config) {
 		config.setDirection(Direction.EXPORT);
-		config.setBrowserType(browserType);
-		config.setTimeScope(timeScope);
-		config.setDistributionScope(distributionScope);
-		config.setTimeout(timeout);
-		config.setPrefetch(prefetch);
-		config.setQueryLimit(queryLimit);
-		config.setFilter(filter);
+		if (browserType != null) {
+			config.setBrowserType(browserType);
+		}
+		if (timeScope != null) {
+			config.setTimeScope(timeScope);
+		}
+		if (distributionScope != null) {
+			config.setDistributionScope(distributionScope);
+		}
+		if (timeout != null) {
+			config.setTimeout(timeout);
+		}
+		if (prefetch != null) {
+			config.setPrefetch(prefetch);
+		}
+		if (queryLimit != null) {
+			config.setQueryLimit(queryLimit);
+		}
+		if (filter != null) {
+			config.setFilter(filter);
+		}
 		super.configure(config);
 	}
 

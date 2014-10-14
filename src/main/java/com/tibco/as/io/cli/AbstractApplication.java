@@ -117,7 +117,7 @@ public abstract class AbstractApplication {
 			}
 			channel = getChannel(config);
 			if (!config.getParallel()) {
-				channel.addListener(new ProgressMonitor());
+				channel.addListener(new DestinationMonitor());
 			}
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not create channel", e);

@@ -36,13 +36,13 @@ public class ListInputStream implements IInputStream {
 	}
 
 	@Override
-	public long size() {
-		return list.size();
+	public Long size() {
+		return (long) list.size();
 	}
 
 	@Override
-	public long getPosition() {
-		return position;
+	public Long getPosition() {
+		return (long) position;
 	}
 
 	@Override

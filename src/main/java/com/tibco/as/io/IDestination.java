@@ -12,9 +12,7 @@ public interface IDestination {
 
 	boolean isClosed();
 
-	long size();
-
-	long getPosition();
+	IInputStream getInputStream();
 
 	String getName();
 

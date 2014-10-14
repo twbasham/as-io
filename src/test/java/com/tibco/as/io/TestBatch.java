@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.tibco.as.convert.Direction;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.log.LogLevel;
 import com.tibco.as.space.ASException;

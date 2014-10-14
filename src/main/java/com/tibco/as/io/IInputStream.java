@@ -2,8 +2,6 @@ package com.tibco.as.io;
 
 public interface IInputStream {
 
-	public static final long UNKNOWN_SIZE = -1;
-
 	void open() throws Exception;
 
 	void close() throws Exception;
@@ -19,9 +17,9 @@ public interface IInputStream {
 	 */
 	Object read() throws Exception;
 
-	long size();
+	Long size();
 
-	long getPosition();
+	Long getPosition();
 
 	/**
 	 * 

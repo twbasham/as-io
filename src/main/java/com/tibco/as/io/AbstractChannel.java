@@ -3,10 +3,10 @@ package com.tibco.as.io;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.tibco.as.convert.Direction;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.MemberDef;
 import com.tibco.as.space.Metaspace;
@@ -37,57 +37,47 @@ public abstract class AbstractChannel implements IChannel {
 			metaspace = Metaspace
 					.connect(config.getMetaspace(), getMemberDef());
 		}
-		Collection<DestinationConfig> configs = getDestinationConfigs(metaspace);
-		for (DestinationConfig config : configs) {
-			destinations.add(createDestination(config));
-		}
-		for (IDestination destination : destinations) {
-			for (IChannelListener listener : listeners) {
-				listener.opening(destination);
-			}
-			try {
-				destination.open(metaspace);
+		for (DestinationConfig destinationConfig : config.getDestinations()) {
+			for (DestinationConfig found : discover(destinationConfig)) {
+				IDestination destination = createDestination(found);
 				for (IChannelListener listener : listeners) {
-					listener.opened(destination);
+					listener.opening(destination);
 				}
-				if (!config.getParallel()) {
-					close(destination);
+				try {
+					destination.open(metaspace);
+					destinations.add(destination);
+					for (IChannelListener listener : listeners) {
+						listener.opened(destination);
+					}
+					if (!config.getParallel()) {
+						close(destination);
+					}
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "Could not open destination", e);
 				}
-			} catch (Exception e) {
-				log.log(Level.SEVERE, "Could not open destination", e);
 			}
 		}
 	}
 
-	private List<DestinationConfig> getDestinationConfigs(Metaspace metaspace)
-			throws Exception {
-		List<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
-		for (DestinationConfig destination : config.getDestinations()) {
-			destinations.addAll(getDestinationConfigs(metaspace, destination));
+	protected Collection<? extends DestinationConfig> discover(
+			DestinationConfig destination) throws Exception {
+		if (isWildcard(destination)) {
+			Collection<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
+			for (String spaceName : metaspace.getUserSpaceNames()) {
+				DestinationConfig destinationConfig = destination.clone();
+				destinationConfig.setSpace(spaceName);
+				destinations.add(destinationConfig);
+			}
+			return destinations;
 		}
-		return destinations;
+		return Arrays.asList(destination);
 	}
 
-	private Collection<DestinationConfig> getDestinationConfigs(
-			Metaspace metaspace, DestinationConfig destination)
-			throws Exception {
-		switch (destination.getDirection()) {
-		case EXPORT:
-			Collection<DestinationConfig> configs = new ArrayList<DestinationConfig>();
-			if (destination.getSpace() == null) {
-				for (String spaceName : metaspace.getUserSpaceNames()) {
-					DestinationConfig destinationConfig = destination.clone();
-					destinationConfig.setSpace(spaceName);
-					configs.add(destinationConfig);
-				}
-			} else {
-				configs.add(destination);
-			}
-			return configs;
-		case IMPORT:
-			return getImportConfigs(destination);
+	protected boolean isWildcard(DestinationConfig destination) {
+		if (destination.getDirection() == Direction.EXPORT) {
+			return destination.getSpace() == null;
 		}
-		return new ArrayList<DestinationConfig>();
+		return false;
 	}
 
 	private MemberDef getMemberDef() {
@@ -140,11 +130,6 @@ public abstract class AbstractChannel implements IChannel {
 			memberDef.setWorkerThreadCount(config.getWorkerThreadCount());
 		}
 		return memberDef;
-	}
-
-	protected Collection<DestinationConfig> getImportConfigs(
-			DestinationConfig config) throws Exception {
-		return Arrays.asList(config);
 	}
 
 	protected abstract IDestination createDestination(DestinationConfig config);

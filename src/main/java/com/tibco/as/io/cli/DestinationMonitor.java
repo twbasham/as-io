@@ -10,21 +10,31 @@ import java.util.logging.Logger;
 
 import com.tibco.as.io.ChannelAdapter;
 import com.tibco.as.io.IDestination;
+import com.tibco.as.io.IInputStream;
 import com.tibco.as.log.LogFactory;
 
-public class ProgressMonitor extends ChannelAdapter {
+public class DestinationMonitor extends ChannelAdapter {
 
-	private Logger log = LogFactory.getLog(ProgressMonitor.class);
+	private Logger log = LogFactory.getLog(DestinationMonitor.class);
 
-	private Map<IDestination, ProgressBar> progressBars = new HashMap<IDestination, ProgressBar>();
+	private Map<IDestination, AbstractConsole> progressBars = new HashMap<IDestination, AbstractConsole>();
 	private ExecutorService executor;
 
 	@Override
 	public void opened(IDestination destination) {
-		ProgressBar progressBar = new ProgressBar(destination);
+		AbstractConsole progressBar = getConsole(destination);
 		progressBars.put(destination, progressBar);
 		executor = Executors.newSingleThreadExecutor();
 		executor.execute(progressBar);
+	}
+
+	private AbstractConsole getConsole(IDestination destination) {
+		IInputStream in = destination.getInputStream();
+		Long size = in.size();
+		if (size == null) {
+			return new SimpleConsole(destination);
+		}
+		return new ProgressConsole(destination, size);
 	}
 
 	@Override

@@ -22,11 +22,11 @@ public class SpaceInputStream implements IInputStream {
 
 	private Browser browser;
 
-	private long position;
+	private Long position;
 
 	private long browseTime;
 
-	private long size = IInputStream.UNKNOWN_SIZE;
+	private Long size;
 
 	public SpaceInputStream(Metaspace metaspace, DestinationConfig config) {
 		this.metaspace = metaspace;
@@ -83,7 +83,7 @@ public class SpaceInputStream implements IInputStream {
 		if (browser instanceof ASBrowser) {
 			size = ((ASBrowser) browser).size();
 		}
-		position = 0;
+		position = 0L;
 	}
 
 	@Override
@@ -123,12 +123,12 @@ public class SpaceInputStream implements IInputStream {
 	}
 
 	@Override
-	public long getPosition() {
+	public Long getPosition() {
 		return position;
 	}
 
 	@Override
-	public long size() {
+	public Long size() {
 		return size;
 	}
 

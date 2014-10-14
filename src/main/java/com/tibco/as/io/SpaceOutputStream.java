@@ -30,8 +30,6 @@ public class SpaceOutputStream implements IOutputStream {
 		if (spaceDef == null) {
 			spaceDef = config.getSpaceDef();
 			metaspace.defineSpace(spaceDef);
-		} else {
-			config.setSpaceDef(spaceDef);
 		}
 		operation = getOperation(metaspace);
 		operation.open();

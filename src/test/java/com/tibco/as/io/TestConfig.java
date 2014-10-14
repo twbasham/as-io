@@ -1,5 +1,7 @@
 package com.tibco.as.io;
 
+import com.tibco.as.convert.Field;
+
 public class TestConfig extends DestinationConfig {
 
 	private IInputStream inputStream;
@@ -38,8 +40,8 @@ public class TestConfig extends DestinationConfig {
 	}
 
 	@Override
-	public FieldConfig createFieldConfig() {
-		return new TestFieldConfig();
+	public Field createField() {
+		return new TestFieldConfig(this);
 	}
 
 }

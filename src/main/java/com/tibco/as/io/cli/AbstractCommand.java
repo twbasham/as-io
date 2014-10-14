@@ -6,10 +6,12 @@ import com.beust.jcommander.Parameter;
 import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.DestinationConfig;
 
-public class Command implements ICommand {
+public abstract class AbstractCommand implements ICommand {
 
 	@Parameter(names = { "-writer_thread_count" }, description = "Number of writer threads")
 	private Integer workerCount;
+	@Parameter(names = { "-limit" }, description = "Max number of entries to read from input")
+	private Long limit;
 
 	@Override
 	public void configure(ChannelConfig config) throws Exception {
@@ -20,7 +22,12 @@ public class Command implements ICommand {
 	}
 
 	protected void configure(DestinationConfig config) {
-		config.setWorkerCount(workerCount);
+		if (limit != null) {
+			config.setLimit(limit);
+		}
+		if (workerCount != null) {
+			config.setWorkerCount(workerCount);
+		}
 	}
 
 }

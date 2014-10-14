@@ -9,6 +9,7 @@ import javax.xml.bind.DatatypeConverter;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.tibco.as.convert.Direction;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
 import com.tibco.as.space.Member.DistributionRole;
