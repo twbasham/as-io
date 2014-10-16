@@ -6,7 +6,7 @@ import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
-public class DestinationConfig extends Space {
+public class DestinationConfig extends Space implements Cloneable {
 
 	private static final int DEFAULT_BATCH_SIZE = 1000;
 	private static final int DEFAULT_BATCH_SIZE_CONTINUOUS = 1;
@@ -27,6 +27,15 @@ public class DestinationConfig extends Space {
 	private Long prefetch;
 	private Long queryLimit;
 	private String filter;
+	private Direction direction;
+	private boolean noTransfer;
+
+	@Override
+	public DestinationConfig clone() {
+		DestinationConfig clone = new DestinationConfig();
+		copyTo(clone);
+		return clone;
+	}
 
 	public Integer getSpaceBatchSize() {
 		if (spaceBatchSize == null) {
@@ -62,19 +71,14 @@ public class DestinationConfig extends Space {
 		this.queueCapacity = queueCapacity;
 	}
 
-	@Override
-	public DestinationConfig clone() {
-		DestinationConfig clone = new DestinationConfig();
-		copyTo(clone);
-		return clone;
-	}
-
 	public void copyTo(DestinationConfig target) {
 		target.browserType = browserType;
+		target.direction = direction;
 		target.distributionRole = distributionRole;
 		target.distributionScope = distributionScope;
 		target.filter = filter;
 		target.limit = limit;
+		target.noTransfer = noTransfer;
 		target.operation = operation;
 		target.prefetch = prefetch;
 		target.queryLimit = queryLimit;
@@ -176,6 +180,33 @@ public class DestinationConfig extends Space {
 
 	public void setLimit(Long limit) {
 		this.limit = limit;
+	}
+
+	public boolean isWildcard() {
+		if (isImport()) {
+			return false;
+		}
+		return getSpace() == null;
+	}
+
+	public Direction getDirection() {
+		return direction;
+	}
+
+	public void setDirection(Direction direction) {
+		this.direction = direction;
+	}
+
+	public boolean isImport() {
+		return direction == Direction.IMPORT;
+	}
+
+	public boolean isNoTransfer() {
+		return noTransfer;
+	}
+
+	public void setNoTransfer(boolean noTransfer) {
+		this.noTransfer = noTransfer;
 	}
 
 }

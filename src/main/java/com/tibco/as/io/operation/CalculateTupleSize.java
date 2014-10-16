@@ -64,9 +64,4 @@ public class CalculateTupleSize extends AbstractOperation {
 		return resultList;
 	}
 
-	@Override
-	public String toString() {
-		return "CalculateTupleSize";
-	}
-
 }

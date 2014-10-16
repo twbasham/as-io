@@ -1,11 +1,15 @@
 package com.tibco.as.io;
 
+import java.util.Collection;
+
 public interface IChannel {
 
-	void open() throws Exception;
+	void start() throws Exception;
 
-	void close() throws Exception;
-	
+	void stop() throws Exception;
+
 	void addListener(IChannelListener listener);
+
+	Collection<IDestination> getDestinations();
 
 }

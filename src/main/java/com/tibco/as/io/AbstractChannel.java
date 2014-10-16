@@ -1,12 +1,10 @@
 package com.tibco.as.io;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.convert.Direction;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.MemberDef;
 import com.tibco.as.space.Metaspace;
@@ -30,54 +28,71 @@ public abstract class AbstractChannel implements IChannel {
 		listeners.add(listener);
 	}
 
-	@Override
-	public void open() throws Exception {
-		metaspace = Utils.getMetaspace(config.getMetaspace());
+	protected void open() throws Exception {
+		String metaspaceName = config.getMetaspace();
+		metaspace = Utils.getMetaspace(metaspaceName);
 		if (metaspace == null) {
-			metaspace = Metaspace
-					.connect(config.getMetaspace(), getMemberDef());
+			log.info("Connecting to metaspace");
+			metaspace = Metaspace.connect(metaspaceName, getMemberDef());
 		}
+		discover();
 		for (DestinationConfig destinationConfig : config.getDestinations()) {
-			for (DestinationConfig found : discover(destinationConfig)) {
-				IDestination destination = createDestination(found);
+			destinations.add(createDestination(destinationConfig));
+		}
+	}
+
+	@Override
+	public void start() throws Exception {
+		open();
+		for (IDestination destination : destinations) {
+			for (IChannelListener listener : listeners) {
+				listener.starting(destination);
+			}
+			try {
+				destination.start();
 				for (IChannelListener listener : listeners) {
-					listener.opening(destination);
+					listener.started(destination);
 				}
-				try {
-					destination.open(metaspace);
-					destinations.add(destination);
-					for (IChannelListener listener : listeners) {
-						listener.opened(destination);
-					}
-					if (!config.getParallel()) {
-						close(destination);
-					}
-				} catch (Exception e) {
-					log.log(Level.SEVERE, "Could not open destination", e);
-				}
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not open destination "
+						+ destination.getName(), e);
+			}
+			if (config.isSequential()) {
+				destination.stop();
 			}
 		}
 	}
 
-	protected Collection<? extends DestinationConfig> discover(
-			DestinationConfig destination) throws Exception {
-		if (isWildcard(destination)) {
-			Collection<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
-			for (String spaceName : metaspace.getUserSpaceNames()) {
-				DestinationConfig destinationConfig = destination.clone();
-				destinationConfig.setSpace(spaceName);
-				destinations.add(destinationConfig);
+	@Override
+	public void stop() throws Exception {
+		for (IDestination destination : destinations) {
+			for (IChannelListener listener : listeners) {
+				listener.stopping(destination);
 			}
-			return destinations;
+			try {
+				destination.stop();
+				for (IChannelListener listener : listeners) {
+					listener.stopped(destination);
+				}
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not close destination"
+						+ destination.getName(), e);
+			}
 		}
-		return Arrays.asList(destination);
+		close();
 	}
 
-	protected boolean isWildcard(DestinationConfig destination) {
-		if (destination.getDirection() == Direction.EXPORT) {
-			return destination.getSpace() == null;
+	protected void discover() throws Exception {
+		for (DestinationConfig destination : config.getDestinations()) {
+			if (destination.isWildcard()) {
+				config.removeDestinationConfig(destination);
+				for (String spaceName : metaspace.getUserSpaceNames()) {
+					DestinationConfig destinationConfig = destination.clone();
+					destinationConfig.setSpace(spaceName);
+					config.addDestinationConfig(destinationConfig);
+				}
+			}
 		}
-		return false;
 	}
 
 	private MemberDef getMemberDef() {
@@ -134,32 +149,24 @@ public abstract class AbstractChannel implements IChannel {
 
 	protected abstract IDestination createDestination(DestinationConfig config);
 
-	@Override
-	public void close() throws Exception {
-		for (IDestination destination : destinations) {
-			close(destination);
-		}
+	protected void close() throws Exception {
 		for (IDestination destination : destinations) {
 			while (!destination.isClosed()) {
 				Thread.sleep(100);
 			}
 		}
+		log.info("Disconnecting from metaspace");
 		metaspace.close();
 		metaspace = null;
 	}
 
-	private void close(IDestination destination) {
-		for (IChannelListener listener : listeners) {
-			listener.closing(destination);
-		}
-		try {
-			destination.close();
-			for (IChannelListener listener : listeners) {
-				listener.closed(destination);
-			}
-		} catch (Exception e) {
-			log.log(Level.SEVERE, "Could not close destination", e);
-		}
+	public Metaspace getMetaspace() {
+		return metaspace;
+	}
+
+	@Override
+	public Collection<IDestination> getDestinations() {
+		return destinations;
 	}
 
 }

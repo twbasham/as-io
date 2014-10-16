@@ -8,7 +8,7 @@ public class TestChannel extends AbstractChannel {
 
 	@Override
 	protected IDestination createDestination(DestinationConfig config) {
-		return new TestDestination(this, (TestConfig) config);
+		return new TestDestination(this, (TestDestinationConfig) config);
 	}
 
 }

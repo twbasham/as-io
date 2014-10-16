@@ -1,7 +1,7 @@
 package com.tibco.as.io;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 public class ChannelConfig {
 
@@ -21,15 +21,32 @@ public class ChannelConfig {
 	private String remoteDiscovery;
 	private String remoteListen;
 	private Integer transportThreadCount;
-	private boolean parallel;
-	private List<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
+	private boolean sequential;
+	private Collection<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
 
-	public boolean getParallel() {
-		return parallel;
+	protected ChannelConfig() {
 	}
 
-	public void setParallel(boolean parallel) {
-		this.parallel = parallel;
+	public void addDestinationConfig(DestinationConfig config) {
+		destinations.add(config);
+	}
+
+	public DestinationConfig addDestinationConfig() {
+		DestinationConfig destination = newDestinationConfig();
+		destinations.add(destination);
+		return destination;
+	}
+
+	protected DestinationConfig newDestinationConfig() {
+		return new DestinationConfig();
+	}
+
+	public boolean isSequential() {
+		return sequential;
+	}
+
+	public void setSequential(boolean sequential) {
+		this.sequential = sequential;
 	}
 
 	public String getMetaspace() {
@@ -104,8 +121,8 @@ public class ChannelConfig {
 		this.identityPassword = identityPassword;
 	}
 
-	public List<DestinationConfig> getDestinations() {
-		return destinations;
+	public DestinationConfig[] getDestinations() {
+		return destinations.toArray(new DestinationConfig[destinations.size()]);
 	}
 
 	public Integer getClusterSuspendThreshold() {
@@ -162,6 +179,10 @@ public class ChannelConfig {
 
 	public void setTransportThreadCount(Integer transportThreadCount) {
 		this.transportThreadCount = transportThreadCount;
+	}
+
+	public boolean removeDestinationConfig(DestinationConfig destination) {
+		return destinations.remove(destination);
 	}
 
 }

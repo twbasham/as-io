@@ -26,11 +26,6 @@ public class NoOperation implements IOperation {
 	}
 
 	@Override
-	public String toString() {
-		return "no-op";
-	}
-
-	@Override
 	public void close() {
 		closed = true;
 	}

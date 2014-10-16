@@ -2,15 +2,15 @@ package com.tibco.as.io;
 
 import com.tibco.as.convert.Field;
 
-public class TestConfig extends DestinationConfig {
+public class TestDestinationConfig extends DestinationConfig {
 
 	private IInputStream inputStream;
 	private IOutputStream outputStream;
 	private int importBatchSize = 1;
 
 	@Override
-	public TestConfig clone() {
-		TestConfig clone = new TestConfig();
+	public TestDestinationConfig clone() {
+		TestDestinationConfig clone = new TestDestinationConfig();
 		copyTo(clone);
 		return clone;
 	}
@@ -40,8 +40,10 @@ public class TestConfig extends DestinationConfig {
 	}
 
 	@Override
-	public Field createField() {
-		return new TestFieldConfig(this);
+	protected Field newField() {
+		Field field = super.newField();
+		field.setJavaType(String.class);
+		return field;
 	}
 
 }

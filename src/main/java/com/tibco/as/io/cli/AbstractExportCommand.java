@@ -2,12 +2,11 @@ package com.tibco.as.io.cli;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import com.beust.jcommander.Parameter;
-import com.tibco.as.convert.Direction;
 import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.DestinationConfig;
+import com.tibco.as.io.Direction;
 import com.tibco.as.io.cli.converters.BrowserDistributionScopeConverter;
 import com.tibco.as.io.cli.converters.BrowserTimeScopeConverter;
 import com.tibco.as.io.cli.converters.BrowserTypeConverter;
@@ -36,19 +35,11 @@ public abstract class AbstractExportCommand extends AbstractCommand {
 
 	@Override
 	public void configure(ChannelConfig config) throws Exception {
-		List<DestinationConfig> destinations = config.getDestinations();
 		for (String spaceName : spaceNames) {
-			DestinationConfig destination = createDestinationConfig();
-			destination.setSpace(spaceName);
-			destinations.add(destination);
-		}
-		if (destinations.isEmpty()) {
-			destinations.add(createDestinationConfig());
+			config.addDestinationConfig().setSpace(spaceName);
 		}
 		super.configure(config);
 	}
-
-	protected abstract DestinationConfig createDestinationConfig();
 
 	@Override
 	protected void configure(DestinationConfig config) {

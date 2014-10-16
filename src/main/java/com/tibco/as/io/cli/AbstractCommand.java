@@ -1,7 +1,5 @@
 package com.tibco.as.io.cli;
 
-import java.util.Collection;
-
 import com.beust.jcommander.Parameter;
 import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.DestinationConfig;
@@ -15,8 +13,10 @@ public abstract class AbstractCommand implements ICommand {
 
 	@Override
 	public void configure(ChannelConfig config) throws Exception {
-		Collection<DestinationConfig> destinations = config.getDestinations();
-		for (DestinationConfig destination : destinations) {
+		if (config.getDestinations().length == 0) {
+			config.addDestinationConfig();
+		}
+		for (DestinationConfig destination : config.getDestinations()) {
 			configure(destination);
 		}
 	}

@@ -1,6 +1,5 @@
 package com.tibco.as.io.operation;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -45,11 +44,6 @@ public class PartialOperation extends AbstractOperation {
 			}
 		}
 		return space.putAll(updates, options);
-	}
-
-	@Override
-	public String toString() {
-		return MessageFormat.format("put {0}", options);
 	}
 
 }

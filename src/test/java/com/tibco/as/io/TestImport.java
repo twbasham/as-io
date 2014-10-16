@@ -9,7 +9,6 @@ import javax.xml.bind.DatatypeConverter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.tibco.as.convert.Direction;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
 import com.tibco.as.space.Member.DistributionRole;
@@ -51,15 +50,15 @@ public class TestImport extends TestBase {
 				DistributionRole.SEEDER);
 		ListInputStream in = new ListInputStream(list);
 		in.setSleep(103);
-		ChannelConfig channelConfig = getChannelConfig();
-		TestConfig destination = new TestConfig();
+		TestChannelConfig channelConfig = getChannelConfig();
+		TestDestinationConfig destination = (TestDestinationConfig) channelConfig
+				.addDestinationConfig();
 		destination.setDirection(Direction.IMPORT);
 		destination.setSpace(spaceName);
 		destination.setInputStream(in);
-		channelConfig.getDestinations().add(destination);
 		TestChannel channel = new TestChannel(channelConfig);
-		channel.open();
-		channel.close();
+		channel.start();
+		channel.stop();
 		Assert.assertEquals(3, space.size());
 		Tuple tuple1 = Tuple.create();
 		tuple1.putString("guid", "1");

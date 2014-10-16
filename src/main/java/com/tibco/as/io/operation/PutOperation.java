@@ -1,6 +1,5 @@
 package com.tibco.as.io.operation;
 
-import java.text.MessageFormat;
 import java.util.Collection;
 
 import com.tibco.as.io.DestinationConfig;
@@ -27,11 +26,6 @@ public class PutOperation extends AbstractOperation {
 	@Override
 	protected SpaceResultList execute(Space space, Collection<Tuple> tuples) {
 		return space.putAll(tuples, options);
-	}
-
-	@Override
-	public String toString() {
-		return MessageFormat.format("put {0}", options);
 	}
 
 }

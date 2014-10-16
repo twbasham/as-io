@@ -1,8 +1,8 @@
 package com.tibco.as.io.cli;
 
 import com.beust.jcommander.Parameter;
-import com.tibco.as.convert.Direction;
 import com.tibco.as.io.DestinationConfig;
+import com.tibco.as.io.Direction;
 import com.tibco.as.io.OperationType;
 import com.tibco.as.io.cli.converters.DistributionRoleConverter;
 import com.tibco.as.io.cli.converters.OperationTypeConverter;

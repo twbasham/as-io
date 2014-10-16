@@ -2,9 +2,9 @@ package com.tibco.as.io;
 
 public class TestDestination extends AbstractDestination {
 
-	private TestConfig config;
+	private TestDestinationConfig config;
 
-	public TestDestination(TestChannel channel, TestConfig config) {
+	public TestDestination(TestChannel channel, TestDestinationConfig config) {
 		super(channel, config);
 		this.config = config;
 	}

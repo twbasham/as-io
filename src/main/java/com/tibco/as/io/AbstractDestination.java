@@ -5,22 +5,27 @@ import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.tibco.as.convert.ConverterFactory;
 import com.tibco.as.convert.IConverter;
+import com.tibco.as.convert.UnsupportedConversionException;
+import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.Member.DistributionRole;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceDef;
 
 public abstract class AbstractDestination implements IDestination {
 
+	private Logger log = LogFactory.getLog(AbstractDestination.class);
 	private ConverterFactory converterFactory = new ConverterFactory();
 	private AbstractChannel channel;
 	private DestinationConfig config;
 	private IInputStream in;
-	private ExecutorService service;
 	private boolean closed;
 	private Collection<Worker> workers = new ArrayList<Worker>();
+	private ExecutorService service;
 
 	protected AbstractDestination(AbstractChannel channel,
 			DestinationConfig config) {
@@ -33,33 +38,54 @@ public abstract class AbstractDestination implements IDestination {
 		return in;
 	}
 
-	protected DestinationConfig getConfig() {
-		return config;
-	}
-
-	protected IChannel getChannel() {
-		return channel;
-	}
-
-	@Override
-	public void open(Metaspace metaspace) throws Exception {
+	private void open() throws Exception {
+		Metaspace metaspace = channel.getMetaspace();
 		in = getInputStream(createInputStream(metaspace));
 		SpaceDef spaceDef = metaspace.getSpaceDef(config.getSpace());
 		if (spaceDef != null) {
 			config.setSpaceDef(spaceDef);
 		}
 		in.open();
-		int workerCount = config.getWorkerCount();
-		service = Executors.newFixedThreadPool(workerCount);
-		for (int index = 0; index < workerCount; index++) {
+		for (int index = 0; index < config.getWorkerCount(); index++) {
 			IOutputStream out = createOutputStream(metaspace);
 			out.open();
-			IConverter converter = converterFactory.getArrayConverter(config);
+			IConverter converter = createConverter();
 			Worker worker = new Worker(in, converter, out);
 			workers.add(worker);
-			service.execute(worker);
 		}
 		closed = false;
+	}
+
+	@Override
+	public void start() throws Exception {
+		open();
+		service = Executors.newFixedThreadPool(workers.size());
+		for (Worker worker : workers) {
+			service.execute(worker);
+		}
+	}
+
+	@Override
+	public void stop() throws Exception {
+		if (service == null) {
+			return;
+		}
+		service.shutdown();
+		try {
+			while (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+				// do nothing
+			}
+		} catch (InterruptedException e) {
+			log.log(Level.WARNING, "Destination ''{0}'' interrupted", getName());
+		}
+		close();
+	}
+
+	private IConverter createConverter() throws UnsupportedConversionException {
+		if (config.isImport()) {
+			return converterFactory.getJavaConverter(config);
+		}
+		return converterFactory.getTupleConverter(config);
 	}
 
 	private IInputStream getInputStream(IInputStream in) {
@@ -93,27 +119,13 @@ public abstract class AbstractDestination implements IDestination {
 
 	protected abstract IOutputStream createOutputStream() throws Exception;
 
-	@Override
-	public void close() throws Exception {
-		service.shutdown();
-		try {
-			while (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) {
-				// do nothing
-			}
-		} catch (InterruptedException e) {
-			throw new Exception("Could not finish transfers", e);
-		}
+	private void close() throws Exception {
 		in.close();
 		closed = true;
 		if (config.getDistributionRole() == DistributionRole.SEEDER) {
 			return;
 		}
 		workers.clear();
-	}
-
-	@Override
-	public void stop() throws Exception {
-		in.close();
 	}
 
 	@Override

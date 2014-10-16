@@ -3,19 +3,19 @@ package com.tibco.as.io;
 public class ChannelAdapter implements IChannelListener {
 
 	@Override
-	public void opening(IDestination destination) {
+	public void starting(IDestination destination) {
 	}
 
 	@Override
-	public void opened(IDestination destination) {
+	public void started(IDestination destination) {
 	}
 
 	@Override
-	public void closing(IDestination destination) {
+	public void stopping(IDestination destination) {
 	}
 
 	@Override
-	public void closed(IDestination destination) {
+	public void stopped(IDestination destination) {
 	}
 
 }

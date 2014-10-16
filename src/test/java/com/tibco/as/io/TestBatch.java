@@ -10,7 +10,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.tibco.as.convert.Direction;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.log.LogLevel;
 import com.tibco.as.space.ASException;
@@ -53,18 +52,18 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testBatch() throws Exception {
 		List<Object> list = new Vector<Object>();
-		ChannelConfig channelConfig = getChannelConfig();
-		TestConfig export = new TestConfig();
+		TestChannelConfig channelConfig = getChannelConfig();
+		TestDestinationConfig export = (TestDestinationConfig) channelConfig
+				.addDestinationConfig();
 		export.setDirection(Direction.EXPORT);
 		export.setWorkerCount(5);
 		export.setQueueCapacity(35000);
 		export.setQueryLimit(100000L);
 		export.setSpace(space.getName());
 		export.setOutputStream(new ListOutputStream(list));
-		channelConfig.getDestinations().add(export);
 		TestChannel channel = new TestChannel(channelConfig);
-		channel.open();
-		channel.close();
+		channel.start();
+		channel.stop();
 		Assert.assertEquals(space.size(), list.size());
 		for (Object element : list) {
 			Object[] line = (Object[]) element;
@@ -82,8 +81,9 @@ public class TestBatch extends TestBase {
 		List<Object> list = new Vector<Object>();
 		ListOutputStream out = new ListOutputStream(list);
 		out.setSleep(100);
-		ChannelConfig channelConfig = getChannelConfig();
-		TestConfig export = new TestConfig();
+		TestChannelConfig channelConfig = getChannelConfig();
+		TestDestinationConfig export = (TestDestinationConfig) channelConfig
+				.addDestinationConfig();
 		export.setDirection(Direction.EXPORT);
 		export.setSpace(space.getName());
 		export.setTimeScope(TimeScope.ALL);
@@ -91,21 +91,20 @@ public class TestBatch extends TestBase {
 		export.setWorkerCount(1);
 		export.setQueueCapacity(1);
 		export.setOutputStream(out);
-		channelConfig.getDestinations().add(export);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.addListener(new ChannelAdapter() {
 
 			@Override
-			public void opened(IDestination destination) {
+			public void started(IDestination destination) {
 				try {
-					destination.stop();
+					destination.getInputStream().close();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-
 		});
-		channel.open();
+		channel.start();
+		channel.stop();
 		Assert.assertTrue(list.size() <= 15);
 	}
 

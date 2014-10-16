@@ -21,7 +21,7 @@ public class DestinationMonitor extends ChannelAdapter {
 	private ExecutorService executor;
 
 	@Override
-	public void opened(IDestination destination) {
+	public void starting(IDestination destination) {
 		AbstractConsole progressBar = getConsole(destination);
 		progressBars.put(destination, progressBar);
 		executor = Executors.newSingleThreadExecutor();
@@ -38,7 +38,7 @@ public class DestinationMonitor extends ChannelAdapter {
 	}
 
 	@Override
-	public void closed(IDestination destination) {
+	public void stopped(IDestination destination) {
 		if (progressBars.containsKey(destination)) {
 			progressBars.remove(destination).stop();
 			executor.shutdown();

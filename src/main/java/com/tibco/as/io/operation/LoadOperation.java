@@ -26,9 +26,4 @@ public class LoadOperation extends AbstractOperation {
 		return space.loadAll(tuples);
 	}
 
-	@Override
-	public String toString() {
-		return "load";
-	}
-
 }

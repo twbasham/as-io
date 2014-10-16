@@ -32,7 +32,7 @@ public class Worker implements Runnable {
 	}
 
 	protected void execute() throws Exception {
-		open();
+		out.open();
 		Object element;
 		while ((element = in.read()) != null) {
 			try {
@@ -49,14 +49,6 @@ public class Worker implements Runnable {
 				log.log(Level.SEVERE, "Could not convert", e);
 			}
 		}
-		close();
-	}
-
-	protected void open() throws Exception {
-		out.open();
-	}
-
-	protected void close() throws Exception {
 		out.close();
 	}
 

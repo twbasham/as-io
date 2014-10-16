@@ -36,12 +36,13 @@ public abstract class AbstractOperation implements IOperation {
 
 	public void open() throws ASException {
 		this.space = getSpace(metaspace);
-		long timeout = config.getWaitForReadyTimeout();
 		if (space.isReady()) {
 			return;
 		}
-		log.log(Level.INFO, "Waiting {0} ms for space ''{1}'' to become ready",
-				new Object[] { timeout, space.getName() });
+		long timeout = config.getWaitForReadyTimeout();
+		log.log(Level.INFO,
+				"Waiting for space ''{0}'' to become ready using timeout of {1} ms",
+				new Object[] { space.getName(), timeout });
 		space.waitForReady(timeout);
 	}
 
@@ -66,10 +67,12 @@ public abstract class AbstractOperation implements IOperation {
 		if (space == null) {
 			return;
 		}
-		if (config.getDistributionRole() != DistributionRole.SEEDER) {
-			space.close();
-			space = null;
+		if (config.getDistributionRole() == DistributionRole.SEEDER) {
+			return;
 		}
+		log.log(Level.INFO, "Closing space ''{0}''", space.getName());
+		space.close();
+		space = null;
 	}
 
 }

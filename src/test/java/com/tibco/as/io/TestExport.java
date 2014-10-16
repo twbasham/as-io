@@ -11,7 +11,6 @@ import javax.xml.bind.DatatypeConverter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.tibco.as.convert.Direction;
 import com.tibco.as.space.DateTime;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
@@ -72,15 +71,15 @@ public class TestExport extends TestBase {
 		List<Object> outList = new Vector<Object>();
 		ListOutputStream out = new ListOutputStream(outList);
 		out.setSleep(140);
-		ChannelConfig channelConfig = getChannelConfig();
-		TestConfig export = new TestConfig();
+		TestChannelConfig channelConfig = getChannelConfig();
+		TestDestinationConfig export = (TestDestinationConfig) channelConfig
+				.addDestinationConfig();
 		export.setDirection(Direction.EXPORT);
 		export.setSpace(spaceName);
 		export.setOutputStream(out);
-		channelConfig.getDestinations().add(export);
 		TestChannel channel = new TestChannel(channelConfig);
-		channel.open();
-		channel.close();
+		channel.start();
+		channel.stop();
 		Assert.assertEquals(3, outList.size());
 		for (Object element : outList) {
 			Object[] line = (Object[]) element;

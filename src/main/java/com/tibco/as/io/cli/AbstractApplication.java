@@ -111,29 +111,19 @@ public abstract class AbstractApplication {
 			config.setRxBufferSize(rxBufferSize);
 			config.setSecurityTokenFile(securityToken);
 			config.setWorkerThreadCount(workerThreadCount);
-			config.setParallel(parallel);
+			config.setSequential(parallel);
 			for (ICommand command : commands) {
 				command.configure(config);
 			}
 			channel = getChannel(config);
-			if (!config.getParallel()) {
+			if (config.isSequential()) {
 				channel.addListener(new DestinationMonitor());
 			}
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not create channel", e);
 			return;
 		}
-		try {
-			channel.open();
-		} catch (Exception e) {
-			log.log(Level.SEVERE, "Could not open channel", e);
-		} finally {
-			try {
-				channel.close();
-			} catch (Exception e) {
-				log.log(Level.SEVERE, "Could not close channel", e);
-			}
-		}
+		execute(channel);
 		if (noExit) {
 			while (true) {
 				try {
@@ -141,6 +131,20 @@ public abstract class AbstractApplication {
 				} catch (InterruptedException e) {
 					log.log(Level.SEVERE, "Interrupted", e);
 				}
+			}
+		}
+	}
+
+	protected void execute(IChannel channel) {
+		try {
+			channel.start();
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Could not start channel", e);
+		} finally {
+			try {
+				channel.stop();
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not stop channel", e);
 			}
 		}
 	}

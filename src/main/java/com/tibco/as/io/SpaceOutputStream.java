@@ -1,5 +1,8 @@
 package com.tibco.as.io;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.tibco.as.io.operation.GetOperation;
 import com.tibco.as.io.operation.IOperation;
 import com.tibco.as.io.operation.LoadOperation;
@@ -7,6 +10,7 @@ import com.tibco.as.io.operation.NoOperation;
 import com.tibco.as.io.operation.PartialOperation;
 import com.tibco.as.io.operation.PutOperation;
 import com.tibco.as.io.operation.TakeOperation;
+import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceDef;
@@ -14,6 +18,7 @@ import com.tibco.as.space.Tuple;
 
 public class SpaceOutputStream implements IOutputStream {
 
+	private Logger log = LogFactory.getLog(SpaceOutputStream.class);
 	private Metaspace metaspace;
 	private DestinationConfig config;
 	private IOperation operation;
@@ -29,6 +34,8 @@ public class SpaceOutputStream implements IOutputStream {
 		SpaceDef spaceDef = metaspace.getSpaceDef(config.getSpace());
 		if (spaceDef == null) {
 			spaceDef = config.getSpaceDef();
+			log.log(Level.INFO, "Defining space ''{0}''", spaceDef.getName());
+			log.fine(spaceDef.toString());
 			metaspace.defineSpace(spaceDef);
 		}
 		operation = getOperation(metaspace);
