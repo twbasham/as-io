@@ -107,10 +107,4 @@ public abstract class AbstractChannel implements IChannel {
 		return destinations;
 	}
 
-	public void completed(IDestination destination) {
-		for (IChannelListener listener : listeners) {
-			listener.completed(destination);
-		}
-	}
-
 }

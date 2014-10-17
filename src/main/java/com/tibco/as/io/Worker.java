@@ -1,7 +1,5 @@
 package com.tibco.as.io;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,8 +13,6 @@ public class Worker implements Runnable {
 	private IInputStream in;
 	private IConverter converter;
 	private IOutputStream out;
-	private Collection<IWorkerListener> listeners = new ArrayList<IWorkerListener>();
-	private boolean completed;
 
 	public Worker(IInputStream in, IConverter converter, IOutputStream out) {
 		this.in = in;
@@ -48,14 +44,6 @@ public class Worker implements Runnable {
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not execute", e);
 		}
-		this.completed = true;
-		for (IWorkerListener listener : listeners) {
-			listener.completed(this);
-		}
-	}
-
-	public boolean isCompleted() {
-		return completed;
 	}
 
 	public void open() throws Exception {
@@ -64,10 +52,6 @@ public class Worker implements Runnable {
 
 	public void close() throws Exception {
 		out.close();
-	}
-
-	public void addListener(IWorkerListener listener) {
-		listeners.add(listener);
 	}
 
 }

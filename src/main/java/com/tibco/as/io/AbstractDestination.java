@@ -13,8 +13,7 @@ import com.tibco.as.space.Member.DistributionRole;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceDef;
 
-public abstract class AbstractDestination implements IDestination,
-		IWorkerListener {
+public abstract class AbstractDestination implements IDestination {
 
 	private ConverterFactory converterFactory = new ConverterFactory();
 	private AbstractChannel channel;
@@ -45,27 +44,11 @@ public abstract class AbstractDestination implements IDestination,
 		if (!config.isNoTransfer()) {
 			service = Executors.newFixedThreadPool(workers.size());
 			for (Worker worker : workers) {
-				worker.addListener(this);
 				worker.open();
 				service.execute(worker);
 			}
+			service.shutdown();
 		}
-	}
-
-	@Override
-	public void completed(Worker worker) {
-		if (allWorkersCompleted()) {
-			channel.completed(this);
-		}
-	}
-
-	private boolean allWorkersCompleted() {
-		for (Worker worker : workers) {
-			if (!worker.isCompleted()) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	@Override
@@ -73,7 +56,6 @@ public abstract class AbstractDestination implements IDestination,
 		if (service == null) {
 			return;
 		}
-		service.shutdown();
 		while (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) {
 			// do nothing
 		}
@@ -137,6 +119,14 @@ public abstract class AbstractDestination implements IDestination,
 	@Override
 	public IInputStream getInputStream() {
 		return in;
+	}
+
+	@Override
+	public boolean hasCompleted() {
+		if (service == null) {
+			return true;
+		}
+		return service.isTerminated();
 	}
 
 }

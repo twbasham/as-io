@@ -7,10 +7,6 @@ public class ChannelAdapter implements IChannelListener {
 	}
 
 	@Override
-	public void completed(IDestination destination) {
-	}
-
-	@Override
 	public void stopped(IDestination destination) {
 	}
 

@@ -13,7 +13,6 @@ public abstract class AbstractConsole implements Runnable {
 
 	private Logger log = LogFactory.getLog(AbstractConsole.class);
 	private IDestination destination;
-	private boolean stopped = false;
 
 	protected AbstractConsole(IDestination destination) {
 		this.destination = destination;
@@ -22,7 +21,7 @@ public abstract class AbstractConsole implements Runnable {
 	@Override
 	public void run() {
 		IInputStream in = destination.getInputStream();
-		while (!stopped) {
+		while (!isFinished()) {
 			print(destination.getName(), in.getPosition());
 			sleep();
 		}
@@ -36,16 +35,16 @@ public abstract class AbstractConsole implements Runnable {
 			} catch (InterruptedException e) {
 				log.log(Level.FINE, "Progress bar interruped", e);
 			}
-			if (stopped) {
+			if (isFinished()) {
 				return;
 			}
 		}
 	}
 
-	protected abstract void print(String name, long position);
-
-	public void stop() {
-		stopped = true;
+	private boolean isFinished() {
+		return destination.hasCompleted();
 	}
+
+	protected abstract void print(String name, long position);
 
 }
