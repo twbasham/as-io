@@ -4,12 +4,12 @@ public interface IDestination {
 
 	void start() throws Exception;
 
+	void awaitTermination() throws InterruptedException;
+
 	void stop() throws Exception;
 
-	boolean isClosed();
+	String getName();
 
 	IInputStream getInputStream();
-
-	String getName();
 
 }

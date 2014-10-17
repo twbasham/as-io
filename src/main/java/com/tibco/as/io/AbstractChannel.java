@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.tibco.as.log.LogFactory;
-import com.tibco.as.space.MemberDef;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Utils;
 
@@ -28,26 +27,19 @@ public abstract class AbstractChannel implements IChannel {
 		listeners.add(listener);
 	}
 
-	protected void open() throws Exception {
+	@Override
+	public void start() throws Exception {
 		String metaspaceName = config.getMetaspace();
 		metaspace = Utils.getMetaspace(metaspaceName);
 		if (metaspace == null) {
 			log.info("Connecting to metaspace");
-			metaspace = Metaspace.connect(metaspaceName, getMemberDef());
+			metaspace = Utils.connect(metaspaceName, config.getMember());
 		}
 		discover();
 		for (DestinationConfig destinationConfig : config.getDestinations()) {
 			destinations.add(createDestination(destinationConfig));
 		}
-	}
-
-	@Override
-	public void start() throws Exception {
-		open();
 		for (IDestination destination : destinations) {
-			for (IChannelListener listener : listeners) {
-				listener.starting(destination);
-			}
 			try {
 				destination.start();
 				for (IChannelListener listener : listeners) {
@@ -57,8 +49,18 @@ public abstract class AbstractChannel implements IChannel {
 				log.log(Level.SEVERE, "Could not open destination "
 						+ destination.getName(), e);
 			}
-			if (config.isSequential()) {
-				destination.stop();
+		}
+	}
+
+	@Override
+	public void awaitTermination() {
+		for (IDestination destination : destinations) {
+			try {
+				destination.awaitTermination();
+			} catch (InterruptedException e) {
+				log.log(Level.SEVERE,
+						"Interrupted while waiting for termination of destination ''{0}''",
+						destination.getName());
 			}
 		}
 	}
@@ -66,9 +68,6 @@ public abstract class AbstractChannel implements IChannel {
 	@Override
 	public void stop() throws Exception {
 		for (IDestination destination : destinations) {
-			for (IChannelListener listener : listeners) {
-				listener.stopping(destination);
-			}
 			try {
 				destination.stop();
 				for (IChannelListener listener : listeners) {
@@ -79,7 +78,9 @@ public abstract class AbstractChannel implements IChannel {
 						+ destination.getName(), e);
 			}
 		}
-		close();
+		log.info("Disconnecting from metaspace");
+		metaspace.close();
+		metaspace = null;
 	}
 
 	protected void discover() throws Exception {
@@ -95,70 +96,7 @@ public abstract class AbstractChannel implements IChannel {
 		}
 	}
 
-	private MemberDef getMemberDef() {
-		MemberDef memberDef = MemberDef.create();
-		if (config.getClusterSuspendThreshold() != null) {
-			memberDef.setClusterSuspendThreshold(config
-					.getClusterSuspendThreshold());
-		}
-		if (config.getConnectTimeout() != null) {
-			memberDef.setConnectTimeout(config.getConnectTimeout());
-		}
-		if (config.getDataStore() != null) {
-			memberDef.setDataStore(config.getDataStore());
-		}
-		if (config.getDiscovery() != null) {
-			memberDef.setDiscovery(config.getDiscovery());
-		}
-		if (config.getIdentityPassword() != null) {
-			memberDef.setIdentityPassword(config.getIdentityPassword()
-					.toCharArray());
-		}
-		if (config.getListen() != null) {
-			memberDef.setListen(config.getListen());
-		}
-		if (config.getMember() != null) {
-			memberDef.setMemberName(config.getMember());
-		}
-		if (config.getMemberTimeout() != null) {
-			memberDef.setMemberTimeout(config.getMemberTimeout());
-		}
-		if (config.getRemoteDiscovery() != null) {
-			memberDef.setRemoteDiscovery(config.getRemoteDiscovery());
-		}
-		if (config.getRemoteListen() != null) {
-			memberDef.setRemoteListen(config.getRemoteListen());
-		}
-		if (config.getRxBufferSize() != null) {
-			memberDef.setRxBufferSize(config.getRxBufferSize());
-		}
-		if (config.getSecurityPolicyFile() != null) {
-			memberDef.setSecurityPolicyFile(config.getSecurityPolicyFile());
-		}
-		if (config.getSecurityTokenFile() != null) {
-			memberDef.setSecurityTokenFile(config.getSecurityTokenFile());
-		}
-		if (config.getTransportThreadCount() != null) {
-			memberDef.setTransportThreadCount(config.getTransportThreadCount());
-		}
-		if (config.getWorkerThreadCount() != null) {
-			memberDef.setWorkerThreadCount(config.getWorkerThreadCount());
-		}
-		return memberDef;
-	}
-
 	protected abstract IDestination createDestination(DestinationConfig config);
-
-	protected void close() throws Exception {
-		for (IDestination destination : destinations) {
-			while (!destination.isClosed()) {
-				Thread.sleep(100);
-			}
-		}
-		log.info("Disconnecting from metaspace");
-		metaspace.close();
-		metaspace = null;
-	}
 
 	public Metaspace getMetaspace() {
 		return metaspace;
@@ -167,6 +105,12 @@ public abstract class AbstractChannel implements IChannel {
 	@Override
 	public Collection<IDestination> getDestinations() {
 		return destinations;
+	}
+
+	public void completed(IDestination destination) {
+		for (IChannelListener listener : listeners) {
+			listener.completed(destination);
+		}
 	}
 
 }

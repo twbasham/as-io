@@ -1,5 +1,7 @@
 package com.tibco.as.io;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,6 +15,8 @@ public class Worker implements Runnable {
 	private IInputStream in;
 	private IConverter converter;
 	private IOutputStream out;
+	private Collection<IWorkerListener> listeners = new ArrayList<IWorkerListener>();
+	private boolean completed;
 
 	public Worker(IInputStream in, IConverter converter, IOutputStream out) {
 		this.in = in;
@@ -22,38 +26,48 @@ public class Worker implements Runnable {
 
 	@Override
 	public void run() {
+		Object element;
 		try {
-			execute();
+			while ((element = in.read()) != null) {
+				try {
+					Object converted = converter.convert(element);
+					if (converted == null) {
+						continue;
+					}
+					try {
+						out.write(converted);
+					} catch (Exception e) {
+						log.log(Level.SEVERE, "Could not write", e);
+					}
+				} catch (ConvertException e) {
+					log.log(Level.SEVERE, "Could not convert", e);
+				}
+			}
 		} catch (InterruptedException e) {
 			log.log(Level.INFO, "Interrupted");
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not execute", e);
 		}
+		this.completed = true;
+		for (IWorkerListener listener : listeners) {
+			listener.completed(this);
+		}
 	}
 
-	protected void execute() throws Exception {
+	public boolean isCompleted() {
+		return completed;
+	}
+
+	public void open() throws Exception {
 		out.open();
-		Object element;
-		while ((element = in.read()) != null) {
-			try {
-				Object converted = converter.convert(element);
-				if (converted == null) {
-					continue;
-				}
-				try {
-					out.write(converted);
-				} catch (Exception e) {
-					log.log(Level.SEVERE, "Could not write to output", e);
-				}
-			} catch (ConvertException e) {
-				log.log(Level.SEVERE, "Could not convert", e);
-			}
-		}
+	}
+
+	public void close() throws Exception {
 		out.close();
 	}
 
-	protected boolean isClosed() {
-		return in.isClosed();
+	public void addListener(IWorkerListener listener) {
+		listeners.add(listener);
 	}
 
 }

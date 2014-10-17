@@ -14,6 +14,7 @@ import com.tibco.as.io.IChannel;
 import com.tibco.as.io.cli.converters.LogLevelConverter;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.log.LogLevel;
+import com.tibco.as.util.Member;
 
 public abstract class AbstractApplication {
 
@@ -47,14 +48,13 @@ public abstract class AbstractApplication {
 	private Integer workerThreadCount;
 	@Parameter(names = { "-data_store" }, description = "Directory path for data store")
 	private String dataStore;
-	@Parameter(names = { "-no_exit" }, description = "Do not shut down after application execution")
-	private boolean noExit;
+	// @Parameter(names = { "-no_exit" }, description =
+	// "Do not shut down after application execution")
+	// private boolean noExit;
 	@Parameter(names = { "-security_token" }, description = "Security token path")
 	private String securityToken;
 	@Parameter(names = { "-identity_password" }, description = "Identity password")
 	private String identityPassword;
-	@Parameter(names = { "-parallel" }, description = "Enable parallel destinations")
-	private boolean parallel;
 
 	protected AbstractApplication() {
 	}
@@ -102,42 +102,32 @@ public abstract class AbstractApplication {
 		IChannel channel;
 		try {
 			ChannelConfig config = getChannelConfig();
-			config.setDataStore(dataStore);
-			config.setDiscovery(discovery);
-			config.setIdentityPassword(identityPassword);
-			config.setListen(listen);
-			config.setMember(memberName);
 			config.setMetaspace(metaspaceName);
-			config.setRxBufferSize(rxBufferSize);
-			config.setSecurityTokenFile(securityToken);
-			config.setWorkerThreadCount(workerThreadCount);
-			config.setSequential(parallel);
+			Member member = new Member();
+			member.setDataStore(dataStore);
+			member.setDiscovery(discovery);
+			member.setIdentityPassword(identityPassword);
+			member.setListen(listen);
+			member.setMemberName(memberName);
+			member.setRxBufferSize(rxBufferSize);
+			member.setSecurityTokenFile(securityToken);
+			member.setWorkerThreadCount(workerThreadCount);
 			for (ICommand command : commands) {
 				command.configure(config);
 			}
 			channel = getChannel(config);
-			if (config.isSequential()) {
-				channel.addListener(new DestinationMonitor());
-			}
+			channel.addListener(new DestinationMonitor());
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not create channel", e);
 			return;
 		}
 		execute(channel);
-		if (noExit) {
-			while (true) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					log.log(Level.SEVERE, "Interrupted", e);
-				}
-			}
-		}
 	}
 
 	protected void execute(IChannel channel) {
 		try {
 			channel.start();
+			channel.awaitTermination();
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not start channel", e);
 		} finally {

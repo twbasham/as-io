@@ -58,6 +58,7 @@ public class TestImport extends TestBase {
 		destination.setInputStream(in);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.start();
+		channel.awaitTermination();
 		channel.stop();
 		Assert.assertEquals(3, space.size());
 		Tuple tuple1 = Tuple.create();

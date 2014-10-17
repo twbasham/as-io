@@ -10,6 +10,8 @@ public abstract class AbstractCommand implements ICommand {
 	private Integer workerCount;
 	@Parameter(names = { "-limit" }, description = "Max number of entries to read from input")
 	private Long limit;
+	@Parameter(names = { "-no_transfer" }, description = "Only initialize input and output without data transfer")
+	private Boolean noTransfer;
 
 	@Override
 	public void configure(ChannelConfig config) throws Exception {
@@ -27,6 +29,9 @@ public abstract class AbstractCommand implements ICommand {
 		}
 		if (workerCount != null) {
 			config.setWorkerCount(workerCount);
+		}
+		if (noTransfer != null) {
+			config.setNoTransfer(noTransfer);
 		}
 	}
 

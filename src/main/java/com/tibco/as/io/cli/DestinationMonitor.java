@@ -16,12 +16,11 @@ import com.tibco.as.log.LogFactory;
 public class DestinationMonitor extends ChannelAdapter {
 
 	private Logger log = LogFactory.getLog(DestinationMonitor.class);
-
 	private Map<IDestination, AbstractConsole> progressBars = new HashMap<IDestination, AbstractConsole>();
 	private ExecutorService executor;
 
 	@Override
-	public void starting(IDestination destination) {
+	public void started(IDestination destination) {
 		AbstractConsole progressBar = getConsole(destination);
 		progressBars.put(destination, progressBar);
 		executor = Executors.newSingleThreadExecutor();
@@ -38,7 +37,7 @@ public class DestinationMonitor extends ChannelAdapter {
 	}
 
 	@Override
-	public void stopped(IDestination destination) {
+	public void completed(IDestination destination) {
 		if (progressBars.containsKey(destination)) {
 			progressBars.remove(destination).stop();
 			executor.shutdown();

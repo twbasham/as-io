@@ -79,6 +79,7 @@ public class TestExport extends TestBase {
 		export.setOutputStream(out);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.start();
+		channel.awaitTermination();
 		channel.stop();
 		Assert.assertEquals(3, outList.size());
 		for (Object element : outList) {

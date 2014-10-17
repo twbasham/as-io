@@ -6,6 +6,7 @@ import org.junit.Before;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.MemberDef;
 import com.tibco.as.space.Metaspace;
+import com.tibco.as.util.Member;
 
 public class TestBase {
 
@@ -15,8 +16,10 @@ public class TestBase {
 
 	protected TestChannelConfig getChannelConfig() {
 		TestChannelConfig config = new TestChannelConfig();
-		config.setDiscovery(DISCOVERY);
-		config.setConnectTimeout(10000L);
+		Member member = new Member();
+		member.setDiscovery(DISCOVERY);
+		member.setConnectTimeout(10000L);
+		config.setMember(member);
 		return config;
 	}
 

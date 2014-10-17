@@ -63,6 +63,7 @@ public class TestBatch extends TestBase {
 		export.setOutputStream(new ListOutputStream(list));
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.start();
+		channel.awaitTermination();
 		channel.stop();
 		Assert.assertEquals(space.size(), list.size());
 		for (Object element : list) {
@@ -97,13 +98,14 @@ public class TestBatch extends TestBase {
 			@Override
 			public void started(IDestination destination) {
 				try {
-					destination.getInputStream().close();
+					destination.stop();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
 		channel.start();
+		channel.awaitTermination();
 		channel.stop();
 		Assert.assertTrue(list.size() <= 15);
 	}
