@@ -32,7 +32,7 @@ public abstract class AbstractChannel implements IChannel {
 		String metaspaceName = config.getMetaspace();
 		metaspace = Utils.getMetaspace(metaspaceName);
 		if (metaspace == null) {
-			log.info("Connecting to metaspace");
+			log.fine("Connecting to metaspace");
 			metaspace = Utils.connect(metaspaceName, config.getMember());
 		}
 		discover();
@@ -78,7 +78,7 @@ public abstract class AbstractChannel implements IChannel {
 						+ destination.getName(), e);
 			}
 		}
-		log.info("Disconnecting from metaspace");
+		log.fine("Disconnecting from metaspace");
 		metaspace.close();
 		metaspace = null;
 	}

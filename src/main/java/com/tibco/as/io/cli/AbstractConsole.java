@@ -27,7 +27,6 @@ public abstract class AbstractConsole implements Runnable {
 			sleep();
 		}
 		print(destination.getName(), in.getPosition());
-		System.out.println();
 	}
 
 	private void sleep() {
