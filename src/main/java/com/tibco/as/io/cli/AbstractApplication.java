@@ -10,7 +10,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.tibco.as.convert.Blob;
-import com.tibco.as.convert.ConversionConfig;
+import com.tibco.as.convert.Settings;
 import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.IChannel;
 import com.tibco.as.io.cli.converters.BlobConverter;
@@ -31,7 +31,7 @@ public abstract class AbstractApplication {
 	private boolean logFile;
 	@Parameter(names = "-log_file_pattern", description = "Log file name pattern")
 	private String logFilePattern;
-	@Parameter(names = "-log_file_limit", description = "Approximate maximum amount to write (in bytes) to any log file")
+	@Parameter(names = "-log_file_limit", description = "Max number of bytes to write to any log file")
 	private Integer logFileLimit;
 	@Parameter(names = "-log_file_count", description = "Number of log files to cycle through")
 	private int logFileCount = 1;
@@ -58,17 +58,17 @@ public abstract class AbstractApplication {
 	private String securityToken;
 	@Parameter(names = "-identity_password", description = "Identity password")
 	private String identityPassword;
-	@Parameter(names = "-blob_format", description = "Blob format (base64, hex)", converter = BlobConverter.class, validateWith = BlobConverter.class)
+	@Parameter(names = "-format_blob", description = "Blob format (\"base64\" or \"hex\")", converter = BlobConverter.class, validateWith = BlobConverter.class)
 	private Blob blob;
-	@Parameter(names = "-boolean_format_true", description = "Format e.g. \"true\"")
+	@Parameter(names = "-format_boolean_true", description = "Boolean format for 'true' value e.g. \"true\"")
 	private String booleanTruePattern;
-	@Parameter(names = "-boolean_format_false", description = "Format e.g. \"false\"")
+	@Parameter(names = "-format_boolean_false", description = "Boolean format for 'false' value e.g. \"false\"")
 	private String booleanFalsePattern;
-	@Parameter(names = "-datetime_format", description = "Date/time format")
+	@Parameter(names = "-format_datetime", description = "Date/time format e.g. \"yyyy-MM-dd'T'HH:mm:ss.SSSZ\"")
 	private String datePattern;
-	@Parameter(names = "-number_format", description = "Number format")
+	@Parameter(names = "-format_number", description = "Number format e.g. \"###,###.###\"")
 	private String numberPattern;
-	@Parameter(names = "-time_zone", description = "Time zone ID e.g. GMT")
+	@Parameter(names = "-time_zone", description = "Time zone ID e.g. \"GMT\"")
 	private String timeZoneID;
 
 	protected AbstractApplication() {
@@ -128,7 +128,7 @@ public abstract class AbstractApplication {
 			member.setSecurityTokenFile(securityToken);
 			member.setWorkerThreadCount(workerThreadCount);
 			config.setMember(member);
-			ConversionConfig conversionConfig = config.getConversion();
+			Settings conversionConfig = config.getConversion();
 			conversionConfig.setBlob(blob);
 			conversionConfig.setBooleanTruePattern(booleanTruePattern);
 			conversionConfig.setBooleanFalsePattern(booleanFalsePattern);

@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.tibco.as.convert.ConversionConfig;
+import com.tibco.as.convert.Settings;
 import com.tibco.as.convert.Field;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
@@ -25,7 +25,7 @@ public class DestinationConfig implements Cloneable {
 	private String space;
 	private Collection<Field> fields = new ArrayList<Field>();
 	private Collection<String> keys = new ArrayList<String>();
-	private ConversionConfig conversion = new ConversionConfig();
+	private Settings conversion = new Settings();
 	private Integer spaceBatchSize;
 	private Integer workerCount;
 	private Integer queueCapacity;
@@ -312,7 +312,7 @@ public class DestinationConfig implements Cloneable {
 		setKeys(spaceDef.getKeyDef().getFieldNames());
 	}
 
-	public ConversionConfig getConversion() {
+	public Settings getConversion() {
 		return conversion;
 	}
 
