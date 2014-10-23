@@ -1,9 +1,11 @@
 package com.tibco.as.io.cli;
 
-import com.tibco.as.io.ChannelConfig;
+import java.util.Collection;
+
+import com.tibco.as.io.DestinationConfig;
 
 public interface ICommand {
 
-	void configure(ChannelConfig config) throws Exception;
+	void configure(Collection<DestinationConfig> destinations);
 
 }

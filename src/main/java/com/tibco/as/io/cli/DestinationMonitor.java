@@ -5,7 +5,6 @@ import java.util.concurrent.Executors;
 
 import com.tibco.as.io.ChannelAdapter;
 import com.tibco.as.io.IDestination;
-import com.tibco.as.io.IInputStream;
 
 public class DestinationMonitor extends ChannelAdapter {
 
@@ -17,8 +16,7 @@ public class DestinationMonitor extends ChannelAdapter {
 	}
 
 	private AbstractConsole getConsole(IDestination destination) {
-		IInputStream in = destination.getInputStream();
-		Long size = in.size();
+		Long size = destination.size();
 		if (size == null) {
 			return new SimpleConsole(destination);
 		}

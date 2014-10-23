@@ -4,7 +4,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.tibco.as.io.IDestination;
-import com.tibco.as.io.IInputStream;
 import com.tibco.as.log.LogFactory;
 
 public abstract class AbstractConsole implements Runnable {
@@ -20,12 +19,12 @@ public abstract class AbstractConsole implements Runnable {
 
 	@Override
 	public void run() {
-		IInputStream in = destination.getInputStream();
 		while (!isFinished()) {
-			print(destination.getName(), in.getPosition());
+			print(destination.getName(), destination.getPosition());
 			sleep();
 		}
-		print(destination.getName(), in.getPosition());
+		print(destination.getName(), destination.getPosition());
+		System.out.println();
 	}
 
 	private void sleep() {

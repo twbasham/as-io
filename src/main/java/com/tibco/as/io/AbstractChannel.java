@@ -35,8 +35,10 @@ public abstract class AbstractChannel implements IChannel {
 			log.fine("Connecting to metaspace");
 			metaspace = Utils.connect(metaspaceName, config.getMember());
 		}
-		discover();
+		configure();
 		for (DestinationConfig destinationConfig : config.getDestinations()) {
+			destinationConfig.getConversion().setDefaults(
+					config.getConversion());
 			destinations.add(createDestination(destinationConfig));
 		}
 		for (IDestination destination : destinations) {
@@ -83,17 +85,20 @@ public abstract class AbstractChannel implements IChannel {
 		metaspace = null;
 	}
 
-	protected void discover() throws Exception {
+	protected void configure() throws Exception {
+		Collection<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
 		for (DestinationConfig destination : config.getDestinations()) {
 			if (destination.isWildcard()) {
-				config.removeDestinationConfig(destination);
 				for (String spaceName : metaspace.getUserSpaceNames()) {
 					DestinationConfig destinationConfig = destination.clone();
 					destinationConfig.setSpace(spaceName);
-					config.addDestinationConfig(destinationConfig);
+					destinations.add(destinationConfig);
 				}
+			} else {
+				destinations.add(destination);
 			}
 		}
+		config.setDestinations(destinations);
 	}
 
 	protected abstract IDestination createDestination(DestinationConfig config);

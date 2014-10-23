@@ -9,8 +9,11 @@ import java.util.logging.Logger;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.tibco.as.convert.Blob;
+import com.tibco.as.convert.ConversionConfig;
 import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.IChannel;
+import com.tibco.as.io.cli.converters.BlobConverter;
 import com.tibco.as.io.cli.converters.LogLevelConverter;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.log.LogLevel;
@@ -34,27 +37,39 @@ public abstract class AbstractApplication {
 	private int logFileCount = 1;
 	@Parameter(names = "-log_file_append", description = "Append logs onto any existing files")
 	private boolean logFileAppend;
-	@Parameter(names = { "-metaspace" }, description = "Metaspace name")
+	@Parameter(names = "-metaspace", description = "Metaspace name")
 	private String metaspaceName;
-	@Parameter(names = { "-member_name" }, description = "Member name")
+	@Parameter(names = "-member_name", description = "Member name")
 	private String memberName;
-	@Parameter(names = { "-discovery" }, description = "Discovery URL")
+	@Parameter(names = "-discovery", description = "Discovery URL")
 	private String discovery;
-	@Parameter(names = { "-listen" }, description = "Listen URL")
+	@Parameter(names = "-listen", description = "Listen URL")
 	private String listen;
-	@Parameter(names = { "-rx_buffer_size" }, description = "Receive buffer size")
+	@Parameter(names = "-rx_buffer_size", description = "Receive buffer size")
 	private Long rxBufferSize;
-	@Parameter(names = { "-worker_thread_count" }, description = "Worker thread count")
+	@Parameter(names = "-worker_thread_count", description = "Worker thread count")
 	private Integer workerThreadCount;
-	@Parameter(names = { "-data_store" }, description = "Directory path for data store")
+	@Parameter(names = "-data_store", description = "Directory path for data store")
 	private String dataStore;
-	// @Parameter(names = { "-no_exit" }, description =
+	// @Parameter(names = "-no_exit" , description =
 	// "Do not shut down after application execution")
 	// private boolean noExit;
-	@Parameter(names = { "-security_token" }, description = "Security token path")
+	@Parameter(names = "-security_token", description = "Security token path")
 	private String securityToken;
-	@Parameter(names = { "-identity_password" }, description = "Identity password")
+	@Parameter(names = "-identity_password", description = "Identity password")
 	private String identityPassword;
+	@Parameter(names = "-blob_format", description = "Blob format (base64, hex)", converter = BlobConverter.class, validateWith = BlobConverter.class)
+	private Blob blob;
+	@Parameter(names = "-boolean_format_true", description = "Format e.g. \"true\"")
+	private String booleanTruePattern;
+	@Parameter(names = "-boolean_format_false", description = "Format e.g. \"false\"")
+	private String booleanFalsePattern;
+	@Parameter(names = "-datetime_format", description = "Date/time format")
+	private String datePattern;
+	@Parameter(names = "-number_format", description = "Number format")
+	private String numberPattern;
+	@Parameter(names = "-time_zone", description = "Time zone ID e.g. GMT")
+	private String timeZoneID;
 
 	protected AbstractApplication() {
 	}
@@ -112,8 +127,16 @@ public abstract class AbstractApplication {
 			member.setRxBufferSize(rxBufferSize);
 			member.setSecurityTokenFile(securityToken);
 			member.setWorkerThreadCount(workerThreadCount);
+			config.setMember(member);
+			ConversionConfig conversionConfig = config.getConversion();
+			conversionConfig.setBlob(blob);
+			conversionConfig.setBooleanTruePattern(booleanTruePattern);
+			conversionConfig.setBooleanFalsePattern(booleanFalsePattern);
+			conversionConfig.setDatePattern(datePattern);
+			conversionConfig.setNumberPattern(numberPattern);
+			conversionConfig.setTimeZoneID(timeZoneID);
 			for (ICommand command : commands) {
-				command.configure(config);
+				command.configure(config.getDestinations());
 			}
 			channel = getChannel(config);
 			channel.addListener(new DestinationMonitor());
@@ -139,7 +162,9 @@ public abstract class AbstractApplication {
 		}
 	}
 
-	protected abstract ChannelConfig getChannelConfig() throws Exception;
+	protected ChannelConfig getChannelConfig() throws Exception {
+		return new ChannelConfig();
+	}
 
 	protected abstract IChannel getChannel(ChannelConfig config);
 

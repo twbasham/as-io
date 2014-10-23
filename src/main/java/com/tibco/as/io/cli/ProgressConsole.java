@@ -11,13 +11,6 @@ public class ProgressConsole extends AbstractConsole {
 		this.size = size;
 	}
 
-	private long getPercent(long size, long position) {
-		if (size == 0) {
-			return 100;
-		}
-		return position * 100 / size;
-	}
-
 	@Override
 	protected void print(String name, long position) {
 		StringBuilder bar = new StringBuilder("\r%1$-20s [");
@@ -34,6 +27,13 @@ public class ProgressConsole extends AbstractConsole {
 		bar.append("] ");
 		bar.append("%2$,d/%3$,d");
 		System.out.printf(bar.toString(), name, position, size);
+	}
+
+	private long getPercent(long size, long position) {
+		if (size == 0) {
+			return 100;
+		}
+		return position * 100 / size;
 	}
 
 }

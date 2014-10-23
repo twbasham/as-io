@@ -1,20 +1,15 @@
 package com.tibco.as.io;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 public class ListOutputStream implements IOutputStream {
 
-	private List<Object> list;
-
+	private List<Object> list = new Vector<Object>();
 	private Long sleep;
 
-	public ListOutputStream() {
-		this(new ArrayList<Object>());
-	}
-
-	public ListOutputStream(List<Object> list) {
-		this.list = list;
+	public List<Object> getList() {
+		return list;
 	}
 
 	@Override
@@ -23,23 +18,19 @@ public class ListOutputStream implements IOutputStream {
 
 	@Override
 	public void close() throws Exception {
-		list = null;
 	}
 
 	private void sleep() throws InterruptedException {
-		if (sleep != null) {
-			Thread.sleep(sleep);
+		if (sleep == null) {
+			return;
 		}
+		Thread.sleep(sleep);
 	}
 
 	@Override
 	public void write(Object element) throws InterruptedException {
 		list.add(element);
 		sleep();
-	}
-
-	public boolean isClosed() {
-		return list == null;
 	}
 
 	public void setSleep(long sleep) {

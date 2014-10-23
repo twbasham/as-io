@@ -4,8 +4,8 @@ import com.tibco.as.convert.Field;
 
 public class TestDestinationConfig extends DestinationConfig {
 
-	private IInputStream inputStream;
-	private IOutputStream outputStream;
+	private ListInputStream inputStream = new ListInputStream();
+	private ListOutputStream outputStream = new ListOutputStream();
 	private int importBatchSize = 1;
 
 	@Override
@@ -15,19 +15,19 @@ public class TestDestinationConfig extends DestinationConfig {
 		return clone;
 	}
 
-	public IInputStream getInputStream() {
+	public ListInputStream getInputStream() {
 		return inputStream;
 	}
 
-	public void setInputStream(IInputStream inputStream) {
+	public void setInputStream(ListInputStream inputStream) {
 		this.inputStream = inputStream;
 	}
 
-	public IOutputStream getOutputStream() {
+	public ListOutputStream getOutputStream() {
 		return outputStream;
 	}
 
-	public void setOutputStream(IOutputStream outputStream) {
+	public void setOutputStream(ListOutputStream outputStream) {
 		this.outputStream = outputStream;
 	}
 

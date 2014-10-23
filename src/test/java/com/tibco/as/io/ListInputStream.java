@@ -1,17 +1,16 @@
 package com.tibco.as.io;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListInputStream implements IInputStream {
 
-	private List<?> list;
-
+	private List<Object> list = new ArrayList<Object>();
 	private int position = 0;
-
 	private Long sleep;
 
-	public ListInputStream(List<?> list) {
-		this.list = list;
+	public List<Object> getList() {
+		return list;
 	}
 
 	@Override
@@ -20,9 +19,6 @@ public class ListInputStream implements IInputStream {
 
 	@Override
 	public Object read() throws Exception {
-		if (list == null) {
-			return null;
-		}
 		if (position < list.size()) {
 			try {
 				return list.get(position++);
@@ -47,12 +43,6 @@ public class ListInputStream implements IInputStream {
 
 	@Override
 	public void close() throws Exception {
-		list = null;
-	}
-
-	@Override
-	public boolean isClosed() {
-		return list == null;
 	}
 
 	public void setSleep(long sleep) {

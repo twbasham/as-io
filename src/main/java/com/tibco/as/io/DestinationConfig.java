@@ -1,18 +1,31 @@
 package com.tibco.as.io;
 
-import com.tibco.as.convert.Space;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import com.tibco.as.convert.ConversionConfig;
+import com.tibco.as.convert.Field;
+import com.tibco.as.space.FieldDef;
+import com.tibco.as.space.FieldDef.FieldType;
 import com.tibco.as.space.Member.DistributionRole;
+import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
-public class DestinationConfig extends Space implements Cloneable {
+public class DestinationConfig implements Cloneable {
 
 	private static final int DEFAULT_BATCH_SIZE = 1000;
 	private static final int DEFAULT_BATCH_SIZE_CONTINUOUS = 1;
 	private static final long DEFAULT_WAIT_FOR_READY_TIMEOUT = 30000;
 	private static final int DEFAULT_WORKER_COUNT = 1;
 
+	private String space;
+	private Collection<Field> fields = new ArrayList<Field>();
+	private Collection<String> keys = new ArrayList<String>();
+	private ConversionConfig conversion = new ConversionConfig();
 	private Integer spaceBatchSize;
 	private Integer workerCount;
 	private Integer queueCapacity;
@@ -72,6 +85,11 @@ public class DestinationConfig extends Space implements Cloneable {
 	}
 
 	public void copyTo(DestinationConfig target) {
+		for (Field field : fields) {
+			target.fields.add(field.clone());
+		}
+		target.keys = new ArrayList<String>(keys);
+		target.space = space;
 		target.browserType = browserType;
 		target.direction = direction;
 		target.distributionRole = distributionRole;
@@ -88,7 +106,6 @@ public class DestinationConfig extends Space implements Cloneable {
 		target.timeScope = timeScope;
 		target.waitForReadyTimeout = waitForReadyTimeout;
 		target.workerCount = workerCount;
-		super.copyTo(target);
 	}
 
 	public BrowserType getBrowserType() {
@@ -207,6 +224,123 @@ public class DestinationConfig extends Space implements Cloneable {
 
 	public void setNoTransfer(boolean noTransfer) {
 		this.noTransfer = noTransfer;
+	}
+
+	public void setFields(Collection<Field> fields) {
+		this.fields = fields;
+	}
+
+	public Collection<Field> getFields() {
+		return Collections.unmodifiableCollection(fields);
+	}
+
+	public Field getField(String name) {
+		for (Field field : fields) {
+			if (field.getFieldName().equals(name)) {
+				return field;
+			}
+		}
+		Field field = addField();
+		field.setFieldName(name);
+		return field;
+	}
+
+	public Collection<String> getKeys() {
+		return keys;
+	}
+
+	public void setKeys(Collection<String> keys) {
+		this.keys = keys;
+	}
+
+	public String getSpace() {
+		return space;
+	}
+
+	public void setSpace(String space) {
+		this.space = space;
+	}
+
+	public Field addField() {
+		Field field = newField();
+		fields.add(field);
+		return field;
+	}
+
+	protected Field newField() {
+		return new Field();
+	}
+
+	public Collection<String> getFieldNames() {
+		Collection<String> fieldNames = new ArrayList<String>();
+		for (Field field : getFields()) {
+			fieldNames.add(field.getFieldName());
+		}
+		return fieldNames;
+	}
+
+	public void setFieldNames(List<String> fieldNames) {
+		Collection<Field> fields = new ArrayList<Field>();
+		for (String fieldName : fieldNames) {
+			fields.add(getField(fieldName));
+		}
+		setFields(fields);
+	}
+
+	public void setSpaceDef(SpaceDef spaceDef) {
+		setSpace(spaceDef.getName());
+		setKeys(spaceDef.getKeyDef().getFieldNames());
+		if (getFields().isEmpty()) {
+			for (FieldDef fieldDef : spaceDef.getFieldDefs()) {
+				addField().setFieldName(fieldDef.getName());
+			}
+		}
+		Collection<Field> fields = new ArrayList<Field>();
+		for (Field field : getFields()) {
+			FieldDef fieldDef = spaceDef.getFieldDef(field.getFieldName());
+			if (fieldDef == null) {
+				field.setFieldName(null);
+				field.setFieldType(null);
+			} else {
+				field.setFieldType(fieldDef.getType());
+				field.setFieldNullable(fieldDef.isNullable());
+				field.setFieldEncrypted(fieldDef.isEncrypted());
+			}
+			fields.add(field);
+		}
+		setFields(fields);
+		setKeys(spaceDef.getKeyDef().getFieldNames());
+	}
+
+	public ConversionConfig getConversion() {
+		return conversion;
+	}
+
+	public SpaceDef getSpaceDef() {
+		SpaceDef spaceDef = SpaceDef.create(getSpace());
+		for (Field field : getFields()) {
+			FieldType fieldType = field.getFieldType();
+			if (fieldType == null) {
+				fieldType = field.getJavaFieldType();
+			}
+			FieldDef fieldDef = FieldDef
+					.create(field.getFieldName(), fieldType);
+			Boolean encrypted = field.getFieldEncrypted();
+			if (encrypted != null) {
+				fieldDef.setEncrypted(encrypted);
+			}
+			Boolean nullable = field.getFieldNullable();
+			if (nullable != null) {
+				fieldDef.setNullable(nullable);
+			}
+			spaceDef.getFieldDefs().add(fieldDef);
+		}
+		Collection<String> keys = getKeys();
+		if (keys.isEmpty()) {
+			keys = getFieldNames();
+		}
+		spaceDef.setKey(keys.toArray(new String[keys.size()]));
+		return spaceDef;
 	}
 
 }

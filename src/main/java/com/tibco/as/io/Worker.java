@@ -3,7 +3,6 @@ package com.tibco.as.io;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.convert.ConvertException;
 import com.tibco.as.convert.IConverter;
 import com.tibco.as.log.LogFactory;
 
@@ -25,18 +24,20 @@ public class Worker implements Runnable {
 		Object element;
 		try {
 			while ((element = in.read()) != null) {
+				Object converted;
 				try {
-					Object converted = converter.convert(element);
-					if (converted == null) {
-						continue;
-					}
-					try {
-						out.write(converted);
-					} catch (Exception e) {
-						log.log(Level.SEVERE, "Could not write", e);
-					}
-				} catch (ConvertException e) {
+					converted = converter.convert(element);
+				} catch (Exception e) {
 					log.log(Level.SEVERE, "Could not convert", e);
+					continue;
+				}
+				if (converted == null) {
+					continue;
+				}
+				try {
+					out.write(converted);
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "Could not write", e);
 				}
 			}
 		} catch (InterruptedException e) {
@@ -46,12 +47,12 @@ public class Worker implements Runnable {
 		}
 	}
 
-	public void open() throws Exception {
-		out.open();
+	public IInputStream getInputStream() {
+		return in;
 	}
 
-	public void close() throws Exception {
-		out.close();
+	public IOutputStream getOutputStream() {
+		return out;
 	}
 
 }

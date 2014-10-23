@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.beust.jcommander.Parameter;
-import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.DestinationConfig;
 import com.tibco.as.io.Direction;
 import com.tibco.as.io.cli.converters.BrowserDistributionScopeConverter;
@@ -34,11 +33,12 @@ public abstract class AbstractExportCommand extends AbstractCommand {
 	private String filter;
 
 	@Override
-	public void configure(ChannelConfig config) throws Exception {
+	protected void populate(Collection<DestinationConfig> destinations) {
 		for (String spaceName : spaceNames) {
-			config.addDestinationConfig().setSpace(spaceName);
+			DestinationConfig destination = newDestination();
+			destination.setSpace(spaceName);
+			destinations.add(destination);
 		}
-		super.configure(config);
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package com.tibco.as.io;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.tibco.as.convert.ConversionConfig;
 import com.tibco.as.util.Member;
 
 public class ChannelConfig {
@@ -10,9 +11,7 @@ public class ChannelConfig {
 	private String metaspace;
 	private Member member;
 	private Collection<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
-
-	protected ChannelConfig() {
-	}
+	private ConversionConfig conversionConfig = new ConversionConfig();
 
 	public Member getMember() {
 		return member;
@@ -22,18 +21,12 @@ public class ChannelConfig {
 		this.member = member;
 	}
 
-	public void addDestinationConfig(DestinationConfig config) {
-		destinations.add(config);
+	public Collection<DestinationConfig> getDestinations() {
+		return destinations;
 	}
 
-	public DestinationConfig addDestinationConfig() {
-		DestinationConfig destination = newDestinationConfig();
-		destinations.add(destination);
-		return destination;
-	}
-
-	protected DestinationConfig newDestinationConfig() {
-		return new DestinationConfig();
+	public void setDestinations(Collection<DestinationConfig> destinations) {
+		this.destinations = destinations;
 	}
 
 	public String getMetaspace() {
@@ -44,12 +37,8 @@ public class ChannelConfig {
 		this.metaspace = metaspace;
 	}
 
-	public DestinationConfig[] getDestinations() {
-		return destinations.toArray(new DestinationConfig[destinations.size()]);
-	}
-
-	public boolean removeDestinationConfig(DestinationConfig destination) {
-		return destinations.remove(destination);
+	public ConversionConfig getConversion() {
+		return conversionConfig;
 	}
 
 }

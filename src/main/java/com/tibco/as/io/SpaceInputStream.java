@@ -1,12 +1,9 @@
 package com.tibco.as.io;
 
-import java.text.MessageFormat;
-
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.ASStatus;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.RuntimeASException;
-import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 import com.tibco.as.space.browser.Browser;
 import com.tibco.as.space.browser.BrowserDef;
@@ -17,15 +14,10 @@ import com.tibco.as.util.Utils;
 public class SpaceInputStream implements IInputStream {
 
 	private Metaspace metaspace;
-
 	private DestinationConfig config;
-
 	private Browser browser;
-
-	private Long position;
-
+	private long position;
 	private long browseTime;
-
 	private Long size;
 
 	public SpaceInputStream(Metaspace metaspace, DestinationConfig config) {
@@ -40,13 +32,7 @@ public class SpaceInputStream implements IInputStream {
 
 	@Override
 	public void open() throws Exception {
-		String spaceName = config.getSpace();
-		SpaceDef spaceDef = metaspace.getSpaceDef(config.getSpace());
-		if (spaceDef == null) {
-			throw new Exception(MessageFormat.format("No space named ''{0}''",
-					spaceName));
-		}
-		config.setSpaceDef(spaceDef);
+		config.setSpaceDef(metaspace.getSpaceDef(config.getSpace()));
 		BrowserType browserType = config.getBrowserType();
 		if (browserType == null) {
 			browserType = BrowserType.GET;
@@ -72,27 +58,31 @@ public class SpaceInputStream implements IInputStream {
 			}
 		}
 		String filter = config.getFilter();
+		String space = config.getSpace();
 		long start = System.nanoTime();
 		if (filter == null) {
-			browser = metaspace.browse(spaceName, browserType, browserDef);
+			browser = metaspace.browse(space, browserType, browserDef);
 		} else {
-			browser = metaspace.browse(spaceName, browserType, browserDef,
-					filter);
+			browser = metaspace.browse(space, browserType, browserDef, filter);
 		}
 		browseTime = System.nanoTime() - start;
 		if (browser instanceof ASBrowser) {
 			size = ((ASBrowser) browser).size();
 		}
-		position = 0L;
+		position = 0;
 	}
 
 	@Override
 	public Tuple read() throws ASException {
-		if (isClosed()) {
+		if (browser == null) {
 			return null;
 		}
 		try {
-			return next();
+			Tuple tuple = browser.next();
+			if (tuple != null) {
+				position++;
+			}
+			return tuple;
 		} catch (RuntimeASException e) {
 			if (e.getCause() instanceof ASException) {
 				ASException ase = (ASException) e.getCause();
@@ -113,15 +103,6 @@ public class SpaceInputStream implements IInputStream {
 		}
 	}
 
-	private Tuple next() throws ASException {
-		Tuple tuple = browser.next();
-		if (tuple == null) {
-			return null;
-		}
-		position++;
-		return tuple;
-	}
-
 	@Override
 	public Long getPosition() {
 		return position;
@@ -134,16 +115,10 @@ public class SpaceInputStream implements IInputStream {
 
 	@Override
 	public void close() throws ASException {
-		if (isClosed()) {
+		if (browser == null) {
 			return;
 		}
 		browser.stop();
 		browser = null;
 	}
-
-	@Override
-	public boolean isClosed() {
-		return browser == null;
-	}
-
 }

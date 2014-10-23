@@ -1,7 +1,8 @@
 package com.tibco.as.io.cli;
 
+import java.util.Collection;
+
 import com.beust.jcommander.Parameter;
-import com.tibco.as.io.ChannelConfig;
 import com.tibco.as.io.DestinationConfig;
 
 public abstract class AbstractCommand implements ICommand {
@@ -14,14 +15,19 @@ public abstract class AbstractCommand implements ICommand {
 	private Boolean noTransfer;
 
 	@Override
-	public void configure(ChannelConfig config) throws Exception {
-		if (config.getDestinations().length == 0) {
-			config.addDestinationConfig();
+	public void configure(Collection<DestinationConfig> destinations) {
+		populate(destinations);
+		if (destinations.isEmpty()) {
+			destinations.add(newDestination());
 		}
-		for (DestinationConfig destination : config.getDestinations()) {
+		for (DestinationConfig destination : destinations) {
 			configure(destination);
 		}
 	}
+
+	protected abstract void populate(Collection<DestinationConfig> destinations);
+
+	protected abstract DestinationConfig newDestination();
 
 	protected void configure(DestinationConfig config) {
 		if (limit != null) {

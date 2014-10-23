@@ -3,7 +3,6 @@ package com.tibco.as.io;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
-import java.util.Vector;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -51,20 +50,19 @@ public class TestBatch extends TestBase {
 
 	@Test
 	public void testBatch() throws Exception {
-		List<Object> list = new Vector<Object>();
-		TestChannelConfig channelConfig = getChannelConfig();
-		TestDestinationConfig export = (TestDestinationConfig) channelConfig
-				.addDestinationConfig();
-		export.setDirection(Direction.EXPORT);
-		export.setWorkerCount(5);
-		export.setQueueCapacity(35000);
-		export.setQueryLimit(100000L);
-		export.setSpace(space.getName());
-		export.setOutputStream(new ListOutputStream(list));
+		ChannelConfig channelConfig = getChannelConfig();
+		TestDestinationConfig destination = new TestDestinationConfig();
+		destination.setDirection(Direction.EXPORT);
+		destination.setWorkerCount(5);
+		destination.setQueueCapacity(35000);
+		destination.setQueryLimit(100000L);
+		destination.setSpace(space.getName());
+		channelConfig.getDestinations().add(destination);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.start();
 		channel.awaitTermination();
 		channel.stop();
+		List<Object> list = destination.getOutputStream().getList();
 		Assert.assertEquals(space.size(), list.size());
 		for (Object element : list) {
 			Object[] line = (Object[]) element;
@@ -79,19 +77,16 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testStopTransfer() throws Exception {
 		LogFactory.getRootLogger(LogLevel.VERBOSE);
-		List<Object> list = new Vector<Object>();
-		ListOutputStream out = new ListOutputStream(list);
-		out.setSleep(100);
-		TestChannelConfig channelConfig = getChannelConfig();
-		TestDestinationConfig export = (TestDestinationConfig) channelConfig
-				.addDestinationConfig();
-		export.setDirection(Direction.EXPORT);
-		export.setSpace(space.getName());
-		export.setTimeScope(TimeScope.ALL);
-		export.setTimeout(100L);
-		export.setWorkerCount(1);
-		export.setQueueCapacity(1);
-		export.setOutputStream(out);
+		ChannelConfig channelConfig = getChannelConfig();
+		TestDestinationConfig destination = new TestDestinationConfig();
+		channelConfig.getDestinations().add(destination);
+		destination.setDirection(Direction.EXPORT);
+		destination.setSpace(space.getName());
+		destination.setTimeScope(TimeScope.ALL);
+		destination.setTimeout(100L);
+		destination.setWorkerCount(1);
+		destination.setQueueCapacity(1);
+		destination.getOutputStream().setSleep(100);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.addListener(new ChannelAdapter() {
 
@@ -107,7 +102,7 @@ public class TestBatch extends TestBase {
 		channel.start();
 		channel.awaitTermination();
 		channel.stop();
-		Assert.assertTrue(list.size() <= 15);
+		Assert.assertTrue(destination.getOutputStream().getList().size() <= 15);
 	}
 
 	@After

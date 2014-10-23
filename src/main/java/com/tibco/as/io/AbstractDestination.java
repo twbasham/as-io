@@ -5,16 +5,20 @@ import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.tibco.as.convert.ConverterFactory;
+import com.tibco.as.convert.Field;
 import com.tibco.as.convert.IConverter;
 import com.tibco.as.convert.UnsupportedConversionException;
+import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.Member.DistributionRole;
 import com.tibco.as.space.Metaspace;
-import com.tibco.as.space.SpaceDef;
 
 public abstract class AbstractDestination implements IDestination {
 
+	private Logger log = LogFactory.getLog(AbstractDestination.class);
 	private ConverterFactory converterFactory = new ConverterFactory();
 	private AbstractChannel channel;
 	private DestinationConfig config;
@@ -28,27 +32,34 @@ public abstract class AbstractDestination implements IDestination {
 		this.config = config;
 	}
 
+	protected AbstractChannel getChannel() {
+		return channel;
+	}
+
 	@Override
 	public void start() throws Exception {
-		Metaspace metaspace = channel.getMetaspace();
-		in = getInputStream(createInputStream(metaspace));
-		SpaceDef spaceDef = metaspace.getSpaceDef(config.getSpace());
-		if (spaceDef != null) {
-			config.setSpaceDef(spaceDef);
-		}
+		in = getInputStream(createInputStream());
 		in.open();
 		for (int index = 0; index < config.getWorkerCount(); index++) {
-			IOutputStream out = createOutputStream(metaspace);
-			workers.add(new Worker(in, createConverter(), out));
+			IOutputStream out = getOutputStream();
+			out.open();
+			IConverter converter = getConverter();
+			workers.add(new Worker(in, converter, out));
 		}
 		if (!config.isNoTransfer()) {
 			service = Executors.newFixedThreadPool(workers.size());
 			for (Worker worker : workers) {
-				worker.open();
 				service.execute(worker);
 			}
 			service.shutdown();
 		}
+	}
+
+	private IInputStream getInputStream(IInputStream in) {
+		if (config.getLimit() == null) {
+			return in;
+		}
+		return new LimitedInputStream(in, config.getLimit());
 	}
 
 	@Override
@@ -65,7 +76,11 @@ public abstract class AbstractDestination implements IDestination {
 	public void stop() throws Exception {
 		in.close();
 		for (Worker worker : workers) {
-			worker.close();
+			try {
+				worker.getOutputStream().close();
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not close output stream", e);
+			}
 		}
 		if (config.getDistributionRole() == DistributionRole.SEEDER) {
 			return;
@@ -73,52 +88,45 @@ public abstract class AbstractDestination implements IDestination {
 		workers.clear();
 	}
 
-	private IConverter createConverter() throws UnsupportedConversionException {
-		if (config.isImport()) {
-			return converterFactory.getJavaConverter(config);
+	private IConverter getConverter() throws UnsupportedConversionException {
+		Collection<Field> fields = config.getFields();
+		for (Field field : fields) {
+			field.getConversion().setDefaults(config.getConversion());
 		}
-		return converterFactory.getTupleConverter(config);
+		if (config.isImport()) {
+			return converterFactory.getJavaConverter(fields);
+		}
+		return converterFactory.getTupleConverter(fields, getComponentType());
 	}
 
-	private IInputStream getInputStream(IInputStream in) {
-		if (config.getLimit() == null) {
-			return in;
+	protected abstract Class<?> getComponentType();
+
+	private IInputStream createInputStream() throws Exception {
+		if (config.isImport()) {
+			return getImportInputStream();
 		}
-		return new LimitedInputStream(in, config.getLimit());
+		return new SpaceInputStream(channel.getMetaspace(), config);
 	}
 
-	private IInputStream createInputStream(Metaspace metaspace)
-			throws Exception {
+	private IOutputStream getOutputStream() throws Exception {
 		if (config.isImport()) {
-			return createInputStream();
-		}
-		return new SpaceInputStream(metaspace, config);
-	}
-
-	private IOutputStream createOutputStream(Metaspace metaspace)
-			throws Exception {
-		if (config.isImport()) {
+			Metaspace metaspace = channel.getMetaspace();
 			int batchSize = config.getSpaceBatchSize();
 			if (batchSize > 1) {
 				return new BatchSpaceOutputStream(metaspace, config, batchSize);
 			}
 			return new SpaceOutputStream(metaspace, config);
 		}
-		return createOutputStream();
+		return getExportOutputStream();
 	}
 
-	protected abstract IInputStream createInputStream() throws Exception;
+	protected abstract IInputStream getImportInputStream() throws Exception;
 
-	protected abstract IOutputStream createOutputStream() throws Exception;
+	protected abstract IOutputStream getExportOutputStream() throws Exception;
 
 	@Override
 	public String getName() {
 		return config.getSpace();
-	}
-
-	@Override
-	public IInputStream getInputStream() {
-		return in;
 	}
 
 	@Override
@@ -127,6 +135,22 @@ public abstract class AbstractDestination implements IDestination {
 			return true;
 		}
 		return service.isTerminated();
+	}
+
+	@Override
+	public Long getPosition() {
+		if (in == null) {
+			return null;
+		}
+		return in.getPosition();
+	}
+
+	@Override
+	public Long size() {
+		if (in == null) {
+			return null;
+		}
+		return in.size();
 	}
 
 }

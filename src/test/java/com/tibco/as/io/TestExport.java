@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Vector;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -68,21 +67,18 @@ public class TestExport extends TestBase {
 		Space space2 = metaspace.getSpace(spaceDef2.getName(),
 				DistributionRole.SEEDER);
 		space2.putAll(list);
-		List<Object> outList = new Vector<Object>();
-		ListOutputStream out = new ListOutputStream(outList);
-		out.setSleep(140);
-		TestChannelConfig channelConfig = getChannelConfig();
-		TestDestinationConfig export = (TestDestinationConfig) channelConfig
-				.addDestinationConfig();
+		ChannelConfig channelConfig = getChannelConfig();
+		TestDestinationConfig export = new TestDestinationConfig();
 		export.setDirection(Direction.EXPORT);
 		export.setSpace(spaceName);
-		export.setOutputStream(out);
+		export.getOutputStream().setSleep(140);
+		channelConfig.getDestinations().add(export);
 		TestChannel channel = new TestChannel(channelConfig);
 		channel.start();
 		channel.awaitTermination();
 		channel.stop();
-		Assert.assertEquals(3, outList.size());
-		for (Object element : outList) {
+		Assert.assertEquals(3, export.getOutputStream().getList().size());
+		for (Object element : export.getOutputStream().getList()) {
 			Object[] line = (Object[]) element;
 			Assert.assertEquals(3, line.length);
 			Calendar calendar = Calendar.getInstance();

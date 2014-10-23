@@ -14,8 +14,8 @@ public class TestBase {
 
 	private Metaspace metaspace;
 
-	protected TestChannelConfig getChannelConfig() {
-		TestChannelConfig config = new TestChannelConfig();
+	protected ChannelConfig getChannelConfig() {
+		ChannelConfig config = new ChannelConfig();
 		Member member = new Member();
 		member.setDiscovery(DISCOVERY);
 		member.setConnectTimeout(10000L);

@@ -10,8 +10,10 @@ public interface IDestination {
 
 	String getName();
 
-	IInputStream getInputStream();
-
 	boolean hasCompleted();
+
+	Long getPosition();
+
+	Long size();
 
 }
