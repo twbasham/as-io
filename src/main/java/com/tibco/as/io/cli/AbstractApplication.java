@@ -25,35 +25,32 @@ public abstract class AbstractApplication {
 
 	@Parameter(names = { "-?", "-help" }, description = "Print this help message", help = true)
 	private Boolean help;
-	@Parameter(names = "-log_level", converter = LogLevelConverter.class, validateWith = LogLevelConverter.class, description = "Log level (ERROR, WARNING, INFO, DEBUG or VERBOSE)")
+	@Parameter(names = "-debug", converter = LogLevelConverter.class, validateWith = LogLevelConverter.class, description = "Log level (ERROR, WARNING, INFO, DEBUG or VERBOSE)")
 	private LogLevel logLevel = LogLevel.INFO;
-	@Parameter(names = "-log_file", description = "Write logs to file")
-	private boolean logFile;
-	@Parameter(names = "-log_file_pattern", description = "Log file name pattern")
-	private String logFilePattern;
-	@Parameter(names = "-log_file_limit", description = "Max number of bytes to write to any log file")
+	@Parameter(names = "-log", description = "Log file path")
+	private String logFile;
+	@Parameter(names = "-log_debug", converter = LogLevelConverter.class, validateWith = LogLevelConverter.class, description = "File log level (ERROR, WARNING, INFO, DEBUG or VERBOSE)")
+	private LogLevel logFileLevel = LogLevel.INFO;
+	@Parameter(names = "-log_limit", description = "Max number of bytes to write to any log file")
 	private Integer logFileLimit;
-	@Parameter(names = "-log_file_count", description = "Number of log files to cycle through")
+	@Parameter(names = "-log_count", description = "Number of log files to cycle through")
 	private int logFileCount = 1;
-	@Parameter(names = "-log_file_append", description = "Append logs onto any existing files")
+	@Parameter(names = "-log_append", description = "Append logs onto any existing files")
 	private boolean logFileAppend;
-	@Parameter(names = "-metaspace", description = "Metaspace name")
+	@Parameter(names = "-metaspace", description = "Name of the metaspace that the application is to join")
 	private String metaspaceName;
-	@Parameter(names = "-member_name", description = "Member name")
+	@Parameter(names = "-member_name", description = "Unique member name")
 	private String memberName;
-	@Parameter(names = "-discovery", description = "Discovery URL")
+	@Parameter(names = "-discovery", description = "URL to be used to discover the metaspace")
 	private String discovery;
-	@Parameter(names = "-listen", description = "Listen URL")
+	@Parameter(names = "-listen", description = "URL for the application")
 	private String listen;
-	@Parameter(names = "-rx_buffer_size", description = "Receive buffer size")
+	@Parameter(names = "-rx_buffer_size", description = "TCP buffer size for receiving data")
 	private Long rxBufferSize;
-	@Parameter(names = "-worker_thread_count", description = "Worker thread count")
+	@Parameter(names = "-worker_thread_count", description = "Number of threads that can be used for program invocation")
 	private Integer workerThreadCount;
-	@Parameter(names = "-data_store", description = "Directory path for data store")
+	@Parameter(names = "-data_store", description = "Directory path for the shared-nothing persistence data store")
 	private String dataStore;
-	// @Parameter(names = "-no_exit" , description =
-	// "Do not shut down after application execution")
-	// private boolean noExit;
 	@Parameter(names = "-security_token", description = "Security token path")
 	private String securityToken;
 	@Parameter(names = "-identity_password", description = "Identity password")
@@ -90,8 +87,8 @@ public abstract class AbstractApplication {
 			return;
 		}
 		try {
-			LogFactory.getRootLogger(logLevel, logFile, logFilePattern,
-					logFileLimit, logFileCount, logFileAppend);
+			LogFactory.configure(logLevel, logFile, logFileLimit, logFileCount,
+					logFileAppend, logFileLevel);
 		} catch (Exception e) {
 			System.err.println(MessageFormat.format(
 					"Could not initialize logging: {0}",
