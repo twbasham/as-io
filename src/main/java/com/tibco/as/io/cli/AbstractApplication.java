@@ -11,8 +11,8 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.tibco.as.convert.Blob;
 import com.tibco.as.convert.Settings;
-import com.tibco.as.io.AbstractChannel;
-import com.tibco.as.io.MetaspaceTransfer;
+import com.tibco.as.io.Channel;
+import com.tibco.as.io.AbstractChannelTransfer;
 import com.tibco.as.io.cli.converters.BlobConverter;
 import com.tibco.as.io.cli.converters.LogLevelConverter;
 import com.tibco.as.log.LogFactory;
@@ -111,7 +111,7 @@ public abstract class AbstractApplication {
 				commands.add((ICommand) command);
 			}
 		}
-		AbstractChannel channel = getChannel();
+		Channel channel = getChannel();
 		channel.setMetaspaceName(metaspaceName);
 		Member member = new Member();
 		member.setDataStore(dataStore);
@@ -134,7 +134,7 @@ public abstract class AbstractApplication {
 		try {
 			channel.open();
 			for (ICommand command : commands) {
-				MetaspaceTransfer transfer;
+				AbstractChannelTransfer transfer;
 				try {
 					transfer = command.getTransfer(channel);
 				} catch (Exception e) {
@@ -159,7 +159,7 @@ public abstract class AbstractApplication {
 		}
 	}
 
-	protected abstract AbstractChannel getChannel();
+	protected abstract Channel getChannel();
 
 	protected ICommand getDefaultCommand() {
 		return null;

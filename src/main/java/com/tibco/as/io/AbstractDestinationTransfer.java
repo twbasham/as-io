@@ -8,15 +8,15 @@ import java.util.logging.Logger;
 
 import com.tibco.as.log.LogFactory;
 
-public abstract class AbstractTransfer implements Runnable {
+public abstract class AbstractDestinationTransfer implements Runnable {
 
-	private Logger log = LogFactory.getLog(AbstractTransfer.class);
+	private Logger log = LogFactory.getLog(AbstractDestinationTransfer.class);
 	private ExecutorService service;
 	private Destination destination;
 	private IInputStream inputStream;
 	private IOutputStream outputStream;
 
-	public AbstractTransfer(Destination destination) {
+	public AbstractDestinationTransfer(Destination destination) {
 		this.destination = destination;
 	}
 

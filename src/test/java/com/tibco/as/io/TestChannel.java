@@ -1,6 +1,6 @@
 package com.tibco.as.io;
 
-public class TestChannel extends AbstractChannel {
+public class TestChannel extends Channel {
 
 	@Override
 	protected TestDestination newDestination() {

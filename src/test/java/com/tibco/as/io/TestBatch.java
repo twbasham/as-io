@@ -34,7 +34,7 @@ public class TestBatch extends TestBase {
 		fieldDefs.add(FieldDef.create("last-payment", FieldType.DATETIME));
 		fieldDefs.add(FieldDef.create("average-spend", FieldType.DOUBLE));
 		spaceDef.setKey("guid");
-		AbstractChannel channel = getChannel();
+		Channel channel = getChannel();
 		Metaspace metaspace = channel.getMetaspace();
 		metaspace.defineSpace(spaceDef);
 		String spaceName = spaceDef.getName();
@@ -51,14 +51,14 @@ public class TestBatch extends TestBase {
 
 	@Test
 	public void testBatch() throws Exception {
-		AbstractChannel channel = getChannel();
+		Channel channel = getChannel();
 		TestDestination destination = (TestDestination) channel
 				.addDestination();
 		destination.setSpace(space.getName());
 		destination.setExportWorkerCount(5);
 		destination.setQueryLimit(100000L);
-		MetaspaceTransfer transfer = channel.getTransfer(true);
-		transfer.execute();
+		ChannelExport export = channel.getExport();
+		export.execute();
 		List<Object> list = destination.getOutputStream().getList();
 		Assert.assertEquals(space.size(), list.size());
 		for (Object element : list) {
@@ -74,7 +74,7 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testStopTransfer() throws Exception {
 		LogFactory.getRootLogger(LogLevel.VERBOSE);
-		AbstractChannel channel = getChannel();
+		Channel channel = getChannel();
 		final TestDestination destination = (TestDestination) channel
 				.addDestination();
 		destination.setSpace(space.getName());
@@ -83,11 +83,11 @@ public class TestBatch extends TestBase {
 		destination.setExportWorkerCount(1);
 		final ListOutputStream out = destination.getOutputStream();
 		out.setSleep(100);
-		MetaspaceTransfer transfer = channel.getTransfer(true);
+		ChannelExport transfer = channel.getExport();
 		transfer.addListener(new IMetaspaceTransferListener() {
 
 			@Override
-			public void executing(final AbstractTransfer transfer) {
+			public void executing(final AbstractDestinationTransfer transfer) {
 				out.addListener(new IOutputStreamListener() {
 
 					@Override

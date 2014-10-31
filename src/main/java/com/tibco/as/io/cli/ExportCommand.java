@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.beust.jcommander.Parameter;
-import com.tibco.as.io.AbstractChannel;
+import com.beust.jcommander.ParametersDelegate;
+import com.tibco.as.io.AbstractChannelTransfer;
+import com.tibco.as.io.Channel;
 import com.tibco.as.io.Destination;
-import com.tibco.as.io.MetaspaceTransfer;
 import com.tibco.as.io.cli.converters.BrowserDistributionScopeConverter;
 import com.tibco.as.io.cli.converters.BrowserTimeScopeConverter;
 import com.tibco.as.io.cli.converters.BrowserTypeConverter;
@@ -14,8 +15,10 @@ import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
-public class ExportCommand extends AbstractCommand {
+public class ExportCommand implements ICommand {
 
+	@ParametersDelegate
+	private Transfer transfer = new Transfer();
 	@Parameter(description = "The list of spaces to export")
 	private Collection<String> spaceNames = new ArrayList<String>();
 	@Parameter(description = "Browser type", names = { "-browser_type" }, converter = BrowserTypeConverter.class, validateWith = BrowserTypeConverter.class)
@@ -33,17 +36,9 @@ public class ExportCommand extends AbstractCommand {
 	@Parameter(description = "Browser filter", names = { "-filter" })
 	private String filter;
 
-	@Override
-	public MetaspaceTransfer getTransfer(AbstractChannel channel)
-			throws Exception {
-		for (String spaceName : spaceNames) {
-			channel.addDestination().setSpace(spaceName);
-		}
-		return super.getTransfer(channel);
-	}
-
-	@Override
 	protected void configure(Destination destination) {
+		destination.setExportLimit(transfer.getLimit());
+		destination.setExportWorkerCount(transfer.getWorkerCount());
 		destination.setBrowserType(browserType);
 		destination.setTimeScope(timeScope);
 		destination.setDistributionScope(distributionScope);
@@ -51,12 +46,15 @@ public class ExportCommand extends AbstractCommand {
 		destination.setPrefetch(prefetch);
 		destination.setQueryLimit(queryLimit);
 		destination.setFilter(filter);
-		super.configure(destination);
 	}
 
 	@Override
-	protected boolean isExport() {
-		return true;
+	public AbstractChannelTransfer getTransfer(Channel channel)
+			throws Exception {
+		for (String spaceName : spaceNames) {
+			channel.addDestination().setSpace(spaceName);
+		}
+		configure(channel.getDefaultDestination());
+		return channel.getExport();
 	}
-
 }

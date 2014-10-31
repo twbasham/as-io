@@ -58,7 +58,7 @@ public class TestExport extends TestBase {
 		list.add(tuple1);
 		list.add(tuple2);
 		list.add(tuple3);
-		AbstractChannel channel = getChannel();
+		Channel channel = getChannel();
 		Metaspace metaspace = channel.getMetaspace();
 		metaspace.defineSpace(spaceDef);
 		metaspace.defineSpace(spaceDef2);
@@ -72,7 +72,7 @@ public class TestExport extends TestBase {
 				.addDestination();
 		destination.setSpace(spaceName);
 		destination.getOutputStream().setSleep(140);
-		channel.getTransfer(true).execute();
+		channel.getExport().execute();
 		Assert.assertEquals(3, destination.getOutputStream().getList().size());
 		for (Object element : destination.getOutputStream().getList()) {
 			Object[] line = (Object[]) element;

@@ -11,7 +11,7 @@ public class TestBase {
 
 	private TestChannel channel;
 
-	protected AbstractChannel getChannel() {
+	protected Channel getChannel() {
 		return channel;
 	}
 

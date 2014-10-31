@@ -38,7 +38,7 @@ public class TestImport extends TestBase {
 		Calendar calendar3 = Calendar.getInstance();
 		calendar3.clear();
 		calendar3.set(2013, 10, 3);
-		AbstractChannel channel = getChannel();
+		Channel channel = getChannel();
 		Metaspace metaspace = channel.getMetaspace();
 		metaspace.defineSpace(spaceDef);
 		Space space = metaspace.getSpace(spaceDef.getName(),
@@ -61,7 +61,7 @@ public class TestImport extends TestBase {
 								"3.33" }));
 		destination.getInputStream().setSleep(103);
 		destination.setSpaceDef(space.getSpaceDef());
-		channel.getTransfer(false).execute();
+		channel.getImport().execute();
 		Assert.assertEquals(3, space.size());
 		Tuple tuple1 = Tuple.create();
 		tuple1.putString("guid", "1");

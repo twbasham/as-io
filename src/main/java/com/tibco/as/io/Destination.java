@@ -24,7 +24,7 @@ public class Destination {
 	private static final long DEFAULT_WAIT_FOR_READY_TIMEOUT = 30000;
 
 	private ConverterFactory converterFactory = new ConverterFactory();
-	private AbstractChannel channel;
+	private Channel channel;
 	private String space;
 	private Collection<Field> fields;
 	private Collection<String> keys;
@@ -45,7 +45,7 @@ public class Destination {
 	private Long queryLimit;
 	private String filter;
 
-	public Destination(AbstractChannel channel) {
+	public Destination(Channel channel) {
 		this.channel = channel;
 	}
 
@@ -387,15 +387,15 @@ public class Destination {
 		return getSpace();
 	}
 
-	public Export getExport() throws Exception {
-		return new Export(this);
+	public DestinationExport getExport() throws Exception {
+		return new DestinationExport(this);
 	}
 
-	public Import getImport() throws Exception {
-		return new Import(this);
+	public DestinationImport getImport() throws Exception {
+		return new DestinationImport(this);
 	}
 
-	public AbstractChannel getChannel() {
+	public Channel getChannel() {
 		return channel;
 	}
 

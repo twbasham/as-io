@@ -1,8 +1,8 @@
 package com.tibco.as.io;
 
-public class Import extends AbstractTransfer {
+public class DestinationImport extends AbstractDestinationTransfer {
 
-	public Import(Destination destination) {
+	public DestinationImport(Destination destination) {
 		super(destination);
 	}
 

@@ -6,13 +6,14 @@ import java.util.Collections;
 import java.util.logging.Logger;
 
 import com.tibco.as.log.LogFactory;
+import com.tibco.as.space.ASException;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Member;
 import com.tibco.as.util.Utils;
 
-public class AbstractChannel {
+public class Channel {
 
-	private Logger log = LogFactory.getLog(AbstractChannel.class);
+	private Logger log = LogFactory.getLog(Channel.class);
 
 	private String metaspaceName;
 	private Member member = new Member();
@@ -46,6 +47,10 @@ public class AbstractChannel {
 		}
 	}
 
+	public ChannelExport getExport() {
+		return new ChannelExport(this);
+	}
+
 	public void close() throws Exception {
 		if (metaspace == null) {
 			return;
@@ -54,38 +59,17 @@ public class AbstractChannel {
 		metaspace = null;
 	}
 
-	public MetaspaceTransfer getTransfer(boolean export) throws Exception {
+	public Collection<Destination> getExportDestinations() throws ASException {
 		Collection<Destination> destinations = new ArrayList<Destination>();
-		destinations.addAll(this.destinations);
-		if (destinations.isEmpty()) {
-			if (export) {
-				for (String spaceName : metaspace.getUserSpaceNames()) {
-					Destination destination = newDestination();
-					destination.setSpace(spaceName);
-					destinations.add(destination);
-				}
-			} else {
-				destinations.addAll(getImportDestinations());
-			}
+		for (String spaceName : metaspace.getUserSpaceNames()) {
+			Destination destination = newDestination();
+			destination.setSpace(spaceName);
+			destinations.add(destination);
 		}
-		MetaspaceTransfer transfer = new MetaspaceTransfer();
-		for (Destination destination : destinations) {
-			defaultDestination.copyTo(destination);
-			transfer.add(getDestinationTransfer(destination, export));
-		}
-		return transfer;
-
+		return destinations;
 	}
 
-	private AbstractTransfer getDestinationTransfer(
-			Destination destination, boolean export) throws Exception {
-		if (export) {
-			return destination.getExport();
-		}
-		return destination.getImport();
-	}
-
-	protected Collection<Destination> getImportDestinations() {
+	public Collection<Destination> getImportDestinations() {
 		return Collections.emptyList();
 	}
 
@@ -105,6 +89,14 @@ public class AbstractChannel {
 
 	public Metaspace getMetaspace() {
 		return metaspace;
+	}
+
+	public Collection<Destination> getDestinations() {
+		return destinations;
+	}
+
+	public ChannelImport getImport() {
+		return new ChannelImport(this);
 	}
 
 }
