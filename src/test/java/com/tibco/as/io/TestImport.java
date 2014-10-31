@@ -38,20 +38,19 @@ public class TestImport extends TestBase {
 		Calendar calendar3 = Calendar.getInstance();
 		calendar3.clear();
 		calendar3.set(2013, 10, 3);
-		Metaspace metaspace = getMetaspace();
+		AbstractChannel channel = getChannel();
+		Metaspace metaspace = channel.getMetaspace();
 		metaspace.defineSpace(spaceDef);
 		Space space = metaspace.getSpace(spaceDef.getName(),
 				DistributionRole.SEEDER);
-		ChannelConfig channelConfig = getChannelConfig();
-		TestDestinationConfig destination = new TestDestinationConfig();
-		channelConfig.getDestinations().add(destination);
-		destination.setDirection(Direction.IMPORT);
+		TestDestination destination = (TestDestination) channel
+				.addDestination();
 		destination.setSpace(spaceName);
 		destination
 				.getInputStream()
 				.getList()
 				.addAll(Arrays.asList(
-						new Object[] { "1",
+						(Object) new Object[] { "1",
 								DatatypeConverter.printDateTime(calendar1),
 								"1.11" },
 						new Object[] { "2",
@@ -62,10 +61,7 @@ public class TestImport extends TestBase {
 								"3.33" }));
 		destination.getInputStream().setSleep(103);
 		destination.setSpaceDef(space.getSpaceDef());
-		TestChannel channel = new TestChannel(channelConfig);
-		channel.start();
-		channel.awaitTermination();
-		channel.stop();
+		channel.getTransfer(false).execute();
 		Assert.assertEquals(3, space.size());
 		Tuple tuple1 = Tuple.create();
 		tuple1.putString("guid", "1");

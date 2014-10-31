@@ -1,11 +1,10 @@
 package com.tibco.as.io.cli;
 
-import java.util.Collection;
-
-import com.tibco.as.io.DestinationConfig;
+import com.tibco.as.io.AbstractChannel;
+import com.tibco.as.io.MetaspaceTransfer;
 
 public interface ICommand {
 
-	void configure(Collection<DestinationConfig> destinations);
+	MetaspaceTransfer getTransfer(AbstractChannel channel) throws Exception;
 
 }

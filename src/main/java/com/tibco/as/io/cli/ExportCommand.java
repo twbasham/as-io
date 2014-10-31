@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.beust.jcommander.Parameter;
-import com.tibco.as.io.DestinationConfig;
-import com.tibco.as.io.Direction;
+import com.tibco.as.io.AbstractChannel;
+import com.tibco.as.io.Destination;
+import com.tibco.as.io.MetaspaceTransfer;
 import com.tibco.as.io.cli.converters.BrowserDistributionScopeConverter;
 import com.tibco.as.io.cli.converters.BrowserTimeScopeConverter;
 import com.tibco.as.io.cli.converters.BrowserTypeConverter;
@@ -13,7 +14,7 @@ import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
-public abstract class AbstractExportCommand extends AbstractCommand {
+public class ExportCommand extends AbstractCommand {
 
 	@Parameter(description = "The list of spaces to export")
 	private Collection<String> spaceNames = new ArrayList<String>();
@@ -33,39 +34,29 @@ public abstract class AbstractExportCommand extends AbstractCommand {
 	private String filter;
 
 	@Override
-	protected void populate(Collection<DestinationConfig> destinations) {
+	public MetaspaceTransfer getTransfer(AbstractChannel channel)
+			throws Exception {
 		for (String spaceName : spaceNames) {
-			DestinationConfig destination = newDestination();
-			destination.setSpace(spaceName);
-			destinations.add(destination);
+			channel.addDestination().setSpace(spaceName);
 		}
+		return super.getTransfer(channel);
 	}
 
 	@Override
-	protected void configure(DestinationConfig config) {
-		config.setDirection(Direction.EXPORT);
-		if (browserType != null) {
-			config.setBrowserType(browserType);
-		}
-		if (timeScope != null) {
-			config.setTimeScope(timeScope);
-		}
-		if (distributionScope != null) {
-			config.setDistributionScope(distributionScope);
-		}
-		if (timeout != null) {
-			config.setTimeout(timeout);
-		}
-		if (prefetch != null) {
-			config.setPrefetch(prefetch);
-		}
-		if (queryLimit != null) {
-			config.setQueryLimit(queryLimit);
-		}
-		if (filter != null) {
-			config.setFilter(filter);
-		}
-		super.configure(config);
+	protected void configure(Destination destination) {
+		destination.setBrowserType(browserType);
+		destination.setTimeScope(timeScope);
+		destination.setDistributionScope(distributionScope);
+		destination.setTimeout(timeout);
+		destination.setPrefetch(prefetch);
+		destination.setQueryLimit(queryLimit);
+		destination.setFilter(filter);
+		super.configure(destination);
+	}
+
+	@Override
+	protected boolean isExport() {
+		return true;
 	}
 
 }

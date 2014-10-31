@@ -6,10 +6,8 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.io.operation.IOperation;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.ASException;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceResult;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.Tuple;
@@ -18,40 +16,44 @@ public class BatchSpaceOutputStream extends SpaceOutputStream {
 
 	private Logger log = LogFactory.getLog(BatchSpaceOutputStream.class);
 	private int batchSize;
-	private Collection<Tuple> tuples;
+	private static final ThreadLocal<Collection<Tuple>> context = new ThreadLocal<Collection<Tuple>>();
 
-	public BatchSpaceOutputStream(Metaspace metaspace,
-			DestinationConfig config, int batchSize) {
-		super(metaspace, config);
+	public BatchSpaceOutputStream(Destination destination, int batchSize) {
+		super(destination);
 		this.batchSize = batchSize;
 	}
 
 	@Override
-	public void open() throws Exception {
-		this.tuples = new ArrayList<Tuple>(batchSize);
+	public synchronized void open() throws Exception {
+		initializeTuples();
 		super.open();
 	}
 
-	@Override
-	protected void close(IOperation operation) throws ASException {
-		if (!tuples.isEmpty()) {
-			execute(operation);
-		}
-		super.close(operation);
+	private void initializeTuples() {
+		context.set(new ArrayList<Tuple>(batchSize));
 	}
 
 	@Override
-	protected int execute(IOperation operation, Tuple tuple) throws ASException {
-		tuples.add((Tuple) tuple);
-		if (tuples.size() >= batchSize) {
-			return execute(operation);
+	public synchronized void close() throws ASException {
+		Collection<Tuple> tuples = context.get();
+		if (!tuples.isEmpty()) {
+			execute(tuples);
+		}
+		super.close();
+	}
+
+	@Override
+	protected int write(Tuple tuple) throws ASException {
+		Collection<Tuple> tuples = context.get();
+		if (tuples.size() == batchSize) {
+			execute(tuples);
 		}
 		return 0;
 	}
 
-	private int execute(IOperation operation) {
+	private int execute(Collection<Tuple> tuples) {
 		int count = 0;
-		SpaceResultList resultList = operation.execute(tuples);
+		SpaceResultList resultList = getOperation().execute(tuples);
 		if (resultList.hasError()) {
 			Iterator<SpaceResult> resultIterator = resultList.iterator();
 			while (resultIterator.hasNext()) {
@@ -66,7 +68,7 @@ public class BatchSpaceOutputStream extends SpaceOutputStream {
 		} else {
 			count = tuples.size();
 		}
-		tuples = new ArrayList<Tuple>(batchSize);
+		initializeTuples();
 		return count;
 	}
 

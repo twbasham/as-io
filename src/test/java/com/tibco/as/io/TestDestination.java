@@ -1,27 +1,34 @@
 package com.tibco.as.io;
 
-public class TestDestination extends AbstractDestination {
+public class TestDestination extends Destination {
 
-	private TestDestinationConfig config;
+	private ListInputStream inputStream = new ListInputStream();
+	private ListOutputStream outputStream = new ListOutputStream(this);
 
-	public TestDestination(TestChannel channel, TestDestinationConfig config) {
-		super(channel, config);
-		this.config = config;
+	public TestDestination(TestChannel channel) {
+		super(channel);
 	}
 
 	@Override
-	protected IInputStream getImportInputStream() throws Exception {
-		return config.getInputStream();
+	protected Field newField() {
+		Field field = super.newField();
+		field.setJavaType(String.class);
+		return field;
 	}
 
 	@Override
-	protected IOutputStream getExportOutputStream() {
-		return config.getOutputStream();
+	public ListInputStream getInputStream() {
+		return inputStream;
 	}
 
 	@Override
-	protected Class<?> getComponentType() {
-		return Object.class;
+	public ListOutputStream getOutputStream() {
+		return outputStream;
+	}
+
+	@Override
+	public String getName() {
+		return getSpace();
 	}
 
 }

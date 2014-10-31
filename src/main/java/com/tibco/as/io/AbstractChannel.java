@@ -2,114 +2,109 @@ package com.tibco.as.io;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Level;
+import java.util.Collections;
 import java.util.logging.Logger;
 
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.Metaspace;
+import com.tibco.as.util.Member;
 import com.tibco.as.util.Utils;
 
-public abstract class AbstractChannel implements IChannel {
+public class AbstractChannel {
 
 	private Logger log = LogFactory.getLog(AbstractChannel.class);
 
-	private ChannelConfig config;
+	private String metaspaceName;
+	private Member member = new Member();
+	private Collection<Destination> destinations = new ArrayList<Destination>();
+	private Destination defaultDestination = newDestination();
 	private Metaspace metaspace;
-	private Collection<IDestination> destinations = new ArrayList<IDestination>();
-	private Collection<IChannelListener> listeners = new ArrayList<IChannelListener>();
 
-	protected AbstractChannel(ChannelConfig config) {
-		this.config = config;
+	public Member getMember() {
+		return member;
 	}
 
-	@Override
-	public void addListener(IChannelListener listener) {
-		listeners.add(listener);
+	public String getMetaspaceName() {
+		return metaspaceName;
 	}
 
-	@Override
-	public void start() throws Exception {
-		String metaspaceName = config.getMetaspace();
-		metaspace = Utils.getMetaspace(metaspaceName);
+	public void setMetaspaceName(String metaspaceName) {
+		this.metaspaceName = metaspaceName;
+	}
+
+	public Destination getDefaultDestination() {
+		return defaultDestination;
+	}
+
+	public void open() throws Exception {
 		if (metaspace == null) {
-			log.fine("Connecting to metaspace");
-			metaspace = Utils.connect(metaspaceName, config.getMember());
-		}
-		configure();
-		for (DestinationConfig destinationConfig : config.getDestinations()) {
-			destinationConfig.getConversion().setDefaults(
-					config.getConversion());
-			destinations.add(createDestination(destinationConfig));
-		}
-		for (IDestination destination : destinations) {
-			try {
-				destination.start();
-				for (IChannelListener listener : listeners) {
-					listener.started(destination);
-				}
-			} catch (Exception e) {
-				log.log(Level.SEVERE, "Could not open destination "
-						+ destination.getName(), e);
+			metaspace = Utils.getMetaspace(metaspaceName);
+			if (metaspace == null) {
+				log.fine("Connecting to metaspace");
+				metaspace = Utils.connect(metaspaceName, member);
 			}
 		}
 	}
 
-	@Override
-	public void awaitTermination() {
-		for (IDestination destination : destinations) {
-			try {
-				destination.awaitTermination();
-			} catch (InterruptedException e) {
-				log.log(Level.SEVERE,
-						"Interrupted while waiting for termination of destination ''{0}''",
-						destination.getName());
-			}
+	public void close() throws Exception {
+		if (metaspace == null) {
+			return;
 		}
-	}
-
-	@Override
-	public void stop() throws Exception {
-		for (IDestination destination : destinations) {
-			try {
-				destination.stop();
-				for (IChannelListener listener : listeners) {
-					listener.stopped(destination);
-				}
-			} catch (Exception e) {
-				log.log(Level.SEVERE, "Could not close destination"
-						+ destination.getName(), e);
-			}
-		}
-		log.fine("Disconnecting from metaspace");
 		metaspace.close();
 		metaspace = null;
 	}
 
-	protected void configure() throws Exception {
-		Collection<DestinationConfig> destinations = new ArrayList<DestinationConfig>();
-		for (DestinationConfig destination : config.getDestinations()) {
-			if (destination.isWildcard()) {
+	public MetaspaceTransfer getTransfer(boolean export) throws Exception {
+		Collection<Destination> destinations = new ArrayList<Destination>();
+		destinations.addAll(this.destinations);
+		if (destinations.isEmpty()) {
+			if (export) {
 				for (String spaceName : metaspace.getUserSpaceNames()) {
-					DestinationConfig destinationConfig = destination.clone();
-					destinationConfig.setSpace(spaceName);
-					destinations.add(destinationConfig);
+					Destination destination = newDestination();
+					destination.setSpace(spaceName);
+					destinations.add(destination);
 				}
 			} else {
-				destinations.add(destination);
+				destinations.addAll(getImportDestinations());
 			}
 		}
-		config.setDestinations(destinations);
+		MetaspaceTransfer transfer = new MetaspaceTransfer();
+		for (Destination destination : destinations) {
+			defaultDestination.copyTo(destination);
+			transfer.add(getDestinationTransfer(destination, export));
+		}
+		return transfer;
+
 	}
 
-	protected abstract IDestination createDestination(DestinationConfig config);
+	private AbstractTransfer getDestinationTransfer(
+			Destination destination, boolean export) throws Exception {
+		if (export) {
+			return destination.getExport();
+		}
+		return destination.getImport();
+	}
+
+	protected Collection<Destination> getImportDestinations() {
+		return Collections.emptyList();
+	}
+
+	public void setMember(Member member) {
+		this.member = member;
+	}
+
+	protected Destination newDestination() {
+		return new Destination(this);
+	}
+
+	public Destination addDestination() {
+		Destination destination = newDestination();
+		destinations.add(destination);
+		return destination;
+	}
 
 	public Metaspace getMetaspace() {
 		return metaspace;
-	}
-
-	@Override
-	public Collection<IDestination> getDestinations() {
-		return destinations;
 	}
 
 }

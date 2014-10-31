@@ -34,7 +34,8 @@ public class TestBatch extends TestBase {
 		fieldDefs.add(FieldDef.create("last-payment", FieldType.DATETIME));
 		fieldDefs.add(FieldDef.create("average-spend", FieldType.DOUBLE));
 		spaceDef.setKey("guid");
-		Metaspace metaspace = getMetaspace();
+		AbstractChannel channel = getChannel();
+		Metaspace metaspace = channel.getMetaspace();
 		metaspace.defineSpace(spaceDef);
 		String spaceName = spaceDef.getName();
 		space = metaspace.getSpace(spaceName, DistributionRole.SEEDER);
@@ -50,18 +51,14 @@ public class TestBatch extends TestBase {
 
 	@Test
 	public void testBatch() throws Exception {
-		ChannelConfig channelConfig = getChannelConfig();
-		TestDestinationConfig destination = new TestDestinationConfig();
-		destination.setDirection(Direction.EXPORT);
-		destination.setWorkerCount(5);
-		destination.setQueueCapacity(35000);
-		destination.setQueryLimit(100000L);
+		AbstractChannel channel = getChannel();
+		TestDestination destination = (TestDestination) channel
+				.addDestination();
 		destination.setSpace(space.getName());
-		channelConfig.getDestinations().add(destination);
-		TestChannel channel = new TestChannel(channelConfig);
-		channel.start();
-		channel.awaitTermination();
-		channel.stop();
+		destination.setExportWorkerCount(5);
+		destination.setQueryLimit(100000L);
+		MetaspaceTransfer transfer = channel.getTransfer(true);
+		transfer.execute();
 		List<Object> list = destination.getOutputStream().getList();
 		Assert.assertEquals(space.size(), list.size());
 		for (Object element : list) {
@@ -77,32 +74,35 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testStopTransfer() throws Exception {
 		LogFactory.getRootLogger(LogLevel.VERBOSE);
-		ChannelConfig channelConfig = getChannelConfig();
-		TestDestinationConfig destination = new TestDestinationConfig();
-		channelConfig.getDestinations().add(destination);
-		destination.setDirection(Direction.EXPORT);
+		AbstractChannel channel = getChannel();
+		final TestDestination destination = (TestDestination) channel
+				.addDestination();
 		destination.setSpace(space.getName());
 		destination.setTimeScope(TimeScope.ALL);
 		destination.setTimeout(100L);
-		destination.setWorkerCount(1);
-		destination.setQueueCapacity(1);
-		destination.getOutputStream().setSleep(100);
-		TestChannel channel = new TestChannel(channelConfig);
-		channel.addListener(new ChannelAdapter() {
+		destination.setExportWorkerCount(1);
+		final ListOutputStream out = destination.getOutputStream();
+		out.setSleep(100);
+		MetaspaceTransfer transfer = channel.getTransfer(true);
+		transfer.addListener(new IMetaspaceTransferListener() {
 
 			@Override
-			public void started(IDestination destination) {
-				try {
-					destination.stop();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			public void executing(final AbstractTransfer transfer) {
+				out.addListener(new IOutputStreamListener() {
+
+					@Override
+					public void wrote(Object object) {
+						try {
+							transfer.getInputStream().close();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
 			}
 		});
-		channel.start();
-		channel.awaitTermination();
-		channel.stop();
-		Assert.assertTrue(destination.getOutputStream().getList().size() <= 15);
+		transfer.execute();
+		Assert.assertTrue(out.getList().size() <= 15);
 	}
 
 	@After

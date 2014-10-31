@@ -1,13 +1,13 @@
 package com.tibco.as.io.cli;
 
-import java.util.Collection;
-
 import com.beust.jcommander.Parameter;
-import com.tibco.as.io.DestinationConfig;
+import com.tibco.as.io.AbstractChannel;
+import com.tibco.as.io.Destination;
+import com.tibco.as.io.MetaspaceTransfer;
 
 public abstract class AbstractCommand implements ICommand {
 
-	@Parameter(names = { "-writer_thread_count" }, description = "Number of writer threads")
+	@Parameter(names = { "-transfer_thread_count" }, description = "Number of worker threads to use for transfer")
 	private Integer workerCount;
 	@Parameter(names = { "-limit" }, description = "Max number of entries to read from input")
 	private Long limit;
@@ -15,30 +15,22 @@ public abstract class AbstractCommand implements ICommand {
 	private Boolean noTransfer;
 
 	@Override
-	public void configure(Collection<DestinationConfig> destinations) {
-		populate(destinations);
-		if (destinations.isEmpty()) {
-			destinations.add(newDestination());
-		}
-		for (DestinationConfig destination : destinations) {
-			configure(destination);
+	public MetaspaceTransfer getTransfer(AbstractChannel channel)
+			throws Exception {
+		configure(channel.getDefaultDestination());
+		return channel.getTransfer(isExport());
+	}
+
+	protected void configure(Destination destination) {
+		if (isExport()) {
+			destination.setExportLimit(limit);
+			destination.setExportWorkerCount(workerCount);
+		} else {
+			destination.setImportLimit(limit);
+			destination.setImportWorkerCount(workerCount);
 		}
 	}
 
-	protected abstract void populate(Collection<DestinationConfig> destinations);
-
-	protected abstract DestinationConfig newDestination();
-
-	protected void configure(DestinationConfig config) {
-		if (limit != null) {
-			config.setLimit(limit);
-		}
-		if (workerCount != null) {
-			config.setWorkerCount(workerCount);
-		}
-		if (noTransfer != null) {
-			config.setNoTransfer(noTransfer);
-		}
-	}
+	protected abstract boolean isExport();
 
 }

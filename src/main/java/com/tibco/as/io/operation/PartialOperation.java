@@ -3,24 +3,24 @@ package com.tibco.as.io.operation;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.tibco.as.io.DestinationConfig;
+import com.tibco.as.io.IOperation;
 import com.tibco.as.space.ASException;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.PutOptions;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.Tuple;
 
-public class PartialOperation extends AbstractOperation {
+public class PartialOperation implements IOperation {
 
 	private PutOptions options = PutOptions.create().setForget(true);
+	private Space space;
 
-	public PartialOperation(Metaspace metaspace, DestinationConfig config) {
-		super(metaspace, config);
+	public PartialOperation(Space space) {
+		this.space = space;
 	}
 
 	@Override
-	protected Tuple execute(Space space, Tuple tuple) throws ASException {
+	public Tuple execute(Tuple tuple) throws ASException {
 		return space.put(update(space, tuple), options);
 	}
 
@@ -34,7 +34,7 @@ public class PartialOperation extends AbstractOperation {
 	}
 
 	@Override
-	protected SpaceResultList execute(Space space, Collection<Tuple> tuples) {
+	public SpaceResultList execute(Collection<Tuple> tuples) {
 		Collection<Tuple> updates = new ArrayList<Tuple>();
 		for (Tuple tuple : tuples) {
 			try {

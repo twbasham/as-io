@@ -11,8 +11,8 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.tibco.as.convert.Blob;
 import com.tibco.as.convert.Settings;
-import com.tibco.as.io.ChannelConfig;
-import com.tibco.as.io.IChannel;
+import com.tibco.as.io.AbstractChannel;
+import com.tibco.as.io.MetaspaceTransfer;
 import com.tibco.as.io.cli.converters.BlobConverter;
 import com.tibco.as.io.cli.converters.LogLevelConverter;
 import com.tibco.as.log.LogFactory;
@@ -111,59 +111,55 @@ public abstract class AbstractApplication {
 				commands.add((ICommand) command);
 			}
 		}
-		IChannel channel;
+		AbstractChannel channel = getChannel();
+		channel.setMetaspaceName(metaspaceName);
+		Member member = new Member();
+		member.setDataStore(dataStore);
+		member.setDiscovery(discovery);
+		member.setIdentityPassword(identityPassword);
+		member.setListen(listen);
+		member.setMemberName(memberName);
+		member.setRxBufferSize(rxBufferSize);
+		member.setSecurityTokenFile(securityToken);
+		member.setWorkerThreadCount(workerThreadCount);
+		channel.setMember(member);
+		Settings settings = new Settings();
+		settings.setBlob(blob);
+		settings.setBooleanTruePattern(booleanTruePattern);
+		settings.setBooleanFalsePattern(booleanFalsePattern);
+		settings.setDatePattern(datePattern);
+		settings.setNumberPattern(numberPattern);
+		settings.setTimeZoneID(timeZoneID);
+		channel.getDefaultDestination().setSettings(settings);
 		try {
-			ChannelConfig config = getChannelConfig();
-			config.setMetaspace(metaspaceName);
-			Member member = new Member();
-			member.setDataStore(dataStore);
-			member.setDiscovery(discovery);
-			member.setIdentityPassword(identityPassword);
-			member.setListen(listen);
-			member.setMemberName(memberName);
-			member.setRxBufferSize(rxBufferSize);
-			member.setSecurityTokenFile(securityToken);
-			member.setWorkerThreadCount(workerThreadCount);
-			config.setMember(member);
-			Settings conversionConfig = config.getConversion();
-			conversionConfig.setBlob(blob);
-			conversionConfig.setBooleanTruePattern(booleanTruePattern);
-			conversionConfig.setBooleanFalsePattern(booleanFalsePattern);
-			conversionConfig.setDatePattern(datePattern);
-			conversionConfig.setNumberPattern(numberPattern);
-			conversionConfig.setTimeZoneID(timeZoneID);
+			channel.open();
 			for (ICommand command : commands) {
-				command.configure(config.getDestinations());
+				MetaspaceTransfer transfer;
+				try {
+					transfer = command.getTransfer(channel);
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "Could not create transfer", e);
+					continue;
+				}
+				transfer.addListener(new MetaspaceTransferMonitor());
+				try {
+					transfer.execute();
+				} catch (InterruptedException e) {
+					log.log(Level.INFO, "Transfer interrupted", e);
+				}
 			}
-			channel = getChannel(config);
-			channel.addListener(new DestinationMonitor());
 		} catch (Exception e) {
-			log.log(Level.SEVERE, "Could not create channel", e);
-			return;
-		}
-		execute(channel);
-	}
-
-	protected void execute(IChannel channel) {
-		try {
-			channel.start();
-			channel.awaitTermination();
-		} catch (Exception e) {
-			log.log(Level.SEVERE, "Could not start channel", e);
+			log.log(Level.SEVERE, "Could not open channel", e);
 		} finally {
 			try {
-				channel.stop();
+				channel.close();
 			} catch (Exception e) {
-				log.log(Level.SEVERE, "Could not stop channel", e);
+				log.log(Level.SEVERE, "Could not close channel", e);
 			}
 		}
 	}
 
-	protected ChannelConfig getChannelConfig() throws Exception {
-		return new ChannelConfig();
-	}
-
-	protected abstract IChannel getChannel(ChannelConfig config);
+	protected abstract AbstractChannel getChannel();
 
 	protected ICommand getDefaultCommand() {
 		return null;

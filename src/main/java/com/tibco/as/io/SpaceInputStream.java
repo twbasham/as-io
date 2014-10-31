@@ -1,9 +1,14 @@
 package com.tibco.as.io;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.ASStatus;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.RuntimeASException;
+import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 import com.tibco.as.space.browser.Browser;
 import com.tibco.as.space.browser.BrowserDef;
@@ -13,16 +18,15 @@ import com.tibco.as.util.Utils;
 
 public class SpaceInputStream implements IInputStream {
 
-	private Metaspace metaspace;
-	private DestinationConfig config;
+	private Logger log = LogFactory.getLog(SpaceInputStream.class);
+	private Destination destination;
 	private Browser browser;
-	private long position;
+	private Long position;
 	private long browseTime;
 	private Long size;
 
-	public SpaceInputStream(Metaspace metaspace, DestinationConfig config) {
-		this.metaspace = metaspace;
-		this.config = config;
+	public SpaceInputStream(Destination destination) {
+		this.destination = destination;
 	}
 
 	@Override
@@ -31,45 +35,65 @@ public class SpaceInputStream implements IInputStream {
 	}
 
 	@Override
-	public void open() throws Exception {
-		config.setSpaceDef(metaspace.getSpaceDef(config.getSpace()));
-		BrowserType browserType = config.getBrowserType();
-		if (browserType == null) {
-			browserType = BrowserType.GET;
+	public synchronized void open() throws Exception {
+		if (isOpen()) {
+			return;
 		}
-		BrowserDef browserDef = BrowserDef.create();
-		if (browserType == BrowserType.GET) {
-			if (config.getTimeScope() != null) {
-				browserDef.setTimeScope(config.getTimeScope());
-			}
-		}
-		if (config.getDistributionScope() != null) {
-			browserDef.setDistributionScope(config.getDistributionScope());
-		}
-		if (config.getTimeout() != null) {
-			browserDef.setTimeout(config.getTimeout());
-		}
-		if (config.getPrefetch() != null) {
-			browserDef.setPrefetch(config.getPrefetch());
-		}
-		if (config.getQueryLimit() != null) {
-			if (Utils.hasMethod(BrowserDef.class, "setQueryLimit")) {
-				browserDef.setQueryLimit(config.getQueryLimit());
-			}
-		}
-		String filter = config.getFilter();
-		String space = config.getSpace();
+		Metaspace metaspace = destination.getMetaspace();
+		SpaceDef spaceDef = metaspace.getSpaceDef(destination.getSpace());
+		destination.setSpaceDef(spaceDef);
+		BrowserDef browserDef = getBrowserDef();
 		long start = System.nanoTime();
-		if (filter == null) {
-			browser = metaspace.browse(space, browserType, browserDef);
-		} else {
-			browser = metaspace.browse(space, browserType, browserDef, filter);
-		}
+		browser = getBrowser(metaspace, browserDef);
 		browseTime = System.nanoTime() - start;
 		if (browser instanceof ASBrowser) {
 			size = ((ASBrowser) browser).size();
 		}
-		position = 0;
+		position = 0L;
+	}
+
+	@Override
+	public boolean isOpen() {
+		return browser != null;
+	}
+
+	private BrowserDef getBrowserDef() {
+		BrowserDef browserDef = BrowserDef.create();
+		if (destination.getTimeScope() != null) {
+			browserDef.setTimeScope(destination.getTimeScope());
+		}
+		if (destination.getDistributionScope() != null) {
+			browserDef.setDistributionScope(destination.getDistributionScope());
+		}
+		if (destination.getTimeout() != null) {
+			browserDef.setTimeout(destination.getTimeout());
+		}
+		if (destination.getPrefetch() != null) {
+			browserDef.setPrefetch(destination.getPrefetch());
+		}
+		if (destination.getQueryLimit() != null) {
+			if (Utils.hasMethod(BrowserDef.class, "setQueryLimit")) {
+				browserDef.setQueryLimit(destination.getQueryLimit());
+			}
+		}
+		return browserDef;
+	}
+
+	private Browser getBrowser(Metaspace metaspace, BrowserDef browserDef)
+			throws ASException {
+		BrowserType browserType = destination.getBrowserType();
+		String filter = destination.getFilter();
+		String space = destination.getSpace();
+		if (filter == null) {
+			log.log(Level.FINE,
+					"Browsing space ''{0}'' with type {1} and def {2}",
+					new Object[] { space, browserType, browserDef });
+			return metaspace.browse(space, browserType, browserDef);
+		}
+		log.log(Level.FINE,
+				"Browsing space ''{0}'' with type {1}, def {2} and filter {3}",
+				new Object[] { space, browserType, browserDef, filter });
+		return metaspace.browse(space, browserType, browserDef, filter);
 	}
 
 	@Override
@@ -114,10 +138,11 @@ public class SpaceInputStream implements IInputStream {
 	}
 
 	@Override
-	public void close() throws ASException {
-		if (browser == null) {
+	public synchronized void close() throws ASException {
+		if (!isOpen()) {
 			return;
 		}
+		log.fine("Stopping browser");
 		browser.stop();
 		browser = null;
 	}

@@ -6,6 +6,8 @@ public interface IInputStream {
 
 	void close() throws Exception;
 
+	boolean isOpen();
+
 	/**
 	 * @return next element in the stream
 	 * @throws InterruptedException

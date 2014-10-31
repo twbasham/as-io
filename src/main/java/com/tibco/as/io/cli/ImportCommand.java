@@ -1,14 +1,13 @@
 package com.tibco.as.io.cli;
 
 import com.beust.jcommander.Parameter;
-import com.tibco.as.io.DestinationConfig;
-import com.tibco.as.io.Direction;
+import com.tibco.as.io.Destination;
 import com.tibco.as.io.OperationType;
 import com.tibco.as.io.cli.converters.DistributionRoleConverter;
 import com.tibco.as.io.cli.converters.OperationTypeConverter;
 import com.tibco.as.space.Member.DistributionRole;
 
-public abstract class AbstractImportCommand extends AbstractCommand {
+public class ImportCommand extends AbstractCommand {
 
 	@Parameter(names = { "-space" }, description = "Space name")
 	private String space;
@@ -22,24 +21,18 @@ public abstract class AbstractImportCommand extends AbstractCommand {
 	private Long waitForReadyTimeout;
 
 	@Override
-	protected void configure(DestinationConfig config) {
-		config.setDirection(Direction.IMPORT);
-		if (space != null) {
-			config.setSpace(space);
-		}
-		if (spaceBatchSize != null) {
-			config.setSpaceBatchSize(spaceBatchSize);
-		}
-		if (distributionRole != null) {
-			config.setDistributionRole(distributionRole);
-		}
-		if (operation != null) {
-			config.setOperation(operation);
-		}
-		if (waitForReadyTimeout != null) {
-			config.setWaitForReadyTimeout(waitForReadyTimeout);
-		}
-		super.configure(config);
+	protected void configure(Destination destination) {
+		destination.setSpace(space);
+		destination.setSpaceBatchSize(spaceBatchSize);
+		destination.setDistributionRole(distributionRole);
+		destination.setOperation(operation);
+		destination.setWaitForReadyTimeout(waitForReadyTimeout);
+		super.configure(destination);
+	}
+
+	@Override
+	protected boolean isExport() {
+		return false;
 	}
 
 }

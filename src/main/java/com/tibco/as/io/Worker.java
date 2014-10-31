@@ -3,47 +3,52 @@ package com.tibco.as.io;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.convert.IConverter;
 import com.tibco.as.log.LogFactory;
 
 public class Worker implements Runnable {
 
 	private Logger log = LogFactory.getLog(Worker.class);
 	private IInputStream in;
-	private IConverter converter;
 	private IOutputStream out;
 
-	public Worker(IInputStream in, IConverter converter, IOutputStream out) {
+	public Worker(IInputStream in, IOutputStream out) {
 		this.in = in;
-		this.converter = converter;
 		this.out = out;
 	}
 
 	@Override
 	public void run() {
-		Object element;
 		try {
-			while ((element = in.read()) != null) {
-				Object converted;
-				try {
-					converted = converter.convert(element);
-				} catch (Exception e) {
-					log.log(Level.SEVERE, "Could not convert", e);
-					continue;
+			in.open();
+			out.open();
+			Object element;
+			try {
+				while ((element = in.read()) != null) {
+					try {
+						out.write(element);
+					} catch (Exception e) {
+						log.log(Level.SEVERE, "Could not write", e);
+					}
 				}
-				if (converted == null) {
-					continue;
-				}
+			} catch (InterruptedException e) {
+				log.log(Level.INFO, "Interrupted");
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not execute", e);
+			}
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Could not open output", e);
+		} finally {
+			try {
+				out.close();
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not close output", e);
+			} finally {
 				try {
-					out.write(converted);
+					in.close();
 				} catch (Exception e) {
-					log.log(Level.SEVERE, "Could not write", e);
+					log.log(Level.SEVERE, "Could not close input", e);
 				}
 			}
-		} catch (InterruptedException e) {
-			log.log(Level.INFO, "Interrupted");
-		} catch (Exception e) {
-			log.log(Level.SEVERE, "Could not execute", e);
 		}
 	}
 

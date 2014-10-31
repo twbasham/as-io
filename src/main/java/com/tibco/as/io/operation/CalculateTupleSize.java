@@ -2,11 +2,9 @@ package com.tibco.as.io.operation;
 
 import java.util.Collection;
 
-import com.tibco.as.io.DestinationConfig;
+import com.tibco.as.io.IOperation;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.ASStatus;
-import com.tibco.as.space.Metaspace;
-import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.Tuple;
@@ -17,25 +15,21 @@ import com.tibco.as.space.impl.data.ASTuple;
 import com.tibco.as.space.impl.serializer.ASEncoder;
 import com.tibco.as.space.impl.serializer.ASSerializerException;
 
-public class CalculateTupleSize extends AbstractOperation {
+public class CalculateTupleSize implements IOperation {
 
 	private static final String FIELD_LENGTH = "length";
 	private static final String FIELD_BYTES = "bytes";
 	private static final String FIELD_CAPACITY = "capacity";
 
 	private ASEncoder encoder = new ASEncoder();
+	private SpaceDef spaceDef;
 
-	public CalculateTupleSize(Metaspace metaspace, DestinationConfig config) {
-		super(metaspace, config);
+	public CalculateTupleSize(SpaceDef spaceDef) {
+		this.spaceDef = spaceDef;
 	}
 
 	@Override
-	protected Tuple execute(Space space, Tuple tuple) throws ASException {
-		return getEncodedData(space.getSpaceDef(), tuple);
-	}
-
-	private Tuple getEncodedData(SpaceDef spaceDef, Tuple tuple)
-			throws ASException {
+	public Tuple execute(Tuple tuple) throws ASException {
 		try {
 			((ASTuple) tuple).serialize(encoder, true, spaceDef);
 		} catch (ASSerializerException e) {
@@ -50,12 +44,11 @@ public class CalculateTupleSize extends AbstractOperation {
 	}
 
 	@Override
-	protected SpaceResultList execute(Space space, Collection<Tuple> tuples) {
+	public SpaceResultList execute(Collection<Tuple> tuples) {
 		SpaceResultList resultList = new ASSpaceResultList();
 		try {
-			SpaceDef spaceDef = space.getSpaceDef();
 			for (Tuple tuple : tuples) {
-				Tuple result = getEncodedData(spaceDef, tuple);
+				Tuple result = execute(tuple);
 				resultList.add(new ASSpaceResult((ASTuple) result, null));
 			}
 		} catch (ASException e) {

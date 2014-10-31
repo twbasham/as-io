@@ -3,39 +3,31 @@ package com.tibco.as.io;
 import org.junit.After;
 import org.junit.Before;
 
-import com.tibco.as.space.ASException;
-import com.tibco.as.space.MemberDef;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Member;
 
 public class TestBase {
 
 	private static final String DISCOVERY = "tcp";
 
-	private Metaspace metaspace;
+	private TestChannel channel;
 
-	protected ChannelConfig getChannelConfig() {
-		ChannelConfig config = new ChannelConfig();
-		Member member = new Member();
-		member.setDiscovery(DISCOVERY);
-		member.setConnectTimeout(10000L);
-		config.setMember(member);
-		return config;
+	protected AbstractChannel getChannel() {
+		return channel;
 	}
 
 	@Before
-	public void connectMetaspace() throws ASException {
-		metaspace = Metaspace.connect(null,
-				MemberDef.create(null, DISCOVERY, null));
-	}
-
-	protected Metaspace getMetaspace() throws ASException {
-		return metaspace;
+	public void openChannel() throws Exception {
+		channel = new TestChannel();
+		Member member = new Member();
+		member.setDiscovery(DISCOVERY);
+		member.setConnectTimeout(10000L);
+		channel.setMember(member);
+		channel.open();
 	}
 
 	@After
-	public void closeMetaspace() throws ASException {
-		metaspace.closeAll();
+	public void closeChannel() throws Exception {
+		channel.close();
 	}
 
 }

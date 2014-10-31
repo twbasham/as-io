@@ -3,8 +3,9 @@ package com.tibco.as.io;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.tibco.as.convert.IAccessor;
+import com.tibco.as.convert.IConverter;
 import com.tibco.as.io.operation.GetOperation;
-import com.tibco.as.io.operation.IOperation;
 import com.tibco.as.io.operation.LoadOperation;
 import com.tibco.as.io.operation.NoOperation;
 import com.tibco.as.io.operation.PartialOperation;
@@ -12,68 +13,120 @@ import com.tibco.as.io.operation.PutOperation;
 import com.tibco.as.io.operation.TakeOperation;
 import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.ASException;
+import com.tibco.as.space.Member.DistributionRole;
 import com.tibco.as.space.Metaspace;
+import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 
 public class SpaceOutputStream implements IOutputStream {
 
 	private Logger log = LogFactory.getLog(SpaceOutputStream.class);
-	private Metaspace metaspace;
-	private DestinationConfig config;
+	private Destination destination;
+	private IAccessor[] objectAccessors;
+	private IAccessor[] tupleAccessors;
+	private IConverter[] converters;
+	private Space space;
 	private IOperation operation;
 	private long position;
 
-	public SpaceOutputStream(Metaspace metaspace, DestinationConfig config) {
-		this.metaspace = metaspace;
-		this.config = config;
+	public SpaceOutputStream(Destination destination) {
+		this.destination = destination;
 	}
 
 	@Override
-	public void open() throws Exception {
-		SpaceDef spaceDef = metaspace.getSpaceDef(config.getSpace());
+	public synchronized void open() throws Exception {
+		Metaspace metaspace = destination.getChannel().getMetaspace();
+		SpaceDef spaceDef = metaspace.getSpaceDef(destination.getSpace());
 		if (spaceDef == null) {
-			spaceDef = config.getSpaceDef();
-			log.log(Level.FINE, "Defining ", spaceDef);
+			spaceDef = destination.getSpaceDef();
+			log.log(Level.FINE, "Defining {0}", spaceDef);
 			metaspace.defineSpace(spaceDef);
-		} else {
-			config.setSpaceDef(spaceDef);
 		}
-		operation = getOperation(metaspace);
-		operation.open();
+		destination.setSpaceDef(spaceDef);
+		objectAccessors = destination.getObjectAccessors();
+		tupleAccessors = destination.getTupleAccessors();
+		converters = destination.getJavaConverters();
+		space = getSpace(metaspace);
+		if (!space.isReady()) {
+			long timeout = destination.getWaitForReadyTimeout();
+			log.log(Level.INFO,
+					"Waiting for space ''{0}'' to become ready using timeout of {1} ms",
+					new Object[] { space.getName(), timeout });
+			space.waitForReady(timeout);
+		}
+		OperationType operationType = getOperationType();
+		operation = getOperation(operationType, space);
 	}
 
-	private IOperation getOperation(Metaspace metaspace) throws ASException {
-		switch (getOperationType()) {
-		case GET:
-			return new GetOperation(metaspace, config);
-		case LOAD:
-			return new LoadOperation(metaspace, config);
-		case NONE:
-			return new NoOperation();
-		case PARTIAL:
-			return new PartialOperation(metaspace, config);
-		case PUT:
-			return new PutOperation(metaspace, config);
-		case TAKE:
-			return new TakeOperation(metaspace, config);
+	private Space getSpace(Metaspace metaspace) throws ASException {
+		String spaceName = destination.getSpace();
+		DistributionRole distributionRole = destination.getDistributionRole();
+		if (distributionRole == null) {
+			log.log(Level.FINE, "Joining space ''{0}''", spaceName);
+			return metaspace.getSpace(spaceName);
 		}
-		throw new RuntimeException("Invalid operation");
+		log.log(Level.FINE, "Joining space ''{0}'' as {1}", new Object[] {
+				spaceName, distributionRole });
+		return metaspace.getSpace(spaceName, distributionRole);
+	}
+
+	protected IOperation getOperation() {
+		return operation;
+	}
+
+	private IOperation getOperation(OperationType type, Space space)
+			throws ASException {
+		switch (type) {
+		case GET:
+			return new GetOperation(space);
+		case LOAD:
+			return new LoadOperation(space);
+		case PARTIAL:
+			return new PartialOperation(space);
+		case PUT:
+			return new PutOperation(space);
+		case TAKE:
+			return new TakeOperation(space);
+		default:
+			return new NoOperation();
+		}
 	}
 
 	private OperationType getOperationType() {
-		if (config.getOperation() == null) {
+		if (destination.getOperation() == null) {
 			return OperationType.PUT;
 		}
-		return config.getOperation();
+		return destination.getOperation();
 	}
 
 	@Override
-	public void write(Object tuple) throws ASException {
-		position += execute(operation, (Tuple) tuple);
+	public void write(Object object) throws Exception {
+		Tuple tuple = Tuple.create();
+		for (int index = 0; index < objectAccessors.length; index++) {
+			if (objectAccessors[index] == null) {
+				continue;
+			}
+			if (converters[index] == null) {
+				continue;
+			}
+			if (tupleAccessors[index] == null) {
+				continue;
+			}
+			Object value = objectAccessors[index].get(object);
+			if (value == null) {
+				continue;
+			}
+			Object converted = converters[index].convert(value);
+			if (converted == null) {
+				continue;
+			}
+			tupleAccessors[index].set(tuple, converted);
+		}
+		position += write(tuple);
 	}
 
-	protected int execute(IOperation operation, Tuple tuple) throws ASException {
+	protected int write(Tuple tuple) throws ASException {
 		operation.execute(tuple);
 		return 1;
 	}
@@ -83,12 +136,16 @@ public class SpaceOutputStream implements IOutputStream {
 	}
 
 	@Override
-	public void close() throws ASException {
-		close(operation);
-	}
-
-	protected void close(IOperation operation) throws ASException {
-		operation.close();
+	public synchronized void close() throws ASException {
+		if (space == null) {
+			return;
+		}
+		if (destination.getDistributionRole() == DistributionRole.SEEDER) {
+			return;
+		}
+		log.log(Level.FINE, "Closing space ''{0}''", space.getName());
+		space.close();
+		space = null;
 	}
 
 }

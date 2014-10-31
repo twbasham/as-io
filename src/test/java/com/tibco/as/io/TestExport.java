@@ -58,7 +58,8 @@ public class TestExport extends TestBase {
 		list.add(tuple1);
 		list.add(tuple2);
 		list.add(tuple3);
-		Metaspace metaspace = getMetaspace();
+		AbstractChannel channel = getChannel();
+		Metaspace metaspace = channel.getMetaspace();
 		metaspace.defineSpace(spaceDef);
 		metaspace.defineSpace(spaceDef2);
 		Space space = metaspace.getSpace(spaceDef.getName(),
@@ -67,18 +68,13 @@ public class TestExport extends TestBase {
 		Space space2 = metaspace.getSpace(spaceDef2.getName(),
 				DistributionRole.SEEDER);
 		space2.putAll(list);
-		ChannelConfig channelConfig = getChannelConfig();
-		TestDestinationConfig export = new TestDestinationConfig();
-		export.setDirection(Direction.EXPORT);
-		export.setSpace(spaceName);
-		export.getOutputStream().setSleep(140);
-		channelConfig.getDestinations().add(export);
-		TestChannel channel = new TestChannel(channelConfig);
-		channel.start();
-		channel.awaitTermination();
-		channel.stop();
-		Assert.assertEquals(3, export.getOutputStream().getList().size());
-		for (Object element : export.getOutputStream().getList()) {
+		TestDestination destination = (TestDestination) channel
+				.addDestination();
+		destination.setSpace(spaceName);
+		destination.getOutputStream().setSleep(140);
+		channel.getTransfer(true).execute();
+		Assert.assertEquals(3, destination.getOutputStream().getList().size());
+		for (Object element : destination.getOutputStream().getList()) {
 			Object[] line = (Object[]) element;
 			Assert.assertEquals(3, line.length);
 			Calendar calendar = Calendar.getInstance();

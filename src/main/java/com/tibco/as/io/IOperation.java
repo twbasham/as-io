@@ -1,4 +1,4 @@
-package com.tibco.as.io.operation;
+package com.tibco.as.io;
 
 import java.util.Collection;
 
@@ -11,9 +11,5 @@ public interface IOperation {
 	Tuple execute(Tuple tuple) throws ASException;
 
 	SpaceResultList execute(Collection<Tuple> tuples);
-
-	void open() throws ASException;
-
-	void close() throws ASException;
 
 }

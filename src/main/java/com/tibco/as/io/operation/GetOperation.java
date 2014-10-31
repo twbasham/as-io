@@ -2,29 +2,29 @@ package com.tibco.as.io.operation;
 
 import java.util.Collection;
 
-import com.tibco.as.io.DestinationConfig;
+import com.tibco.as.io.IOperation;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.GetOptions;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.Tuple;
 
-public class GetOperation extends AbstractOperation {
+public class GetOperation implements IOperation {
 
 	private GetOptions options = GetOptions.create();
+	private Space space;
 
-	public GetOperation(Metaspace metaspace, DestinationConfig config) {
-		super(metaspace, config);
+	public GetOperation(Space space) {
+		this.space = space;
 	}
 
 	@Override
-	protected Tuple execute(Space space, Tuple tuple) throws ASException {
+	public Tuple execute(Tuple tuple) throws ASException {
 		return space.get(tuple, options);
 	}
 
 	@Override
-	protected SpaceResultList execute(Space space, Collection<Tuple> tuples) {
+	public SpaceResultList execute(Collection<Tuple> tuples) {
 		return space.getAll(tuples);
 	}
 
