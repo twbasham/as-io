@@ -3,7 +3,7 @@ package com.tibco.as.io.cli;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.io.IInputStream;
+import com.tibco.as.io.DestinationTransfer;
 import com.tibco.as.log.LogFactory;
 
 public class Console implements Runnable {
@@ -12,26 +12,24 @@ public class Console implements Runnable {
 	private static final int WIDTH = 40;
 
 	private Logger log = LogFactory.getLog(Console.class);
-	private String name;
-	private IInputStream in;
+	private DestinationTransfer transfer;
 
-	protected Console(String name, IInputStream in) {
-		this.name = name;
-		this.in = in;
+	protected Console(DestinationTransfer transfer) {
+		this.transfer = transfer;
 	}
 
 	@Override
 	public void run() {
-		while (in.isOpen()) {
-			print(name, in.getPosition());
+		while (!transfer.getInputStream().isClosed()) {
+			print();
 			sleep();
 		}
-		print(name, in.getPosition());
+		print();
 		System.out.println();
 	}
 
 	private void sleep() {
-		for (int index = 0; index < 3 && in.isOpen(); index++) {
+		for (int index = 0; index < 3 && !transfer.getInputStream().isClosed(); index++) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -40,30 +38,28 @@ public class Console implements Runnable {
 		}
 	}
 
-	protected void print(String name, Long position) {
-		Long size = in.size();
+	protected void print() {
+		String name = transfer.getName();
+		Long size = transfer.size();
+		Long position = transfer.getPosition();
 		if (size == null) {
 			System.out.printf(FORMAT, name, position == null ? 0 : null);
 		} else {
-			print(name, position, size);
-		}
-	}
-
-	private void print(String name, Long position, long size) {
-		StringBuilder bar = new StringBuilder("\r%1$-20s [");
-		long progress = getPercent(size, position) * WIDTH / 100;
-		for (int i = 0; i < WIDTH; i++) {
-			if (i < progress) {
-				bar.append('=');
-			} else if (i == progress) {
-				bar.append('>');
-			} else {
-				bar.append(' ');
+			StringBuilder bar = new StringBuilder("\r%1$-20s [");
+			long progress = getPercent(size, position) * WIDTH / 100;
+			for (int i = 0; i < WIDTH; i++) {
+				if (i < progress) {
+					bar.append('=');
+				} else if (i == progress) {
+					bar.append('>');
+				} else {
+					bar.append(' ');
+				}
 			}
+			bar.append("] ");
+			bar.append("%2$,d/%3$,d");
+			System.out.printf(bar.toString(), name, position, size);
 		}
-		bar.append("] ");
-		bar.append("%2$,d/%3$,d");
-		System.out.printf(bar.toString(), name, position, size);
 	}
 
 	private long getPercent(long size, Long position) {

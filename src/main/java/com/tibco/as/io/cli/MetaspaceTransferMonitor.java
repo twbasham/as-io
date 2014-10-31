@@ -4,19 +4,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.tibco.as.io.IMetaspaceTransferListener;
-import com.tibco.as.io.AbstractDestinationTransfer;
+import com.tibco.as.io.DestinationTransfer;
 
 public class MetaspaceTransferMonitor implements IMetaspaceTransferListener {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	@Override
-	public void executing(AbstractDestinationTransfer transfer) {
+	public void executing(DestinationTransfer transfer) {
 		executor.execute(getConsole(transfer));
 	}
 
-	private Console getConsole(AbstractDestinationTransfer transfer) {
-		return new Console(transfer.getName(), transfer.getInputStream());
+	private Console getConsole(DestinationTransfer transfer) {
+		return new Console(transfer);
 	}
 
 }

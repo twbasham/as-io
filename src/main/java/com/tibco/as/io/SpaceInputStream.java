@@ -24,6 +24,7 @@ public class SpaceInputStream implements IInputStream {
 	private Long position;
 	private long browseTime;
 	private Long size;
+	private boolean open;
 
 	public SpaceInputStream(Destination destination) {
 		this.destination = destination;
@@ -36,7 +37,7 @@ public class SpaceInputStream implements IInputStream {
 
 	@Override
 	public synchronized void open() throws Exception {
-		if (isOpen()) {
+		if (open) {
 			return;
 		}
 		Metaspace metaspace = destination.getMetaspace();
@@ -50,11 +51,12 @@ public class SpaceInputStream implements IInputStream {
 			size = ((ASBrowser) browser).size();
 		}
 		position = 0L;
+		open = true;
 	}
 
 	@Override
-	public boolean isOpen() {
-		return browser != null;
+	public boolean isClosed() {
+		return !open;
 	}
 
 	private BrowserDef getBrowserDef() {
@@ -139,11 +141,12 @@ public class SpaceInputStream implements IInputStream {
 
 	@Override
 	public synchronized void close() throws ASException {
-		if (!isOpen()) {
+		if (!open) {
 			return;
 		}
 		log.fine("Stopping browser");
 		browser.stop();
 		browser = null;
+		open = false;
 	}
 }

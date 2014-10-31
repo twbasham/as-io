@@ -387,14 +387,6 @@ public class Destination {
 		return getSpace();
 	}
 
-	public DestinationExport getExport() throws Exception {
-		return new DestinationExport(this);
-	}
-
-	public DestinationImport getImport() throws Exception {
-		return new DestinationImport(this);
-	}
-
 	public Channel getChannel() {
 		return channel;
 	}

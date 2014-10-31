@@ -47,8 +47,8 @@ public class LimitedInputStream implements IInputStream {
 	}
 
 	@Override
-	public boolean isOpen() {
-		return in.isOpen();
+	public boolean isClosed() {
+		return in.isClosed();
 	}
 
 }

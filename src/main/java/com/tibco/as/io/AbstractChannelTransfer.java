@@ -28,7 +28,7 @@ public abstract class AbstractChannelTransfer {
 				.size());
 		for (Destination destination : destinations) {
 			channel.getDefaultDestination().copyTo(destination);
-			AbstractDestinationTransfer transfer = getTransfer(destination);
+			DestinationTransfer transfer = getTransfer(destination);
 			for (IMetaspaceTransferListener listener : listeners) {
 				listener.executing(transfer);
 			}
@@ -40,7 +40,7 @@ public abstract class AbstractChannelTransfer {
 		}
 	}
 
-	protected abstract AbstractDestinationTransfer getTransfer(
+	protected abstract DestinationTransfer getTransfer(
 			Destination destination) throws Exception;
 
 	protected abstract Collection<Destination> getDestinations(Channel channel)

@@ -16,16 +16,15 @@ public class ListInputStream implements IInputStream {
 
 	@Override
 	public synchronized void open() throws Exception {
-		if (isOpen()) {
-			return;
+		if (isClosed()) {
+			position = 0L;
+			open = true;
 		}
-		position = 0L;
-		open = true;
 	}
 
 	@Override
 	public synchronized Object read() throws Exception {
-		if (!isOpen()) {
+		if (isClosed()) {
 			return null;
 		}
 		if (position < list.size()) {
@@ -43,10 +42,10 @@ public class ListInputStream implements IInputStream {
 
 	@Override
 	public Long size() {
-		if (isOpen()) {
-			return (long) list.size();
+		if (isClosed()) {
+			return null;
 		}
-		return null;
+		return (long) list.size();
 	}
 
 	@Override
@@ -60,8 +59,8 @@ public class ListInputStream implements IInputStream {
 	}
 
 	@Override
-	public boolean isOpen() {
-		return open;
+	public boolean isClosed() {
+		return !open;
 	}
 
 	public void setSleep(long sleep) {

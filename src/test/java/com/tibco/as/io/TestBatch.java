@@ -87,7 +87,7 @@ public class TestBatch extends TestBase {
 		transfer.addListener(new IMetaspaceTransferListener() {
 
 			@Override
-			public void executing(final AbstractDestinationTransfer transfer) {
+			public void executing(final DestinationTransfer transfer) {
 				out.addListener(new IOutputStreamListener() {
 
 					@Override

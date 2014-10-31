@@ -8,28 +8,26 @@ import java.util.logging.Logger;
 
 import com.tibco.as.log.LogFactory;
 
-public abstract class AbstractDestinationTransfer implements Runnable {
+public class DestinationTransfer implements Runnable {
 
-	private Logger log = LogFactory.getLog(AbstractDestinationTransfer.class);
+	private Logger log = LogFactory.getLog(DestinationTransfer.class);
 	private ExecutorService service;
-	private Destination destination;
+	private String name;
+	private int workers;
 	private IInputStream inputStream;
 	private IOutputStream outputStream;
 
-	public AbstractDestinationTransfer(Destination destination) {
-		this.destination = destination;
-	}
-
-	public IInputStream getInputStream() {
-		return inputStream;
+	public DestinationTransfer(String name, int workers, IInputStream in,
+			IOutputStream out) {
+		this.name = name;
+		this.workers = workers;
+		this.inputStream = in;
+		this.outputStream = out;
+		service = Executors.newFixedThreadPool(workers);
 	}
 
 	@Override
 	public void run() {
-		int workers = getWorkerCount(destination);
-		inputStream = getInputStream(destination);
-		outputStream = getOutputStream(destination);
-		service = Executors.newFixedThreadPool(workers);
 		for (int index = 0; index < workers; index++) {
 			service.execute(new Worker(inputStream, outputStream));
 		}
@@ -43,14 +41,6 @@ public abstract class AbstractDestinationTransfer implements Runnable {
 		}
 	}
 
-	protected abstract IInputStream getInputStream(
-			Destination destination);
-
-	protected abstract IOutputStream getOutputStream(
-			Destination destination);
-
-	protected abstract int getWorkerCount(Destination destination);
-
 	public void stop() throws Exception {
 		inputStream.close();
 	}
@@ -62,8 +52,20 @@ public abstract class AbstractDestinationTransfer implements Runnable {
 		return service.isTerminated();
 	}
 
+	public Long size() {
+		return inputStream.size();
+	}
+
 	public String getName() {
-		return destination.getName();
+		return name;
+	}
+
+	public Long getPosition() {
+		return inputStream.getPosition();
+	}
+
+	public IInputStream getInputStream() {
+		return inputStream;
 	}
 
 }
