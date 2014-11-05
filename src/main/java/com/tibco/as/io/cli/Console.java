@@ -3,7 +3,7 @@ package com.tibco.as.io.cli;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.io.DestinationTransfer;
+import com.tibco.as.io.IDestinationTransfer;
 import com.tibco.as.log.LogFactory;
 
 public class Console implements Runnable {
@@ -12,15 +12,15 @@ public class Console implements Runnable {
 	private static final int WIDTH = 40;
 
 	private Logger log = LogFactory.getLog(Console.class);
-	private DestinationTransfer transfer;
+	private IDestinationTransfer transfer;
 
-	protected Console(DestinationTransfer transfer) {
+	protected Console(IDestinationTransfer transfer) {
 		this.transfer = transfer;
 	}
 
 	@Override
 	public void run() {
-		while (!transfer.getInputStream().isClosed()) {
+		while (transfer.isRunning()) {
 			print();
 			sleep();
 		}
@@ -29,7 +29,7 @@ public class Console implements Runnable {
 	}
 
 	private void sleep() {
-		for (int index = 0; index < 3 && !transfer.getInputStream().isClosed(); index++) {
+		for (int index = 0; index < 3 && transfer.isRunning(); index++) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -39,11 +39,14 @@ public class Console implements Runnable {
 	}
 
 	protected void print() {
+		Long position = transfer.getPosition();
+		if (position == null) {
+			return;
+		}
 		String name = transfer.getName();
 		Long size = transfer.size();
-		Long position = transfer.getPosition();
 		if (size == null) {
-			System.out.printf(FORMAT, name, position == null ? 0 : null);
+			System.out.printf(FORMAT, name, position);
 		} else {
 			StringBuilder bar = new StringBuilder("\r%1$-20s [");
 			long progress = getPercent(size, position) * WIDTH / 100;

@@ -58,8 +58,7 @@ public class ListInputStream implements IInputStream {
 		open = false;
 	}
 
-	@Override
-	public boolean isClosed() {
+	private boolean isClosed() {
 		return !open;
 	}
 

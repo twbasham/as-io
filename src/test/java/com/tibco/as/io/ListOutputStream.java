@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 
-public class ListOutputStream extends AbstractOutputStream<Object> {
+public class ListOutputStream extends AbstractOutputStream<Object[]> {
 
 	private List<Object> list = new Vector<Object>();
 	private Long sleep;
@@ -44,7 +44,7 @@ public class ListOutputStream extends AbstractOutputStream<Object> {
 	}
 
 	@Override
-	protected Object[] newArray(int length) {
+	protected Object[] newObject(int length) {
 		return new String[length];
 	}
 

@@ -32,7 +32,7 @@ public class Destination {
 	private Integer importWorkerCount;
 	private Long importLimit;
 	private Integer exportWorkerCount;
-	private Long exportLimit;
+	private Long spaceLimit;
 	private Integer spaceBatchSize;
 	private OperationType operation;
 	private Long waitForReadyTimeout;
@@ -75,8 +75,8 @@ public class Destination {
 		if (target.importWorkerCount == null) {
 			target.importWorkerCount = importWorkerCount;
 		}
-		if (target.exportLimit == null) {
-			target.exportLimit = exportLimit;
+		if (target.spaceLimit == null) {
+			target.spaceLimit = spaceLimit;
 		}
 		if (target.exportWorkerCount == null) {
 			target.exportWorkerCount = exportWorkerCount;
@@ -135,7 +135,7 @@ public class Destination {
 		this.importLimit = importLimit;
 	}
 
-	public int getExportWorkerCount() {
+	public int getSpaceWorkerCount() {
 		if (exportWorkerCount == null) {
 			return DEFAULT_WORKER_COUNT;
 		}
@@ -146,12 +146,12 @@ public class Destination {
 		this.exportWorkerCount = workerCount;
 	}
 
-	public Long getExportLimit() {
-		return exportLimit;
+	public Long getSpaceLimit() {
+		return spaceLimit;
 	}
 
-	public void setExportLimit(Long exportLimit) {
-		this.exportLimit = exportLimit;
+	public void setSpaceLimit(Long spaceLimit) {
+		this.spaceLimit = spaceLimit;
 	}
 
 	public Integer getSpaceBatchSize() {
@@ -212,6 +212,9 @@ public class Destination {
 	}
 
 	public Collection<String> getKeys() {
+		if (keys == null) {
+			keys = new ArrayList<String>();
+		}
 		return keys;
 	}
 
@@ -375,7 +378,7 @@ public class Destination {
 		return spaceDef;
 	}
 
-	public IInputStream getInputStream() {
+	public IInputStream getInputStream() throws Exception {
 		return null;
 	}
 

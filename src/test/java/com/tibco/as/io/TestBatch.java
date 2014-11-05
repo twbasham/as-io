@@ -58,6 +58,7 @@ public class TestBatch extends TestBase {
 		destination.setExportWorkerCount(5);
 		destination.setQueryLimit(100000L);
 		ChannelExport export = channel.getExport();
+		export.prepare();
 		export.execute();
 		List<Object> list = destination.getOutputStream().getList();
 		Assert.assertEquals(space.size(), list.size());
@@ -84,16 +85,17 @@ public class TestBatch extends TestBase {
 		final ListOutputStream out = destination.getOutputStream();
 		out.setSleep(100);
 		ChannelExport transfer = channel.getExport();
-		transfer.addListener(new IMetaspaceTransferListener() {
+		transfer.addListener(new IChannelTransferListener() {
 
 			@Override
-			public void executing(final DestinationTransfer transfer) {
+			public void executing(final IDestinationTransfer transfer) {
 				out.addListener(new IOutputStreamListener() {
 
 					@Override
 					public void wrote(Object object) {
 						try {
-							transfer.getInputStream().close();
+							System.out.println("Stopping transfer");
+							transfer.stop();
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -101,6 +103,7 @@ public class TestBatch extends TestBase {
 				});
 			}
 		});
+		transfer.prepare();
 		transfer.execute();
 		Assert.assertTrue(out.getList().size() <= 15);
 	}

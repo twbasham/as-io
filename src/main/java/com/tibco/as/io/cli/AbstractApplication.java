@@ -2,7 +2,7 @@ package com.tibco.as.io.cli;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,7 +12,7 @@ import com.beust.jcommander.ParameterException;
 import com.tibco.as.convert.Blob;
 import com.tibco.as.convert.Settings;
 import com.tibco.as.io.Channel;
-import com.tibco.as.io.AbstractChannelTransfer;
+import com.tibco.as.io.IChannelTransfer;
 import com.tibco.as.io.cli.converters.BlobConverter;
 import com.tibco.as.io.cli.converters.LogLevelConverter;
 import com.tibco.as.log.LogFactory;
@@ -94,7 +94,7 @@ public abstract class AbstractApplication {
 					"Could not initialize logging: {0}",
 					e.getLocalizedMessage()));
 		}
-		List<ICommand> commands = new ArrayList<ICommand>();
+		Collection<ICommand> commands = new ArrayList<ICommand>();
 		String parsedCommand = jc.getParsedCommand();
 		if (parsedCommand == null) {
 			ICommand defaultCommand = getDefaultCommand();
@@ -134,14 +134,15 @@ public abstract class AbstractApplication {
 		try {
 			channel.open();
 			for (ICommand command : commands) {
-				AbstractChannelTransfer transfer;
+				IChannelTransfer transfer;
 				try {
 					transfer = command.getTransfer(channel);
 				} catch (Exception e) {
 					log.log(Level.SEVERE, "Could not create transfer", e);
 					continue;
 				}
-				transfer.addListener(new MetaspaceTransferMonitor());
+				transfer.addListener(new ChannelTransferMonitor());
+				transfer.prepare();
 				try {
 					transfer.execute();
 				} catch (InterruptedException e) {

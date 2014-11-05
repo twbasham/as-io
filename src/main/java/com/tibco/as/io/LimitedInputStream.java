@@ -46,9 +46,4 @@ public class LimitedInputStream implements IInputStream {
 		return in.getOpenTime();
 	}
 
-	@Override
-	public boolean isClosed() {
-		return in.isClosed();
-	}
-
 }

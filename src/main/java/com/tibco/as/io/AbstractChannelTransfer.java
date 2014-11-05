@@ -6,30 +6,37 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractChannelTransfer {
+public abstract class AbstractChannelTransfer implements IChannelTransfer {
 
-	private Collection<IMetaspaceTransferListener> listeners = new ArrayList<IMetaspaceTransferListener>();
 	private Channel channel;
+	private Collection<IChannelTransferListener> listeners = new ArrayList<IChannelTransferListener>();
+	private Collection<IDestinationTransfer> transfers = new ArrayList<IDestinationTransfer>();
+	private ExecutorService executor;
 
 	public AbstractChannelTransfer(Channel channel) {
 		this.channel = channel;
 	}
 
-	public void execute() throws Exception {
-		Collection<Destination> destinations = new ArrayList<Destination>();
-		destinations.addAll(channel.getDestinations());
-		if (destinations.isEmpty()) {
-			destinations.addAll(getDestinations(channel));
+	@Override
+	public void prepare() throws Exception {
+		for (Destination destination : getDestinations(channel)) {
+			IDestinationTransfer transfer = getTransfer(destination);
+			transfer.prepare();
+			transfers.add(transfer);
 		}
-		if (destinations.isEmpty()) {
+		if (transfers.isEmpty()) {
 			return;
 		}
-		ExecutorService executor = Executors.newFixedThreadPool(destinations
-				.size());
-		for (Destination destination : destinations) {
-			channel.getDefaultDestination().copyTo(destination);
-			DestinationTransfer transfer = getTransfer(destination);
-			for (IMetaspaceTransferListener listener : listeners) {
+		executor = Executors.newFixedThreadPool(transfers.size());
+	}
+
+	protected abstract Collection<Destination> getDestinations(Channel channel)
+			throws Exception;
+
+	@Override
+	public void execute() throws Exception {
+		for (IDestinationTransfer transfer : transfers) {
+			for (IChannelTransferListener listener : listeners) {
 				listener.executing(transfer);
 			}
 			executor.execute(transfer);
@@ -40,13 +47,14 @@ public abstract class AbstractChannelTransfer {
 		}
 	}
 
-	protected abstract DestinationTransfer getTransfer(
-			Destination destination) throws Exception;
+	protected Collection<IDestinationTransfer> getTransfers() {
+		return transfers;
+	}
 
-	protected abstract Collection<Destination> getDestinations(Channel channel)
-			throws Exception;
+	protected abstract IDestinationTransfer getTransfer(Destination destination);
 
-	public void addListener(IMetaspaceTransferListener listener) {
+	@Override
+	public void addListener(IChannelTransferListener listener) {
 		listeners.add(listener);
 	}
 

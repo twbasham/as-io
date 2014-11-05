@@ -37,7 +37,7 @@ public class ExportCommand implements ICommand {
 	private String filter;
 
 	protected void configure(Destination destination) {
-		destination.setExportLimit(transfer.getLimit());
+		destination.setSpaceLimit(transfer.getLimit());
 		destination.setExportWorkerCount(transfer.getWorkerCount());
 		destination.setBrowserType(browserType);
 		destination.setTimeScope(timeScope);

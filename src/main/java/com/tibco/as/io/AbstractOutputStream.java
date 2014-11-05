@@ -33,7 +33,7 @@ public abstract class AbstractOutputStream<T> implements IOutputStream {
 	@Override
 	public void write(Object tuple) throws Exception {
 		IConverter[] converters = context.get();
-		T[] array = newArray(tupleAccessors.length);
+		T array = newObject(tupleAccessors.length);
 		for (int index = 0; index < tupleAccessors.length; index++) {
 			if (tupleAccessors[index] == null) {
 				continue;
@@ -57,8 +57,8 @@ public abstract class AbstractOutputStream<T> implements IOutputStream {
 		doWrite(array);
 	}
 
-	protected abstract void doWrite(T[] array) throws Exception;
+	protected abstract void doWrite(T array) throws Exception;
 
-	protected abstract T[] newArray(int length);
+	protected abstract T newObject(int length);
 
 }

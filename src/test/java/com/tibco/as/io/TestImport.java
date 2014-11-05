@@ -61,7 +61,9 @@ public class TestImport extends TestBase {
 								"3.33" }));
 		destination.getInputStream().setSleep(103);
 		destination.setSpaceDef(space.getSpaceDef());
-		channel.getImport().execute();
+		ChannelImport transfer = channel.getImport();
+		transfer.prepare();
+		transfer.execute();
 		Assert.assertEquals(3, space.size());
 		Tuple tuple1 = Tuple.create();
 		tuple1.putString("guid", "1");

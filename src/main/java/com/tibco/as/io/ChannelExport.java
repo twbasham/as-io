@@ -9,13 +9,8 @@ public class ChannelExport extends AbstractChannelTransfer {
 	}
 
 	@Override
-	protected DestinationTransfer getTransfer(Destination destination)
-			throws Exception {
-		String name = destination.getName();
-		int workerCount = destination.getExportWorkerCount();
-		IInputStream in = new SpaceInputStream(destination);
-		IOutputStream out = destination.getOutputStream();
-		return new DestinationTransfer(name, workerCount, in, out);
+	protected DestinationExport getTransfer(Destination destination) {
+		return new DestinationExport(destination);
 	}
 
 	@Override

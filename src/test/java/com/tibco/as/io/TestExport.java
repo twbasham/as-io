@@ -72,7 +72,9 @@ public class TestExport extends TestBase {
 				.addDestination();
 		destination.setSpace(spaceName);
 		destination.getOutputStream().setSleep(140);
-		channel.getExport().execute();
+		ChannelExport export = channel.getExport();
+		export.prepare();
+		export.execute();
 		Assert.assertEquals(3, destination.getOutputStream().getList().size());
 		for (Object element : destination.getOutputStream().getList()) {
 			Object[] line = (Object[]) element;

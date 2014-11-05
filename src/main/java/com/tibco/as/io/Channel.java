@@ -2,11 +2,9 @@ package com.tibco.as.io;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.logging.Logger;
 
 import com.tibco.as.log.LogFactory;
-import com.tibco.as.space.ASException;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Member;
 import com.tibco.as.util.Utils;
@@ -59,20 +57,6 @@ public class Channel {
 		metaspace = null;
 	}
 
-	public Collection<Destination> getExportDestinations() throws ASException {
-		Collection<Destination> destinations = new ArrayList<Destination>();
-		for (String spaceName : metaspace.getUserSpaceNames()) {
-			Destination destination = newDestination();
-			destination.setSpace(spaceName);
-			destinations.add(destination);
-		}
-		return destinations;
-	}
-
-	public Collection<Destination> getImportDestinations() {
-		return Collections.emptyList();
-	}
-
 	public void setMember(Member member) {
 		this.member = member;
 	}
@@ -97,6 +81,31 @@ public class Channel {
 
 	public ChannelImport getImport() {
 		return new ChannelImport(this);
+	}
+
+	public Collection<Destination> getExportDestinations() throws Exception {
+		Collection<Destination> ed = new ArrayList<Destination>(destinations);
+		if (ed.isEmpty()) {
+			for (String spaceName : metaspace.getUserSpaceNames()) {
+				Destination destination = newDestination();
+				destination.setSpace(spaceName);
+				ed.add(destination);
+			}
+		}
+		configure(ed);
+		return ed;
+	}
+
+	protected void configure(Collection<Destination> destinations) {
+		for (Destination destination : destinations) {
+			defaultDestination.copyTo(destination);
+		}
+	}
+
+	public Collection<Destination> getImportDestinations() throws Exception {
+		ArrayList<Destination> id = new ArrayList<Destination>(destinations);
+		configure(id);
+		return id;
 	}
 
 }
