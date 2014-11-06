@@ -2,6 +2,7 @@ package com.tibco.as.io.cli;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
@@ -21,6 +22,8 @@ public class ExportCommand implements ICommand {
 	private Transfer transfer = new Transfer();
 	@Parameter(description = "The list of spaces to export")
 	private Collection<String> spaceNames = new ArrayList<String>();
+	@Parameter(names = { "-fields" }, description = "Names of specific fields to export, e.g. field1 field2", variableArity = true)
+	private List<String> fieldNames;
 	@Parameter(description = "Browser type", names = { "-browser_type" }, converter = BrowserTypeConverter.class, validateWith = BrowserTypeConverter.class)
 	private BrowserType browserType;
 	@Parameter(description = "Browser time scope", names = { "-time_scope" }, converter = BrowserTimeScopeConverter.class, validateWith = BrowserTimeScopeConverter.class)
@@ -37,6 +40,9 @@ public class ExportCommand implements ICommand {
 	private String filter;
 
 	protected void configure(Destination destination) {
+		if (fieldNames != null) {
+			destination.setFieldNames(fieldNames);
+		}
 		destination.setSpaceLimit(transfer.getLimit());
 		destination.setExportWorkerCount(transfer.getWorkerCount());
 		destination.setBrowserType(browserType);

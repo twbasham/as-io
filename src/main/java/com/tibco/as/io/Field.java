@@ -54,13 +54,6 @@ public class Field {
 		this.fieldName = fieldName;
 	}
 
-	@Override
-	public Field clone() {
-		Field field = new Field();
-		copyTo(field);
-		return field;
-	}
-
 	public void copyTo(Field target) {
 		target.fieldEncrypted = fieldEncrypted;
 		target.fieldName = fieldName;

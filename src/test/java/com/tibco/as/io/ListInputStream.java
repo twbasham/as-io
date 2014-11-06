@@ -1,17 +1,13 @@
 package com.tibco.as.io;
 
-import java.util.List;
-import java.util.Vector;
-
 public class ListInputStream implements IInputStream {
 
-	private List<Object> list = new Vector<Object>();
+	private TestDestination destination;
 	private Long position;
-	private Long sleep;
 	private boolean open;
 
-	public List<Object> getList() {
-		return list;
+	public ListInputStream(TestDestination destination) {
+		this.destination = destination;
 	}
 
 	@Override
@@ -27,12 +23,12 @@ public class ListInputStream implements IInputStream {
 		if (isClosed()) {
 			return null;
 		}
-		if (position < list.size()) {
+		if (position < destination.getList().size()) {
 			try {
-				return list.get(position.intValue());
+				return destination.getList().get(position.intValue());
 			} finally {
-				if (sleep != null) {
-					Thread.sleep(sleep);
+				if (destination.getSleep() != null) {
+					Thread.sleep(destination.getSleep());
 				}
 				position++;
 			}
@@ -45,7 +41,7 @@ public class ListInputStream implements IInputStream {
 		if (isClosed()) {
 			return null;
 		}
-		return (long) list.size();
+		return (long) destination.getList().size();
 	}
 
 	@Override
@@ -60,10 +56,6 @@ public class ListInputStream implements IInputStream {
 
 	private boolean isClosed() {
 		return !open;
-	}
-
-	public void setSleep(long sleep) {
-		this.sleep = sleep;
 	}
 
 	@Override

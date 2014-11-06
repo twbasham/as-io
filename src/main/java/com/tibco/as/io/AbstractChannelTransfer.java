@@ -35,6 +35,9 @@ public abstract class AbstractChannelTransfer implements IChannelTransfer {
 
 	@Override
 	public void execute() throws Exception {
+		if (executor == null) {
+			return;
+		}
 		for (IDestinationTransfer transfer : transfers) {
 			for (IChannelTransferListener listener : listeners) {
 				listener.executing(transfer);
@@ -47,7 +50,7 @@ public abstract class AbstractChannelTransfer implements IChannelTransfer {
 		}
 	}
 
-	protected Collection<IDestinationTransfer> getTransfers() {
+	public Collection<IDestinationTransfer> getTransfers() {
 		return transfers;
 	}
 

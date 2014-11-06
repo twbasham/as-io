@@ -1,25 +1,16 @@
 package com.tibco.as.io;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Vector;
-
 public class ListOutputStream extends AbstractOutputStream<Object[]> {
 
-	private List<Object> list = new Vector<Object>();
-	private Long sleep;
-	private Collection<IOutputStreamListener> listeners = new ArrayList<IOutputStreamListener>();
+	private TestDestination destination;
 
-	public ListOutputStream(Destination destination) {
+	public ListOutputStream(TestDestination destination) {
 		super(destination);
-	}
-
-	public List<Object> getList() {
-		return list;
+		this.destination = destination;
 	}
 
 	private void sleep() throws InterruptedException {
+		Long sleep = destination.getSleep();
 		if (sleep == null) {
 			return;
 		}
@@ -28,19 +19,8 @@ public class ListOutputStream extends AbstractOutputStream<Object[]> {
 
 	@Override
 	protected void doWrite(Object[] object) throws Exception {
-		list.add(object);
+		destination.write(object);
 		sleep();
-		for (IOutputStreamListener listener : listeners) {
-			listener.wrote(object);
-		}
-	}
-
-	public void addListener(IOutputStreamListener listener) {
-		listeners.add(listener);
-	}
-
-	public void setSleep(long sleep) {
-		this.sleep = sleep;
 	}
 
 	@Override

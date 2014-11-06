@@ -1,12 +1,33 @@
 package com.tibco.as.io;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 public class TestDestination extends Destination {
 
-	private ListInputStream inputStream = new ListInputStream();
-	private ListOutputStream outputStream = new ListOutputStream(this);
+	private Collection<IOutputStreamListener> listeners = new ArrayList<IOutputStreamListener>();
+	private Long sleep;
+	private TestChannel channel;
 
 	public TestDestination(TestChannel channel) {
 		super(channel);
+		this.channel = channel;
+	}
+
+	@Override
+	public TestDestination clone() {
+		TestDestination destination = new TestDestination(channel);
+		copyTo(destination);
+		return destination;
+	}
+
+	public void copyTo(TestDestination target) {
+		if (target.sleep == null) {
+			target.sleep = sleep;
+		}
+		target.listeners.addAll(listeners);
+		super.copyTo(target);
 	}
 
 	@Override
@@ -17,18 +38,36 @@ public class TestDestination extends Destination {
 	}
 
 	@Override
-	public ListInputStream getInputStream() {
-		return inputStream;
+	public ListInputStream getInputStream() throws Exception {
+		return new ListInputStream(this);
 	}
 
 	@Override
 	public ListOutputStream getOutputStream() {
-		return outputStream;
+		return new ListOutputStream(this);
 	}
 
-	@Override
-	public String getName() {
-		return getSpace();
+	public List<Object> getList() {
+		return channel.getList(getSpace());
+	}
+
+	public void setSleep(Long sleep) {
+		this.sleep = sleep;
+	}
+
+	public Long getSleep() {
+		return sleep;
+	}
+
+	public void write(Object[] object) {
+		getList().add(object);
+		for (IOutputStreamListener listener : listeners) {
+			listener.wrote(object);
+		}
+	}
+
+	public void addListener(IOutputStreamListener listener) {
+		listeners.add(listener);
 	}
 
 }

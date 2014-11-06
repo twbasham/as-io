@@ -51,16 +51,15 @@ public class TestBatch extends TestBase {
 
 	@Test
 	public void testBatch() throws Exception {
-		Channel channel = getChannel();
-		TestDestination destination = (TestDestination) channel
-				.addDestination();
+		TestChannel channel = getChannel();
+		TestDestination destination = channel.addDestination();
 		destination.setSpace(space.getName());
 		destination.setExportWorkerCount(5);
 		destination.setQueryLimit(100000L);
 		ChannelExport export = channel.getExport();
 		export.prepare();
 		export.execute();
-		List<Object> list = destination.getOutputStream().getList();
+		List<Object> list = destination.getList();
 		Assert.assertEquals(space.size(), list.size());
 		for (Object element : list) {
 			Object[] line = (Object[]) element;
@@ -76,36 +75,36 @@ public class TestBatch extends TestBase {
 	public void testStopTransfer() throws Exception {
 		LogFactory.getRootLogger(LogLevel.VERBOSE);
 		Channel channel = getChannel();
-		final TestDestination destination = (TestDestination) channel
+		TestDestination destination = (TestDestination) channel
 				.addDestination();
+		destination.setSleep(100L);
 		destination.setSpace(space.getName());
 		destination.setTimeScope(TimeScope.ALL);
 		destination.setTimeout(100L);
 		destination.setExportWorkerCount(1);
-		final ListOutputStream out = destination.getOutputStream();
-		out.setSleep(100);
 		ChannelExport transfer = channel.getExport();
 		transfer.addListener(new IChannelTransferListener() {
 
 			@Override
 			public void executing(final IDestinationTransfer transfer) {
-				out.addListener(new IOutputStreamListener() {
+				((TestDestination) transfer.getDestination())
+						.addListener(new IOutputStreamListener() {
 
-					@Override
-					public void wrote(Object object) {
-						try {
-							System.out.println("Stopping transfer");
-							transfer.stop();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
+							@Override
+							public void wrote(Object object) {
+								try {
+									System.out.println("Stopping transfer");
+									transfer.stop();
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						});
 			}
 		});
 		transfer.prepare();
 		transfer.execute();
-		Assert.assertTrue(out.getList().size() <= 15);
+		Assert.assertTrue(destination.getList().size() <= 15);
 	}
 
 	@After

@@ -18,7 +18,7 @@ import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.browser.BrowserDef.DistributionScope;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 
-public class Destination {
+public class Destination implements Cloneable {
 
 	private static final int DEFAULT_WORKER_COUNT = 1;
 	private static final long DEFAULT_WAIT_FOR_READY_TIMEOUT = 30000;
@@ -26,8 +26,8 @@ public class Destination {
 	private ConverterFactory converterFactory = new ConverterFactory();
 	private Channel channel;
 	private String space;
-	private Collection<Field> fields;
-	private Collection<String> keys;
+	private Collection<Field> fields = new ArrayList<Field>();
+	private Collection<String> keys = new ArrayList<String>();
 	private Settings settings;
 	private Integer importWorkerCount;
 	private Long importLimit;
@@ -49,21 +49,23 @@ public class Destination {
 		this.channel = channel;
 	}
 
+	@Override
+	public Destination clone() {
+		Destination destination = new Destination(channel);
+		copyTo(destination);
+		return destination;
+	}
+
 	public void copyTo(Destination target) {
 		if (target.space == null) {
 			target.space = space;
 		}
-		if (target.fields == null) {
-			target.fields = new ArrayList<Field>();
-			for (Field field : getFields()) {
-				target.fields.add(field.clone());
-			}
+		for (Field field : fields) {
+			Field newField = newField();
+			field.copyTo(newField);
+			target.fields.add(newField);
 		}
-		if (target.keys == null) {
-			if (keys != null) {
-				target.keys = new ArrayList<String>(keys);
-			}
-		}
+		target.keys = new ArrayList<String>(keys);
 		if (target.settings == null) {
 			if (settings != null) {
 				target.settings = settings.clone();
@@ -190,9 +192,6 @@ public class Destination {
 	}
 
 	public Collection<Field> getFields() {
-		if (fields == null) {
-			fields = new ArrayList<Field>();
-		}
 		return fields;
 	}
 
@@ -200,21 +199,16 @@ public class Destination {
 		this.fields = fields;
 	}
 
-	public Field getField(String name) {
-		for (Field field : getFields()) {
+	protected Field getField(String name) {
+		for (Field field : fields) {
 			if (field.getFieldName().equals(name)) {
 				return field;
 			}
 		}
-		Field field = addField();
-		field.setFieldName(name);
-		return field;
+		return null;
 	}
 
 	public Collection<String> getKeys() {
-		if (keys == null) {
-			keys = new ArrayList<String>();
-		}
 		return keys;
 	}
 
@@ -230,31 +224,32 @@ public class Destination {
 		this.space = space;
 	}
 
-	public Field addField() {
-		Field field = newField();
-		getFields().add(field);
-		return field;
-	}
-
 	protected Field newField() {
 		return new Field();
 	}
 
 	public Collection<String> getFieldNames() {
 		Collection<String> fieldNames = new ArrayList<String>();
-		for (Field field : getFields()) {
+		for (Field field : fields) {
 			fieldNames.add(field.getFieldName());
 		}
 		return fieldNames;
 	}
 
 	public void setFieldNames(List<String> fieldNames) {
-		if (fieldNames == null) {
-			return;
+		for (String fieldName : fieldNames) {
+			Field field = getField(fieldName);
+			if (field == null) {
+				field = newField();
+				field.setFieldName(fieldName);
+				fields.add(field);
+			}
 		}
 		Collection<Field> fields = new ArrayList<Field>();
-		for (String fieldName : fieldNames) {
-			fields.add(getField(fieldName));
+		for (Field field : this.fields) {
+			if (fieldNames.contains(field.getFieldName())) {
+				fields.add(field);
+			}
 		}
 		setFields(fields);
 	}
@@ -262,13 +257,15 @@ public class Destination {
 	public void setSpaceDef(SpaceDef spaceDef) {
 		setSpace(spaceDef.getName());
 		setKeys(spaceDef.getKeyDef().getFieldNames());
-		if (getFields().isEmpty()) {
+		if (fields.isEmpty()) {
 			for (FieldDef fieldDef : spaceDef.getFieldDefs()) {
-				addField().setFieldName(fieldDef.getName());
+				Field field = newField();
+				field.setFieldName(fieldDef.getName());
+				fields.add(field);
 			}
 		}
 		Collection<Field> fields = new ArrayList<Field>();
-		for (Field field : getFields()) {
+		for (Field field : this.fields) {
 			FieldDef fieldDef = spaceDef.getFieldDef(field.getFieldName());
 			if (fieldDef == null) {
 				field.setFieldName(null);
@@ -353,7 +350,7 @@ public class Destination {
 
 	public SpaceDef getSpaceDef() {
 		SpaceDef spaceDef = SpaceDef.create(getSpace());
-		for (Field field : getFields()) {
+		for (Field field : fields) {
 			FieldType fieldType = field.getFieldType();
 			if (fieldType == null) {
 				fieldType = field.getJavaFieldType();
@@ -396,7 +393,7 @@ public class Destination {
 
 	public IAccessor[] getObjectAccessors() {
 		Collection<IAccessor> accessors = new ArrayList<IAccessor>();
-		int size = getFields().size();
+		int size = fields.size();
 		for (int index = 0; index < size; index++) {
 			accessors.add(new ObjectArrayAccessor(index));
 		}
@@ -405,7 +402,7 @@ public class Destination {
 
 	public IAccessor[] getTupleAccessors() {
 		Collection<IAccessor> accessors = new ArrayList<IAccessor>();
-		for (Field field : getFields()) {
+		for (Field field : fields) {
 			String fieldName = field.getFieldName();
 			FieldType fieldType = field.getFieldType();
 			accessors.add(converterFactory.getAccessor(fieldName, fieldType));
@@ -415,7 +412,7 @@ public class Destination {
 
 	public IConverter[] getJavaConverters() {
 		Collection<IConverter> converters = new ArrayList<IConverter>();
-		for (Field field : getFields()) {
+		for (Field field : fields) {
 			Class<?> javaType = field.getJavaType();
 			FieldType fieldType = field.getFieldType();
 			converters.add(converterFactory.getConverter(settings, javaType,
@@ -426,7 +423,7 @@ public class Destination {
 
 	public IConverter[] getFieldConverters() {
 		Collection<IConverter> converters = new ArrayList<IConverter>();
-		for (Field field : getFields()) {
+		for (Field field : fields) {
 			FieldType fieldType = field.getFieldType();
 			Class<?> javaType = field.getJavaType();
 			converters.add(converterFactory.getConverter(settings, fieldType,

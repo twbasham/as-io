@@ -1,10 +1,12 @@
 package com.tibco.as.io;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Logger;
 
 import com.tibco.as.log.LogFactory;
+import com.tibco.as.space.ASException;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Member;
 import com.tibco.as.util.Utils;
@@ -84,28 +86,43 @@ public class Channel {
 	}
 
 	public Collection<Destination> getExportDestinations() throws Exception {
-		Collection<Destination> ed = new ArrayList<Destination>(destinations);
-		if (ed.isEmpty()) {
-			for (String spaceName : metaspace.getUserSpaceNames()) {
-				Destination destination = newDestination();
-				destination.setSpace(spaceName);
-				ed.add(destination);
+		Collection<Destination> destinations = new ArrayList<Destination>();
+		for (Destination destination : this.destinations) {
+			for (Destination ed : getExportDestinations(destination)) {
+				defaultDestination.copyTo(ed);
+				destinations.add(ed);
 			}
 		}
-		configure(ed);
-		return ed;
+		return destinations;
 	}
 
-	protected void configure(Collection<Destination> destinations) {
-		for (Destination destination : destinations) {
-			defaultDestination.copyTo(destination);
+	private Collection<Destination> getExportDestinations(
+			Destination destination) throws ASException {
+		Collection<Destination> destinations = new ArrayList<Destination>();
+		for (String spaceName : metaspace.getUserSpaceNames()) {
+			if (Utils.matches(spaceName, destination.getSpace(), false)) {
+				Destination found = destination.clone();
+				found.setSpace(spaceName);
+				destinations.add(found);
+			}
 		}
+		return destinations;
 	}
 
 	public Collection<Destination> getImportDestinations() throws Exception {
-		ArrayList<Destination> id = new ArrayList<Destination>(destinations);
-		configure(id);
-		return id;
+		ArrayList<Destination> destinations = new ArrayList<Destination>();
+		for (Destination destination : this.destinations) {
+			for (Destination id : getImportDestinations(destination)) {
+				defaultDestination.copyTo(id);
+				destinations.add(id);
+			}
+		}
+		return destinations;
+	}
+
+	protected Collection<Destination> getImportDestinations(
+			Destination destination) throws Exception {
+		return Arrays.asList(destination);
 	}
 
 }

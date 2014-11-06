@@ -46,10 +46,8 @@ public class TestImport extends TestBase {
 		TestDestination destination = (TestDestination) channel
 				.addDestination();
 		destination.setSpace(spaceName);
-		destination
-				.getInputStream()
-				.getList()
-				.addAll(Arrays.asList(
+		destination.getList().addAll(
+				Arrays.asList(
 						(Object) new Object[] { "1",
 								DatatypeConverter.printDateTime(calendar1),
 								"1.11" },
@@ -59,7 +57,7 @@ public class TestImport extends TestBase {
 						new Object[] { "3",
 								DatatypeConverter.printDateTime(calendar3),
 								"3.33" }));
-		destination.getInputStream().setSleep(103);
+		destination.setSleep(103L);
 		destination.setSpaceDef(space.getSpaceDef());
 		ChannelImport transfer = channel.getImport();
 		transfer.prepare();
