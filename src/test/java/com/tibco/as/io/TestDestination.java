@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.tibco.as.space.FieldDef;
+
 public class TestDestination extends Destination {
 
 	private Collection<IOutputStreamListener> listeners = new ArrayList<IOutputStreamListener>();
@@ -16,29 +18,17 @@ public class TestDestination extends Destination {
 	}
 
 	@Override
-	public TestDestination clone() {
-		TestDestination destination = new TestDestination(channel);
-		copyTo(destination);
-		return destination;
-	}
-
-	public void copyTo(TestDestination target) {
+	public void copyTo(Destination destination) {
+		TestDestination target = (TestDestination) destination;
 		if (target.sleep == null) {
 			target.sleep = sleep;
 		}
 		target.listeners.addAll(listeners);
-		super.copyTo(target);
+		super.copyTo(destination);
 	}
 
 	@Override
-	protected Field newField() {
-		Field field = super.newField();
-		field.setJavaType(String.class);
-		return field;
-	}
-
-	@Override
-	public ListInputStream getInputStream() throws Exception {
+	public ListInputStream getInputStream() {
 		return new ListInputStream(this);
 	}
 
@@ -48,7 +38,7 @@ public class TestDestination extends Destination {
 	}
 
 	public List<Object> getList() {
-		return channel.getList(getSpace());
+		return channel.getList(getSpaceName());
 	}
 
 	public void setSleep(Long sleep) {
@@ -68,6 +58,11 @@ public class TestDestination extends Destination {
 
 	public void addListener(IOutputStreamListener listener) {
 		listeners.add(listener);
+	}
+
+	@Override
+	protected Class<String> getJavaType(FieldDef fieldDef) {
+		return String.class;
 	}
 
 }

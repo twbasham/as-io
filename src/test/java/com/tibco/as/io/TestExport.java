@@ -69,8 +69,9 @@ public class TestExport extends TestBase {
 				DistributionRole.SEEDER);
 		space2.putAll(list);
 		TestDestination destination = (TestDestination) channel
-				.addDestination();
-		destination.setSpace("cust*");
+				.newDestination();
+		channel.getDestinations().add(destination);
+		destination.setSpaceName("cust*");
 		destination.setSleep(140L);
 		ChannelExport export = channel.getExport();
 		export.prepare();

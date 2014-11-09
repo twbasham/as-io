@@ -4,7 +4,7 @@ public interface IDestinationTransfer extends Runnable {
 
 	void prepare() throws Exception;
 
-	Destination getDestination();
+	IDestination getDestination();
 
 	boolean isRunning();
 

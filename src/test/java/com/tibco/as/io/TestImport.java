@@ -44,8 +44,9 @@ public class TestImport extends TestBase {
 		Space space = metaspace.getSpace(spaceDef.getName(),
 				DistributionRole.SEEDER);
 		TestDestination destination = (TestDestination) channel
-				.addDestination();
-		destination.setSpace(spaceName);
+				.newDestination();
+		channel.getDestinations().add(destination);
+		destination.setSpaceName(spaceName);
 		destination.getList().addAll(
 				Arrays.asList(
 						(Object) new Object[] { "1",

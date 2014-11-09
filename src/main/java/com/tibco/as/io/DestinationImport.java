@@ -10,13 +10,8 @@ public class DestinationImport extends AbstractDestinationTransfer {
 	}
 
 	@Override
-	protected int getWorkerCount() {
-		return destination.getImportWorkerCount();
-	}
-
-	@Override
-	protected Long getLimit() {
-		return destination.getImportLimit();
+	protected TransferConfig getConfig() {
+		return destination.getImportConfig();
 	}
 
 	@Override
@@ -26,8 +21,8 @@ public class DestinationImport extends AbstractDestinationTransfer {
 
 	@Override
 	protected IOutputStream getOutputStream() {
-		Integer batchSize = destination.getSpaceBatchSize();
-		if (batchSize == null) {
+		Integer batchSize = destination.getImportConfig().getBatchSize();
+		if (batchSize == null || batchSize == 1) {
 			return new SpaceOutputStream(destination);
 		}
 		return new BatchSpaceOutputStream(destination, batchSize);

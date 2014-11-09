@@ -17,11 +17,10 @@ public class TestBase {
 
 	@Before
 	public void openChannel() throws Exception {
-		channel = new TestChannel();
-		Member member = new Member();
+		channel = new TestChannel(null);
+		Member member = channel.getMember();
 		member.setDiscovery(DISCOVERY);
 		member.setConnectTimeout(10000L);
-		channel.setMember(member);
 		channel.open();
 	}
 

@@ -8,18 +8,13 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractChannelTransfer implements IChannelTransfer {
 
-	private Channel channel;
 	private Collection<IChannelTransferListener> listeners = new ArrayList<IChannelTransferListener>();
 	private Collection<IDestinationTransfer> transfers = new ArrayList<IDestinationTransfer>();
 	private ExecutorService executor;
 
-	public AbstractChannelTransfer(Channel channel) {
-		this.channel = channel;
-	}
-
 	@Override
 	public void prepare() throws Exception {
-		for (Destination destination : getDestinations(channel)) {
+		for (Destination destination : getDestinations()) {
 			IDestinationTransfer transfer = getTransfer(destination);
 			transfer.prepare();
 			transfers.add(transfer);
@@ -30,7 +25,7 @@ public abstract class AbstractChannelTransfer implements IChannelTransfer {
 		executor = Executors.newFixedThreadPool(transfers.size());
 	}
 
-	protected abstract Collection<Destination> getDestinations(Channel channel)
+	protected abstract Collection<Destination> getDestinations()
 			throws Exception;
 
 	@Override

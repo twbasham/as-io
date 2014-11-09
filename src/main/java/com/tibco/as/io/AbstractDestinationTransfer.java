@@ -13,6 +13,8 @@ import com.tibco.as.log.LogFactory;
 public abstract class AbstractDestinationTransfer implements
 		IDestinationTransfer {
 
+	private static final int DEFAULT_WORKER_COUNT = 1;
+
 	private Logger log = LogFactory.getLog(AbstractDestinationTransfer.class);
 	private Destination destination;
 	private IInputStream in;
@@ -25,7 +27,7 @@ public abstract class AbstractDestinationTransfer implements
 	}
 
 	@Override
-	public Destination getDestination() {
+	public IDestination getDestination() {
 		return destination;
 	}
 
@@ -38,6 +40,16 @@ public abstract class AbstractDestinationTransfer implements
 		}
 		executor = Executors.newFixedThreadPool(workers.size());
 	}
+
+	private int getWorkerCount() {
+		Integer workerCount = getConfig().getWorkerCount();
+		if (workerCount == null) {
+			return DEFAULT_WORKER_COUNT;
+		}
+		return workerCount;
+	}
+
+	protected abstract TransferConfig getConfig();
 
 	@Override
 	public Long getPosition() {
@@ -71,16 +83,12 @@ public abstract class AbstractDestinationTransfer implements
 	}
 
 	private IInputStream getInputStream(IInputStream in) {
-		Long limit = getLimit();
+		Long limit = getConfig().getLimit();
 		if (limit == null) {
 			return in;
 		}
 		return new LimitedInputStream(in, limit);
 	}
-
-	protected abstract int getWorkerCount();
-
-	protected abstract Long getLimit();
 
 	protected abstract IInputStream getInputStream() throws Exception;
 

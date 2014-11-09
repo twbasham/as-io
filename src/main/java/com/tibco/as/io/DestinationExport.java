@@ -10,13 +10,8 @@ public class DestinationExport extends AbstractDestinationTransfer {
 	}
 
 	@Override
-	protected int getWorkerCount() {
-		return destination.getSpaceWorkerCount();
-	}
-
-	@Override
-	protected Long getLimit() {
-		return destination.getSpaceLimit();
+	protected TransferConfig getConfig() {
+		return destination.getExportConfig();
 	}
 
 	@Override

@@ -14,7 +14,6 @@ import com.tibco.as.space.browser.Browser;
 import com.tibco.as.space.browser.BrowserDef;
 import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.impl.ASBrowser;
-import com.tibco.as.util.Utils;
 
 public class SpaceInputStream implements IInputStream {
 
@@ -40,7 +39,7 @@ public class SpaceInputStream implements IInputStream {
 			return;
 		}
 		Metaspace metaspace = destination.getMetaspace();
-		SpaceDef spaceDef = metaspace.getSpaceDef(destination.getSpace());
+		SpaceDef spaceDef = metaspace.getSpaceDef(getSpaceName());
 		destination.setSpaceDef(spaceDef);
 		BrowserDef browserDef = getBrowserDef();
 		long start = System.nanoTime();
@@ -53,32 +52,15 @@ public class SpaceInputStream implements IInputStream {
 	}
 
 	private BrowserDef getBrowserDef() {
-		BrowserDef browserDef = BrowserDef.create();
-		if (destination.getTimeScope() != null) {
-			browserDef.setTimeScope(destination.getTimeScope());
-		}
-		if (destination.getDistributionScope() != null) {
-			browserDef.setDistributionScope(destination.getDistributionScope());
-		}
-		if (destination.getTimeout() != null) {
-			browserDef.setTimeout(destination.getTimeout());
-		}
-		if (destination.getPrefetch() != null) {
-			browserDef.setPrefetch(destination.getPrefetch());
-		}
-		if (destination.getQueryLimit() != null) {
-			if (Utils.hasMethod(BrowserDef.class, "setQueryLimit")) {
-				browserDef.setQueryLimit(destination.getQueryLimit());
-			}
-		}
-		return browserDef;
+		return destination.getExportConfig().getBrowserConfig().getBrowserDef();
 	}
 
 	private Browser getBrowser(Metaspace metaspace, BrowserDef browserDef)
 			throws ASException {
-		BrowserType browserType = destination.getBrowserType();
-		String filter = destination.getFilter();
-		String space = destination.getSpace();
+		BrowserType browserType = getBrowserType();
+		String filter = destination.getExportConfig().getBrowserConfig()
+				.getFilter();
+		String space = getSpaceName();
 		if (filter == null) {
 			log.log(Level.FINE,
 					"Browsing space ''{0}'' with type {1} and def {2}",
@@ -89,6 +71,19 @@ public class SpaceInputStream implements IInputStream {
 				"Browsing space ''{0}'' with type {1}, def {2} and filter {3}",
 				new Object[] { space, browserType, browserDef, filter });
 		return metaspace.browse(space, browserType, browserDef, filter);
+	}
+
+	private String getSpaceName() {
+		return destination.getSpaceName();
+	}
+
+	private BrowserType getBrowserType() {
+		BrowserType type = destination.getExportConfig().getBrowserConfig()
+				.getBrowserType();
+		if (type == null) {
+			return BrowserType.GET;
+		}
+		return type;
 	}
 
 	@Override

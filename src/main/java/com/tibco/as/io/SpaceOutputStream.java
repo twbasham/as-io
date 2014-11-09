@@ -21,6 +21,8 @@ import com.tibco.as.space.Tuple;
 
 public class SpaceOutputStream implements IOutputStream {
 
+	private static final long DEFAULT_WAIT_FOR_READY_TIMEOUT = 30000;
+
 	private Logger log = LogFactory.getLog(SpaceOutputStream.class);
 	private Destination destination;
 	private IAccessor[] objectAccessors;
@@ -37,19 +39,21 @@ public class SpaceOutputStream implements IOutputStream {
 	@Override
 	public synchronized void open() throws Exception {
 		Metaspace metaspace = destination.getChannel().getMetaspace();
-		SpaceDef spaceDef = metaspace.getSpaceDef(destination.getSpace());
+		String spaceName = destination.getSpaceName();
+		SpaceDef spaceDef = metaspace.getSpaceDef(spaceName);
 		if (spaceDef == null) {
 			spaceDef = destination.getSpaceDef();
 			log.log(Level.FINE, "Defining {0}", spaceDef);
 			metaspace.defineSpace(spaceDef);
+		} else {
+			destination.setSpaceDef(spaceDef);
 		}
-		destination.setSpaceDef(spaceDef);
 		objectAccessors = destination.getObjectAccessors();
 		tupleAccessors = destination.getTupleAccessors();
 		converters = destination.getJavaConverters();
 		space = getSpace(metaspace);
 		if (!space.isReady()) {
-			long timeout = destination.getWaitForReadyTimeout();
+			long timeout = getWaitForReadyTimeout();
 			log.log(Level.INFO,
 					"Waiting for space ''{0}'' to become ready using timeout of {1} ms",
 					new Object[] { space.getName(), timeout });
@@ -59,9 +63,18 @@ public class SpaceOutputStream implements IOutputStream {
 		operation = getOperation(operationType, space);
 	}
 
+	private long getWaitForReadyTimeout() {
+		Long timeout = destination.getImportConfig().getWaitForReadyTimeout();
+		if (timeout == null) {
+			return DEFAULT_WAIT_FOR_READY_TIMEOUT;
+		}
+		return timeout;
+	}
+
 	private Space getSpace(Metaspace metaspace) throws ASException {
-		String spaceName = destination.getSpace();
-		DistributionRole distributionRole = destination.getDistributionRole();
+		String spaceName = destination.getSpaceName();
+		DistributionRole distributionRole = destination.getImportConfig()
+				.getDistributionRole();
 		if (distributionRole == null) {
 			log.log(Level.FINE, "Joining space ''{0}''", spaceName);
 			return metaspace.getSpace(spaceName);
@@ -94,10 +107,12 @@ public class SpaceOutputStream implements IOutputStream {
 	}
 
 	private OperationType getOperationType() {
-		if (destination.getOperation() == null) {
+		OperationType operationType = destination.getImportConfig()
+				.getOperation();
+		if (operationType == null) {
 			return OperationType.PUT;
 		}
-		return destination.getOperation();
+		return operationType;
 	}
 
 	@Override
@@ -140,7 +155,7 @@ public class SpaceOutputStream implements IOutputStream {
 		if (space == null) {
 			return;
 		}
-		if (destination.getDistributionRole() == DistributionRole.SEEDER) {
+		if (destination.getImportConfig().getDistributionRole() == DistributionRole.SEEDER) {
 			return;
 		}
 		log.log(Level.FINE, "Closing space ''{0}''", space.getName());

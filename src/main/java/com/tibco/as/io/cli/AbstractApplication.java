@@ -11,7 +11,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.tibco.as.convert.Blob;
 import com.tibco.as.convert.Settings;
-import com.tibco.as.io.Channel;
+import com.tibco.as.io.IChannel;
 import com.tibco.as.io.IChannelTransfer;
 import com.tibco.as.io.cli.converters.BlobConverter;
 import com.tibco.as.io.cli.converters.LogLevelConverter;
@@ -111,43 +111,13 @@ public abstract class AbstractApplication {
 				commands.add((ICommand) command);
 			}
 		}
-		Channel channel = getChannel();
-		channel.setMetaspaceName(metaspaceName);
-		Member member = new Member();
-		member.setDataStore(dataStore);
-		member.setDiscovery(discovery);
-		member.setIdentityPassword(identityPassword);
-		member.setListen(listen);
-		member.setMemberName(memberName);
-		member.setRxBufferSize(rxBufferSize);
-		member.setSecurityTokenFile(securityToken);
-		member.setWorkerThreadCount(workerThreadCount);
-		channel.setMember(member);
-		Settings settings = new Settings();
-		settings.setBlob(blob);
-		settings.setBooleanTruePattern(booleanTruePattern);
-		settings.setBooleanFalsePattern(booleanFalsePattern);
-		settings.setDatePattern(datePattern);
-		settings.setNumberPattern(numberPattern);
-		settings.setTimeZoneID(timeZoneID);
-		channel.getDefaultDestination().setSettings(settings);
+		IChannel channel = getChannel(metaspaceName);
+		configure(channel.getMember());
+		configure(channel.getDefaultDestination().getSettings());
 		try {
 			channel.open();
 			for (ICommand command : commands) {
-				IChannelTransfer transfer;
-				try {
-					transfer = command.getTransfer(channel);
-				} catch (Exception e) {
-					log.log(Level.SEVERE, "Could not create transfer", e);
-					continue;
-				}
-				transfer.addListener(new ChannelTransferMonitor());
-				transfer.prepare();
-				try {
-					transfer.execute();
-				} catch (InterruptedException e) {
-					log.log(Level.INFO, "Transfer interrupted", e);
-				}
+				execute(channel, command);
 			}
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not open channel", e);
@@ -160,7 +130,42 @@ public abstract class AbstractApplication {
 		}
 	}
 
-	protected abstract Channel getChannel();
+	private void configure(Member member) {
+		member.setDataStore(dataStore);
+		member.setDiscovery(discovery);
+		member.setIdentityPassword(identityPassword);
+		member.setListen(listen);
+		member.setMemberName(memberName);
+		member.setRxBufferSize(rxBufferSize);
+		member.setSecurityTokenFile(securityToken);
+		member.setWorkerThreadCount(workerThreadCount);
+	}
+
+	private void configure(Settings settings) {
+		settings.setBlob(blob);
+		settings.setBooleanTruePattern(booleanTruePattern);
+		settings.setBooleanFalsePattern(booleanFalsePattern);
+		settings.setDatePattern(datePattern);
+		settings.setNumberPattern(numberPattern);
+		settings.setTimeZoneID(timeZoneID);
+	}
+
+	private void execute(IChannel channel, ICommand command) {
+		IChannelTransfer transfer = command.getTransfer(channel);
+		transfer.addListener(new ChannelTransferMonitor());
+		try {
+			transfer.prepare();
+			try {
+				transfer.execute();
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Could not execute transfer", e);
+			}
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Could not prepare transfer", e);
+		}
+	}
+
+	protected abstract IChannel getChannel(String metaspaceName);
 
 	protected ICommand getDefaultCommand() {
 		return null;

@@ -1,7 +1,6 @@
 package com.tibco.as.io;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Logger;
 
@@ -11,7 +10,7 @@ import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Member;
 import com.tibco.as.util.Utils;
 
-public class Channel {
+public class Channel implements IChannel {
 
 	private Logger log = LogFactory.getLog(Channel.class);
 
@@ -21,22 +20,25 @@ public class Channel {
 	private Destination defaultDestination = newDestination();
 	private Metaspace metaspace;
 
+	protected Channel(String metaspaceName) {
+		this.metaspaceName = metaspaceName;
+	}
+
+	public Destination newDestination() {
+		return new Destination(this);
+	}
+
+	@Override
 	public Member getMember() {
 		return member;
 	}
 
-	public String getMetaspaceName() {
-		return metaspaceName;
-	}
-
-	public void setMetaspaceName(String metaspaceName) {
-		this.metaspaceName = metaspaceName;
-	}
-
-	public Destination getDefaultDestination() {
+	@Override
+	public IDestination getDefaultDestination() {
 		return defaultDestination;
 	}
 
+	@Override
 	public void open() throws Exception {
 		if (metaspace == null) {
 			metaspace = Utils.getMetaspace(metaspaceName);
@@ -47,10 +49,12 @@ public class Channel {
 		}
 	}
 
+	@Override
 	public ChannelExport getExport() {
 		return new ChannelExport(this);
 	}
 
+	@Override
 	public void close() throws Exception {
 		if (metaspace == null) {
 			return;
@@ -59,28 +63,11 @@ public class Channel {
 		metaspace = null;
 	}
 
-	public void setMember(Member member) {
-		this.member = member;
-	}
-
-	protected Destination newDestination() {
-		return new Destination(this);
-	}
-
-	public Destination addDestination() {
-		Destination destination = newDestination();
-		destinations.add(destination);
-		return destination;
-	}
-
 	public Metaspace getMetaspace() {
 		return metaspace;
 	}
 
-	public Collection<Destination> getDestinations() {
-		return destinations;
-	}
-
+	@Override
 	public ChannelImport getImport() {
 		return new ChannelImport(this);
 	}
@@ -96,15 +83,20 @@ public class Channel {
 		return destinations;
 	}
 
-	private Collection<Destination> getExportDestinations(
+	protected Collection<Destination> getExportDestinations(
 			Destination destination) throws ASException {
 		Collection<Destination> destinations = new ArrayList<Destination>();
+		String destinationSpaceName = destination.getSpaceName();
 		for (String spaceName : metaspace.getUserSpaceNames()) {
-			if (Utils.matches(spaceName, destination.getSpace(), false)) {
-				Destination found = destination.clone();
-				found.setSpace(spaceName);
+			if (Utils.matches(spaceName, destinationSpaceName, false)) {
+				Destination found = newDestination();
+				found.setSpaceName(spaceName);
+				destination.copyTo(found);
 				destinations.add(found);
 			}
+		}
+		if (destinations.isEmpty()) {
+			destinations.add(destination);
 		}
 		return destinations;
 	}
@@ -122,7 +114,26 @@ public class Channel {
 
 	protected Collection<Destination> getImportDestinations(
 			Destination destination) throws Exception {
-		return Arrays.asList(destination);
+		Collection<Destination> destinations = new ArrayList<Destination>();
+		destinations.add(destination);
+		return destinations;
+	}
+
+	public Collection<Destination> getDestinations() {
+		return destinations;
+	}
+
+	@Override
+	public void setSpaceNames(Collection<String> spaceNames) {
+		for (String spaceName : spaceNames) {
+			Destination destination = newDestination();
+			destination.setSpaceName(spaceName);
+			addDestination(destination);
+		}
+	}
+
+	protected void addDestination(Destination destination) {
+		destinations.add(destination);
 	}
 
 }

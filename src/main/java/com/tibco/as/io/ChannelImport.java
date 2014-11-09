@@ -4,8 +4,10 @@ import java.util.Collection;
 
 public class ChannelImport extends AbstractChannelTransfer {
 
+	private Channel channel;
+
 	public ChannelImport(Channel channel) {
-		super(channel);
+		this.channel = channel;
 	}
 
 	@Override
@@ -14,8 +16,7 @@ public class ChannelImport extends AbstractChannelTransfer {
 	}
 
 	@Override
-	protected Collection<Destination> getDestinations(Channel channel)
-			throws Exception {
+	protected Collection<Destination> getDestinations() throws Exception {
 		return channel.getImportDestinations();
 	}
 
