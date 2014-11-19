@@ -3,7 +3,7 @@ package com.tibco.as.io;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.log.LogFactory;
+import com.tibco.as.util.log.LogFactory;
 
 public class Worker implements Runnable {
 

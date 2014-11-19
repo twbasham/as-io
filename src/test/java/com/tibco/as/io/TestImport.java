@@ -38,15 +38,14 @@ public class TestImport extends TestBase {
 		Calendar calendar3 = Calendar.getInstance();
 		calendar3.clear();
 		calendar3.set(2013, 10, 3);
-		Channel channel = getChannel();
+		TestChannel channel = getChannel();
 		Metaspace metaspace = channel.getMetaspace();
 		metaspace.defineSpace(spaceDef);
 		Space space = metaspace.getSpace(spaceDef.getName(),
 				DistributionRole.SEEDER);
-		TestDestination destination = (TestDestination) channel
-				.newDestination();
+		TestDestination destination = new TestDestination(channel);
 		channel.getDestinations().add(destination);
-		destination.setSpaceName(spaceName);
+		destination.getSpaceDef().setName(spaceName);
 		destination.getList().addAll(
 				Arrays.asList(
 						(Object) new Object[] { "1",
@@ -60,8 +59,8 @@ public class TestImport extends TestBase {
 								"3.33" }));
 		destination.setSleep(103L);
 		destination.setSpaceDef(space.getSpaceDef());
-		ChannelImport transfer = channel.getImport();
-		transfer.prepare();
+		ChannelTransfer transfer = new ChannelTransfer();
+		transfer.addDestinationTransfer(new DestinationImport(destination));
 		transfer.execute();
 		Assert.assertEquals(3, space.size());
 		Tuple tuple1 = Tuple.create();

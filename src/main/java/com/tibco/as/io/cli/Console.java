@@ -4,7 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.tibco.as.io.IDestinationTransfer;
-import com.tibco.as.log.LogFactory;
+import com.tibco.as.util.log.LogFactory;
 
 public class Console implements Runnable {
 
@@ -20,7 +20,7 @@ public class Console implements Runnable {
 
 	@Override
 	public void run() {
-		while (transfer.isRunning()) {
+		while (!transfer.isTerminated()) {
 			print();
 			sleep();
 		}
@@ -29,7 +29,7 @@ public class Console implements Runnable {
 	}
 
 	private void sleep() {
-		for (int index = 0; index < 3 && transfer.isRunning(); index++) {
+		for (int index = 0; index < 3 && !transfer.isTerminated(); index++) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {

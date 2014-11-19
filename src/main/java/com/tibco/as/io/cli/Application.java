@@ -9,19 +9,20 @@ import java.util.logging.Logger;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-import com.tibco.as.convert.Blob;
-import com.tibco.as.convert.Settings;
+import com.tibco.as.io.Channel;
+import com.tibco.as.io.ChannelTransfer;
 import com.tibco.as.io.IChannel;
-import com.tibco.as.io.IChannelTransfer;
 import com.tibco.as.io.cli.converters.BlobConverter;
 import com.tibco.as.io.cli.converters.LogLevelConverter;
-import com.tibco.as.log.LogFactory;
-import com.tibco.as.log.LogLevel;
 import com.tibco.as.util.Member;
+import com.tibco.as.util.convert.Blob;
+import com.tibco.as.util.convert.Settings;
+import com.tibco.as.util.log.LogFactory;
+import com.tibco.as.util.log.LogLevel;
 
-public abstract class AbstractApplication {
+public class Application {
 
-	private Logger log = LogFactory.getLog(AbstractApplication.class);
+	private Logger log = LogFactory.getLog(Application.class);
 
 	@Parameter(names = { "-?", "-help" }, description = "Print this help message", help = true)
 	private Boolean help;
@@ -68,9 +69,6 @@ public abstract class AbstractApplication {
 	@Parameter(names = "-time_zone", description = "Time zone ID e.g. \"GMT\"")
 	private String timeZoneID;
 
-	protected AbstractApplication() {
-	}
-
 	public void execute(String[] args) {
 		JCommander jc = new JCommander(this);
 		jc.setProgramName(getProgramName());
@@ -99,7 +97,7 @@ public abstract class AbstractApplication {
 		if (parsedCommand == null) {
 			ICommand defaultCommand = getDefaultCommand();
 			if (defaultCommand == null) {
-				LogFactory.getLog(AbstractApplication.class).warning(
+				LogFactory.getLog(Application.class).warning(
 						"No command specified");
 				jc.usage();
 				return;
@@ -113,11 +111,15 @@ public abstract class AbstractApplication {
 		}
 		IChannel channel = getChannel(metaspaceName);
 		configure(channel.getMember());
-		configure(channel.getDefaultDestination().getSettings());
+		configure(channel.getSettings());
 		try {
 			channel.open();
 			for (ICommand command : commands) {
-				execute(channel, command);
+				try {
+					execute(channel, command);
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "Could not execute command", e);
+				}
 			}
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Could not open channel", e);
@@ -150,22 +152,19 @@ public abstract class AbstractApplication {
 		settings.setTimeZoneID(timeZoneID);
 	}
 
-	private void execute(IChannel channel, ICommand command) {
-		IChannelTransfer transfer = command.getTransfer(channel);
+	private void execute(IChannel channel, ICommand command) throws Exception {
+		ChannelTransfer transfer = command.getTransfer(channel);
 		transfer.addListener(new ChannelTransferMonitor());
 		try {
-			transfer.prepare();
-			try {
-				transfer.execute();
-			} catch (Exception e) {
-				log.log(Level.SEVERE, "Could not execute transfer", e);
-			}
+			transfer.execute();
 		} catch (Exception e) {
-			log.log(Level.SEVERE, "Could not prepare transfer", e);
+			log.log(Level.SEVERE, "Could not execute transfer", e);
 		}
 	}
 
-	protected abstract IChannel getChannel(String metaspaceName);
+	protected IChannel getChannel(String metaspaceName) {
+		return new Channel(metaspaceName);
+	}
 
 	protected ICommand getDefaultCommand() {
 		return null;
@@ -174,6 +173,7 @@ public abstract class AbstractApplication {
 	protected void addCommands(JCommander jc) {
 	}
 
-	protected abstract String getProgramName();
-
+	protected String getProgramName() {
+		return "unknown";
+	}
 }

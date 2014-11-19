@@ -1,6 +1,6 @@
 package com.tibco.as.io.cli.converters;
 
-import com.tibco.as.convert.Blob;
+import com.tibco.as.util.convert.Blob;
 
 public class BlobConverter extends AbstractEnumConverter<Blob> {
 

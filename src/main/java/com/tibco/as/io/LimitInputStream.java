@@ -1,11 +1,11 @@
 package com.tibco.as.io;
 
-public class LimitedInputStream implements IInputStream {
+public class LimitInputStream implements IInputStream {
 
 	private IInputStream in;
 	private long limit;
 
-	public LimitedInputStream(IInputStream in, long limit) {
+	public LimitInputStream(IInputStream in, long limit) {
 		this.in = in;
 		this.limit = limit;
 	}

@@ -1,6 +1,6 @@
 package com.tibco.as.io.cli.converters;
 
-import com.tibco.as.log.LogLevel;
+import com.tibco.as.util.log.LogLevel;
 
 public class LogLevelConverter extends AbstractEnumConverter<LogLevel> {
 

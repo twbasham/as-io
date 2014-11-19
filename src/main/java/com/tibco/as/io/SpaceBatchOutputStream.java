@@ -6,25 +6,26 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.SpaceResult;
 import com.tibco.as.space.SpaceResultList;
 import com.tibco.as.space.Tuple;
+import com.tibco.as.util.log.LogFactory;
 
-public class BatchSpaceOutputStream extends SpaceOutputStream {
+public class SpaceBatchOutputStream extends SpaceOutputStream {
 
-	private Logger log = LogFactory.getLog(BatchSpaceOutputStream.class);
-	private int batchSize;
 	private static final ThreadLocal<Collection<Tuple>> context = new ThreadLocal<Collection<Tuple>>();
 
-	public BatchSpaceOutputStream(Destination destination, int batchSize) {
+	private Logger log = LogFactory.getLog(SpaceBatchOutputStream.class);
+	private Integer batchSize;
+
+	public SpaceBatchOutputStream(IDestination destination) {
 		super(destination);
-		this.batchSize = batchSize;
 	}
 
 	@Override
 	public synchronized void open() throws Exception {
+		this.batchSize = getDestination().getImportConfig().getBatchSize();
 		initializeTuples();
 		super.open();
 	}

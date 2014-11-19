@@ -2,11 +2,11 @@ package com.tibco.as.io;
 
 public interface IDestinationTransfer extends Runnable {
 
-	void prepare() throws Exception;
-
 	IDestination getDestination();
 
-	boolean isRunning();
+	TransferConfig getConfig();
+
+	boolean isTerminated();
 
 	Long getPosition();
 

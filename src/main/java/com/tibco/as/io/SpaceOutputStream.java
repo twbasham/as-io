@@ -3,28 +3,28 @@ package com.tibco.as.io;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.convert.IAccessor;
-import com.tibco.as.convert.IConverter;
 import com.tibco.as.io.operation.GetOperation;
 import com.tibco.as.io.operation.LoadOperation;
 import com.tibco.as.io.operation.NoOperation;
 import com.tibco.as.io.operation.PartialOperation;
 import com.tibco.as.io.operation.PutOperation;
 import com.tibco.as.io.operation.TakeOperation;
-import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.Member.DistributionRole;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
+import com.tibco.as.util.convert.IAccessor;
+import com.tibco.as.util.convert.IConverter;
+import com.tibco.as.util.log.LogFactory;
 
 public class SpaceOutputStream implements IOutputStream {
 
 	private static final long DEFAULT_WAIT_FOR_READY_TIMEOUT = 30000;
 
 	private Logger log = LogFactory.getLog(SpaceOutputStream.class);
-	private Destination destination;
+	private IDestination destination;
 	private IAccessor[] objectAccessors;
 	private IAccessor[] tupleAccessors;
 	private IConverter[] converters;
@@ -32,14 +32,19 @@ public class SpaceOutputStream implements IOutputStream {
 	private IOperation operation;
 	private long position;
 
-	public SpaceOutputStream(Destination destination) {
+	public SpaceOutputStream(IDestination destination) {
 		this.destination = destination;
+	}
+
+	protected IDestination getDestination() {
+		return destination;
 	}
 
 	@Override
 	public synchronized void open() throws Exception {
+		ImportConfig transfer = destination.getImportConfig();
 		Metaspace metaspace = destination.getChannel().getMetaspace();
-		String spaceName = destination.getSpaceName();
+		String spaceName = destination.getSpaceDef().getName();
 		SpaceDef spaceDef = metaspace.getSpaceDef(spaceName);
 		if (spaceDef == null) {
 			spaceDef = destination.getSpaceDef();
@@ -48,9 +53,9 @@ public class SpaceOutputStream implements IOutputStream {
 		} else {
 			destination.setSpaceDef(spaceDef);
 		}
-		objectAccessors = destination.getObjectAccessors();
-		tupleAccessors = destination.getTupleAccessors();
-		converters = destination.getJavaConverters();
+		objectAccessors = destination.getObjectAccessors(transfer);
+		tupleAccessors = destination.getTupleAccessors(transfer);
+		converters = destination.getJavaConverters(transfer);
 		space = getSpace(metaspace);
 		if (!space.isReady()) {
 			long timeout = getWaitForReadyTimeout();
@@ -72,7 +77,7 @@ public class SpaceOutputStream implements IOutputStream {
 	}
 
 	private Space getSpace(Metaspace metaspace) throws ASException {
-		String spaceName = destination.getSpaceName();
+		String spaceName = destination.getSpaceDef().getName();
 		DistributionRole distributionRole = destination.getImportConfig()
 				.getDistributionRole();
 		if (distributionRole == null) {

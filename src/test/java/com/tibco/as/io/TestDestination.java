@@ -18,16 +18,6 @@ public class TestDestination extends Destination {
 	}
 
 	@Override
-	public void copyTo(Destination destination) {
-		TestDestination target = (TestDestination) destination;
-		if (target.sleep == null) {
-			target.sleep = sleep;
-		}
-		target.listeners.addAll(listeners);
-		super.copyTo(destination);
-	}
-
-	@Override
 	public ListInputStream getInputStream() {
 		return new ListInputStream(this);
 	}
@@ -38,7 +28,7 @@ public class TestDestination extends Destination {
 	}
 
 	public List<Object> getList() {
-		return channel.getList(getSpaceName());
+		return channel.getList(getSpaceDef().getName());
 	}
 
 	public void setSleep(Long sleep) {

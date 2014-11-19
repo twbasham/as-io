@@ -1,20 +1,18 @@
 package com.tibco.as.io.cli;
 
 import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParametersDelegate;
-import com.tibco.as.io.ChannelImport;
-import com.tibco.as.io.IChannel;
+import com.tibco.as.io.DestinationImport;
 import com.tibco.as.io.IDestination;
+import com.tibco.as.io.IDestinationTransfer;
 import com.tibco.as.io.ImportConfig;
 import com.tibco.as.io.OperationType;
+import com.tibco.as.io.TransferConfig;
 import com.tibco.as.io.cli.converters.DistributionRoleConverter;
 import com.tibco.as.io.cli.converters.OperationTypeConverter;
 import com.tibco.as.space.Member.DistributionRole;
 
 public abstract class ImportCommand extends AbstractCommand {
 
-	@ParametersDelegate
-	private Transfer transfer = new Transfer();
 	@Parameter(names = { "-space" }, description = "Space name")
 	private String space;
 	@Parameter(names = { "-distribution_role" }, description = "Distribution role (none, leech, seeder)", converter = DistributionRoleConverter.class, validateWith = DistributionRoleConverter.class)
@@ -25,25 +23,26 @@ public abstract class ImportCommand extends AbstractCommand {
 	private Long waitForReadyTimeout;
 
 	@Override
-	protected void configure(IDestination destination) {
-		if (space != null) {
-			destination.setSpaceName(space);
-		}
-		ImportConfig config = destination.getImportConfig();
-		transfer.configure(config);
+	protected void configure(TransferConfig config) {
+		ImportConfig importConfig = (ImportConfig) config;
 		if (distributionRole != null) {
-			config.setDistributionRole(distributionRole);
+			importConfig.setDistributionRole(distributionRole);
 		}
 		if (operation != null) {
-			config.setOperation(operation);
+			importConfig.setOperation(operation);
 		}
 		if (waitForReadyTimeout != null) {
-			config.setWaitForReadyTimeout(waitForReadyTimeout);
+			importConfig.setWaitForReadyTimeout(waitForReadyTimeout);
 		}
+		super.configure(config);
 	}
 
 	@Override
-	protected ChannelImport createTransfer(IChannel channel) {
-		return channel.getImport();
+	protected IDestinationTransfer getTransfer(IDestination destination) {
+		if (space != null) {
+			destination.getSpaceDef().setName(space);
+		}
+		return new DestinationImport(destination);
 	}
+
 }

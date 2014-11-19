@@ -68,13 +68,12 @@ public class TestExport extends TestBase {
 		Space space2 = metaspace.getSpace(spaceDef2.getName(),
 				DistributionRole.SEEDER);
 		space2.putAll(list);
-		TestDestination destination = (TestDestination) channel
-				.newDestination();
+		TestDestination destination = new TestDestination(channel);
 		channel.getDestinations().add(destination);
-		destination.setSpaceName("cust*");
+		destination.getSpaceDef().setName("cust_account");
 		destination.setSleep(140L);
-		ChannelExport export = channel.getExport();
-		export.prepare();
+		ChannelTransfer export = new ChannelTransfer();
+		export.addDestinationTransfer(new DestinationExport(destination));
 		export.execute();
 		List<Object> accountList = channel.getList(spaceName);
 		Assert.assertEquals(3, accountList.size());

@@ -1,7 +1,7 @@
 package com.tibco.as.io;
 
-import com.tibco.as.convert.IAccessor;
-import com.tibco.as.convert.IConverter;
+import com.tibco.as.util.convert.IAccessor;
+import com.tibco.as.util.convert.IConverter;
 
 public abstract class AbstractOutputStream<T> implements IOutputStream {
 
@@ -16,12 +16,13 @@ public abstract class AbstractOutputStream<T> implements IOutputStream {
 
 	@Override
 	public synchronized void open() throws Exception {
-		context.set(destination.getFieldConverters());
+		ExportConfig export = destination.getExportConfig();
+		context.set(destination.getFieldConverters(export));
 		if (tupleAccessors == null) {
-			tupleAccessors = destination.getTupleAccessors();
+			tupleAccessors = destination.getTupleAccessors(export);
 		}
 		if (objectAccessors == null) {
-			objectAccessors = destination.getObjectAccessors();
+			objectAccessors = destination.getObjectAccessors(export);
 		}
 	}
 

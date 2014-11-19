@@ -3,42 +3,25 @@ package com.tibco.as.io;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.tibco.as.convert.ConverterFactory;
-import com.tibco.as.convert.IAccessor;
-import com.tibco.as.convert.IConverter;
-import com.tibco.as.convert.Settings;
-import com.tibco.as.convert.accessors.ObjectArrayAccessor;
 import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.FieldDef.FieldType;
-import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.SpaceDef;
+import com.tibco.as.util.accessors.ObjectArrayAccessor;
+import com.tibco.as.util.convert.ConverterFactory;
+import com.tibco.as.util.convert.IAccessor;
+import com.tibco.as.util.convert.IConverter;
+import com.tibco.as.util.convert.Settings;
 
 public class Destination implements IDestination {
 
 	private ConverterFactory converterFactory = new ConverterFactory();
-	private Channel channel;
-	private String spaceName;
-	private Collection<FieldDef> fieldDefs = new ArrayList<FieldDef>();
-	private Collection<String> keys = new ArrayList<String>();
-	private Collection<String> fieldNames = new ArrayList<String>();
-	private Settings settings = new Settings();
+	private IChannel channel;
 	private ExportConfig exportConfig = new ExportConfig();
 	private ImportConfig importConfig = new ImportConfig();
+	private SpaceDef spaceDef = SpaceDef.create();
 
-	public Destination(Channel channel) {
+	public Destination(IChannel channel) {
 		this.channel = channel;
-	}
-
-	public void copyTo(Destination target) {
-		exportConfig.copyTo(target.exportConfig);
-		importConfig.copyTo(target.importConfig);
-		settings.copyTo(target.settings);
-		if (target.spaceName == null) {
-			target.spaceName = spaceName;
-		}
-		target.fieldDefs.addAll(fieldDefs);
-		target.keys.addAll(keys);
-		target.fieldNames = new ArrayList<String>(fieldNames);
 	}
 
 	@Override
@@ -51,11 +34,6 @@ public class Destination implements IDestination {
 		return importConfig;
 	}
 
-	@Override
-	public Settings getSettings() {
-		return settings;
-	}
-
 	public IInputStream getInputStream() {
 		return null;
 	}
@@ -65,24 +43,24 @@ public class Destination implements IDestination {
 	}
 
 	public String getName() {
-		return spaceName;
+		return getSpaceDef().getName();
 	}
 
-	public Channel getChannel() {
+	public IChannel getChannel() {
 		return channel;
 	}
 
-	public IAccessor[] getObjectAccessors() {
+	public IAccessor[] getObjectAccessors(TransferConfig transfer) {
 		Collection<IAccessor> accessors = new ArrayList<IAccessor>();
-		for (int index = 0; index < getFieldDefs().size(); index++) {
+		for (int index = 0; index < getFieldDefs(transfer).size(); index++) {
 			accessors.add(new ObjectArrayAccessor(index));
 		}
 		return accessors.toArray(new IAccessor[accessors.size()]);
 	}
 
-	public IAccessor[] getTupleAccessors() {
+	public IAccessor[] getTupleAccessors(TransferConfig transfer) {
 		Collection<IAccessor> accessors = new ArrayList<IAccessor>();
-		for (FieldDef fieldDef : getFieldDefs()) {
+		for (FieldDef fieldDef : getFieldDefs(transfer)) {
 			String fieldName = fieldDef.getName();
 			FieldType fieldType = fieldDef.getType();
 			accessors.add(converterFactory.getAccessor(fieldName, fieldType));
@@ -90,25 +68,12 @@ public class Destination implements IDestination {
 		return accessors.toArray(new IAccessor[accessors.size()]);
 	}
 
-	public Collection<String> getFieldNames() {
-		Collection<String> fieldNames = new ArrayList<String>();
-		for (FieldDef fieldDef : getFieldDefs()) {
-			fieldNames.add(fieldDef.getName());
-		}
-		return fieldNames;
-	}
-
-	@Override
-	public void setFieldNames(Collection<String> fieldNames) {
-		this.fieldNames = fieldNames;
-	}
-
-	protected Collection<FieldDef> getFieldDefs() {
-		if (fieldNames.isEmpty()) {
-			return fieldDefs;
+	public Collection<FieldDef> getFieldDefs(TransferConfig transfer) {
+		if (transfer.getFieldNames().isEmpty()) {
+			return getSpaceDef().getFieldDefs();
 		}
 		Collection<FieldDef> fieldDefs = new ArrayList<FieldDef>();
-		for (String fieldName : fieldNames) {
+		for (String fieldName : transfer.getFieldNames()) {
 			FieldDef fieldDef = getFieldDef(fieldName);
 			if (fieldDef == null) {
 				continue;
@@ -119,63 +84,51 @@ public class Destination implements IDestination {
 	}
 
 	protected FieldDef getFieldDef(String fieldName) {
-		for (FieldDef fieldDef : fieldDefs) {
-			if (fieldName.equals(fieldDef.getName())) {
-				return fieldDef;
-			}
-		}
-		return null;
+		return spaceDef.getFieldDef(fieldName);
 	}
 
-	public IConverter[] getJavaConverters() {
+	public IConverter[] getJavaConverters(TransferConfig transfer) {
 		Collection<IConverter> converters = new ArrayList<IConverter>();
-		for (FieldDef fieldDef : getFieldDefs()) {
-			converters.add(converterFactory.getConverter(settings,
-					getJavaType(fieldDef), fieldDef.getType()));
+		for (FieldDef fieldDef : getFieldDefs(transfer)) {
+			converters.add(getJavaConverter(fieldDef));
 		}
 		return converters.toArray(new IConverter[converters.size()]);
+	}
+
+	private IConverter getJavaConverter(FieldDef fieldDef) {
+		Settings settings = channel.getSettings();
+		Class<?> from = getJavaType(fieldDef);
+		FieldType to = fieldDef.getType();
+		return converterFactory.getConverter(settings, from, to);
 	}
 
 	protected Class<?> getJavaType(FieldDef fieldDef) {
-		return converterFactory.getJavaType(fieldDef.getType());
+		return Object.class;
 	}
 
-	public IConverter[] getFieldConverters() {
+	public IConverter[] getFieldConverters(TransferConfig transfer) {
 		Collection<IConverter> converters = new ArrayList<IConverter>();
-		for (FieldDef field : getFieldDefs()) {
-			converters.add(converterFactory.getConverter(settings,
-					field.getType(), getJavaType(field)));
+		for (FieldDef fieldDef : getFieldDefs(transfer)) {
+			converters.add(getFieldConverter(fieldDef));
 		}
 		return converters.toArray(new IConverter[converters.size()]);
 	}
 
-	public Metaspace getMetaspace() {
-		return channel.getMetaspace();
+	private IConverter getFieldConverter(FieldDef fieldDef) {
+		Settings settings = channel.getSettings();
+		FieldType from = fieldDef.getType();
+		Class<?> to = getJavaType(fieldDef);
+		return converterFactory.getConverter(settings, from, to);
 	}
 
-	public String getSpaceName() {
-		return spaceName;
-	}
-
-	public void setSpaceName(String spaceName) {
-		this.spaceName = spaceName;
-	}
-
-	public void setSpaceDef(SpaceDef spaceDef) {
-		this.spaceName = spaceDef.getName();
-		this.fieldDefs = spaceDef.getFieldDefs();
-		this.keys = spaceDef.getKeyDef().getFieldNames();
-	}
-
-	public Collection<String> getKeys() {
-		return keys;
-	}
-
+	@Override
 	public SpaceDef getSpaceDef() {
-		SpaceDef spaceDef = SpaceDef.create(getSpaceName());
-		spaceDef.getFieldDefs().addAll(getFieldDefs());
-		spaceDef.getKeyDef().setFieldNames(getKeys().toArray(new String[0]));
 		return spaceDef;
+	}
+
+	@Override
+	public void setSpaceDef(SpaceDef spaceDef) {
+		this.spaceDef = spaceDef;
 	}
 
 }

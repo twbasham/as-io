@@ -3,7 +3,6 @@ package com.tibco.as.io;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.log.LogFactory;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.ASStatus;
 import com.tibco.as.space.Metaspace;
@@ -14,17 +13,18 @@ import com.tibco.as.space.browser.Browser;
 import com.tibco.as.space.browser.BrowserDef;
 import com.tibco.as.space.browser.BrowserDef.BrowserType;
 import com.tibco.as.space.impl.ASBrowser;
+import com.tibco.as.util.log.LogFactory;
 
 public class SpaceInputStream implements IInputStream {
 
 	private Logger log = LogFactory.getLog(SpaceInputStream.class);
-	private Destination destination;
+	private IDestination destination;
 	private Browser browser;
 	private Long position;
 	private long browseTime;
 	private Long size;
 
-	public SpaceInputStream(Destination destination) {
+	public SpaceInputStream(IDestination destination) {
 		this.destination = destination;
 	}
 
@@ -38,7 +38,7 @@ public class SpaceInputStream implements IInputStream {
 		if (browser != null) {
 			return;
 		}
-		Metaspace metaspace = destination.getMetaspace();
+		Metaspace metaspace = destination.getChannel().getMetaspace();
 		SpaceDef spaceDef = metaspace.getSpaceDef(getSpaceName());
 		destination.setSpaceDef(spaceDef);
 		BrowserDef browserDef = getBrowserDef();
@@ -74,7 +74,7 @@ public class SpaceInputStream implements IInputStream {
 	}
 
 	private String getSpaceName() {
-		return destination.getSpaceName();
+		return destination.getSpaceDef().getName();
 	}
 
 	private BrowserType getBrowserType() {

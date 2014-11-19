@@ -2,15 +2,15 @@ package com.tibco.as.io;
 
 public class DestinationExport extends AbstractDestinationTransfer {
 
-	private Destination destination;
+	private IDestination destination;
 
-	public DestinationExport(Destination destination) {
+	public DestinationExport(IDestination destination) {
 		super(destination);
 		this.destination = destination;
 	}
 
 	@Override
-	protected TransferConfig getConfig() {
+	public TransferConfig getConfig() {
 		return destination.getExportConfig();
 	}
 

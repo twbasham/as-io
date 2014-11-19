@@ -9,8 +9,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.tibco.as.log.LogFactory;
-import com.tibco.as.log.LogLevel;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.DateTime;
 import com.tibco.as.space.FieldDef;
@@ -22,6 +20,8 @@ import com.tibco.as.space.SpaceDef;
 import com.tibco.as.space.Tuple;
 import com.tibco.as.space.browser.BrowserDef.TimeScope;
 import com.tibco.as.util.BrowserConfig;
+import com.tibco.as.util.log.LogFactory;
+import com.tibco.as.util.log.LogLevel;
 
 public class TestBatch extends TestBase {
 
@@ -53,14 +53,14 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testBatch() throws Exception {
 		TestChannel channel = getChannel();
-		TestDestination destination = channel.newDestination();
+		TestDestination destination = new TestDestination(channel);
 		channel.getDestinations().add(destination);
-		destination.setSpaceName(space.getName());
+		destination.getSpaceDef().setName(space.getName());
 		destination.getExportConfig().setWorkerCount(5);
 		destination.getExportConfig().getBrowserConfig().setQueryLimit(100000L);
-		ChannelExport export = channel.getExport();
-		export.prepare();
-		export.execute();
+		ChannelTransfer transfer = new ChannelTransfer();
+		transfer.addDestinationTransfer(new DestinationExport(destination));
+		transfer.execute();
 		List<Object> list = destination.getList();
 		Assert.assertEquals(space.size(), list.size());
 		for (Object element : list) {
@@ -76,18 +76,17 @@ public class TestBatch extends TestBase {
 	@Test
 	public void testStopTransfer() throws Exception {
 		LogFactory.getRootLogger(LogLevel.VERBOSE);
-		Channel channel = getChannel();
-		TestDestination destination = (TestDestination) channel
-				.newDestination();
+		TestChannel channel = getChannel();
+		TestDestination destination = new TestDestination(channel);
 		channel.getDestinations().add(destination);
 		destination.setSleep(100L);
-		destination.setSpaceName(space.getName());
+		destination.getSpaceDef().setName(space.getName());
 		ExportConfig exportConfig = destination.getExportConfig();
 		BrowserConfig browserConfig = exportConfig.getBrowserConfig();
 		browserConfig.setTimeScope(TimeScope.ALL);
 		browserConfig.setTimeout(100L);
 		exportConfig.setWorkerCount(1);
-		ChannelExport transfer = channel.getExport();
+		ChannelTransfer transfer = new ChannelTransfer();
 		transfer.addListener(new IChannelTransferListener() {
 
 			@Override
@@ -107,7 +106,7 @@ public class TestBatch extends TestBase {
 						});
 			}
 		});
-		transfer.prepare();
+		transfer.addDestinationTransfer(new DestinationExport(destination));
 		transfer.execute();
 		Assert.assertTrue(destination.getList().size() <= 15);
 	}

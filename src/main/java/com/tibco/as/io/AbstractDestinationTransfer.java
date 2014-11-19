@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.tibco.as.log.LogFactory;
+import com.tibco.as.util.log.LogFactory;
 
 public abstract class AbstractDestinationTransfer implements
 		IDestinationTransfer {
@@ -16,29 +16,19 @@ public abstract class AbstractDestinationTransfer implements
 	private static final int DEFAULT_WORKER_COUNT = 1;
 
 	private Logger log = LogFactory.getLog(AbstractDestinationTransfer.class);
-	private Destination destination;
+	private IDestination destination;
 	private IInputStream in;
 	private IOutputStream out;
 	private Collection<Worker> workers = new ArrayList<Worker>();
 	private ExecutorService executor;
 
-	protected AbstractDestinationTransfer(Destination destination) {
+	protected AbstractDestinationTransfer(IDestination destination) {
 		this.destination = destination;
 	}
 
 	@Override
 	public IDestination getDestination() {
 		return destination;
-	}
-
-	@Override
-	public void prepare() throws Exception {
-		in = getInputStream(getInputStream());
-		out = getOutputStream();
-		for (int index = 0; index < getWorkerCount(); index++) {
-			workers.add(new Worker(in, out));
-		}
-		executor = Executors.newFixedThreadPool(workers.size());
 	}
 
 	private int getWorkerCount() {
@@ -49,15 +39,19 @@ public abstract class AbstractDestinationTransfer implements
 		return workerCount;
 	}
 
-	protected abstract TransferConfig getConfig();
-
 	@Override
 	public Long getPosition() {
+		if (in == null) {
+			return null;
+		}
 		return in.getPosition();
 	}
 
 	@Override
 	public Long size() {
+		if (in == null) {
+			return null;
+		}
 		return in.size();
 	}
 
@@ -69,6 +63,12 @@ public abstract class AbstractDestinationTransfer implements
 
 	@Override
 	public void run() {
+		in = getInputStream(getInputStream());
+		out = getOutputStream();
+		for (int index = 0; index < getWorkerCount(); index++) {
+			workers.add(new Worker(in, out));
+		}
+		executor = Executors.newFixedThreadPool(workers.size());
 		for (Worker worker : workers) {
 			executor.execute(worker);
 		}
@@ -87,16 +87,16 @@ public abstract class AbstractDestinationTransfer implements
 		if (limit == null) {
 			return in;
 		}
-		return new LimitedInputStream(in, limit);
+		return new LimitInputStream(in, limit);
 	}
 
-	protected abstract IInputStream getInputStream() throws Exception;
+	protected abstract IInputStream getInputStream();
 
 	protected abstract IOutputStream getOutputStream();
 
 	@Override
-	public boolean isRunning() {
-		return !executor.isTerminated();
+	public boolean isTerminated() {
+		return executor != null && executor.isTerminated();
 	}
 
 	@Override

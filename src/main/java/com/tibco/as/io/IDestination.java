@@ -1,19 +1,31 @@
 package com.tibco.as.io;
 
-import java.util.Collection;
-
-import com.tibco.as.convert.Settings;
+import com.tibco.as.space.SpaceDef;
+import com.tibco.as.util.convert.IAccessor;
+import com.tibco.as.util.convert.IConverter;
 
 public interface IDestination {
 
-	Settings getSettings();
+	IChannel getChannel();
 
 	ExportConfig getExportConfig();
 
 	ImportConfig getImportConfig();
 
-	void setSpaceName(String spaceName);
+	SpaceDef getSpaceDef();
 
-	void setFieldNames(Collection<String> fieldNames);
+	void setSpaceDef(SpaceDef spaceDef);
+
+	String getName();
+
+	IInputStream getInputStream();
+
+	IOutputStream getOutputStream();
+
+	IAccessor[] getObjectAccessors(TransferConfig transfer);
+
+	IAccessor[] getTupleAccessors(TransferConfig transfer);
+
+	IConverter[] getJavaConverters(TransferConfig transfer);
 
 }

@@ -2,30 +2,29 @@ package com.tibco.as.io;
 
 public class DestinationImport extends AbstractDestinationTransfer {
 
-	private Destination destination;
+	private IDestination destination;
 
-	public DestinationImport(Destination destination) {
+	public DestinationImport(IDestination destination) {
 		super(destination);
 		this.destination = destination;
 	}
 
 	@Override
-	protected TransferConfig getConfig() {
+	public TransferConfig getConfig() {
 		return destination.getImportConfig();
 	}
 
 	@Override
-	protected IInputStream getInputStream() throws Exception {
+	protected IInputStream getInputStream() {
 		return destination.getInputStream();
 	}
 
 	@Override
 	protected IOutputStream getOutputStream() {
-		Integer batchSize = destination.getImportConfig().getBatchSize();
-		if (batchSize == null || batchSize == 1) {
-			return new SpaceOutputStream(destination);
+		if (destination.getImportConfig().isBatch()) {
+			return new SpaceBatchOutputStream(destination);
 		}
-		return new BatchSpaceOutputStream(destination, batchSize);
+		return new SpaceOutputStream(destination);
 	}
 
 }

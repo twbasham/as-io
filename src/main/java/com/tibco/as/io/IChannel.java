@@ -2,22 +2,22 @@ package com.tibco.as.io;
 
 import java.util.Collection;
 
+import com.tibco.as.space.Metaspace;
 import com.tibco.as.util.Member;
+import com.tibco.as.util.convert.Settings;
 
 public interface IChannel {
 
 	Member getMember();
 
-	IDestination getDefaultDestination();
+	Settings getSettings();
 
 	void open() throws Exception;
 
-	ChannelImport getImport();
-
-	ChannelExport getExport();
-
 	void close() throws Exception;
 
-	void setSpaceNames(Collection<String> spaceNames);
+	Collection<IDestination> getDestinations();
+
+	Metaspace getMetaspace();
 
 }

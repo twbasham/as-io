@@ -6,33 +6,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractChannelTransfer implements IChannelTransfer {
+public class ChannelTransfer {
 
 	private Collection<IChannelTransferListener> listeners = new ArrayList<IChannelTransferListener>();
 	private Collection<IDestinationTransfer> transfers = new ArrayList<IDestinationTransfer>();
-	private ExecutorService executor;
 
-	@Override
-	public void prepare() throws Exception {
-		for (Destination destination : getDestinations()) {
-			IDestinationTransfer transfer = getTransfer(destination);
-			transfer.prepare();
-			transfers.add(transfer);
-		}
+	public void execute() throws Exception {
 		if (transfers.isEmpty()) {
 			return;
 		}
-		executor = Executors.newFixedThreadPool(transfers.size());
-	}
-
-	protected abstract Collection<Destination> getDestinations()
-			throws Exception;
-
-	@Override
-	public void execute() throws Exception {
-		if (executor == null) {
-			return;
-		}
+		int nThreads = transfers.size();
+		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 		for (IDestinationTransfer transfer : transfers) {
 			for (IChannelTransferListener listener : listeners) {
 				listener.executing(transfer);
@@ -45,13 +29,10 @@ public abstract class AbstractChannelTransfer implements IChannelTransfer {
 		}
 	}
 
-	public Collection<IDestinationTransfer> getTransfers() {
-		return transfers;
+	public void addDestinationTransfer(IDestinationTransfer transfer) {
+		transfers.add(transfer);
 	}
 
-	protected abstract IDestinationTransfer getTransfer(Destination destination);
-
-	@Override
 	public void addListener(IChannelTransferListener listener) {
 		listeners.add(listener);
 	}

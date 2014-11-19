@@ -7,15 +7,10 @@ import java.util.Vector;
 
 public class TestChannel extends Channel {
 
-	protected TestChannel(String metaspaceName) {
-		super(metaspaceName);
-	}
-
 	private Map<String, List<Object>> lists = new HashMap<String, List<Object>>();
 
-	@Override
-	public TestDestination newDestination() {
-		return new TestDestination(this);
+	protected TestChannel(String metaspaceName) {
+		super(metaspaceName);
 	}
 
 	public synchronized List<Object> getList(String name) {
