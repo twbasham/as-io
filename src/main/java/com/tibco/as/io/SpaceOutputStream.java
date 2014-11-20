@@ -1,5 +1,6 @@
 package com.tibco.as.io;
 
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -11,6 +12,7 @@ import com.tibco.as.io.operation.PutOperation;
 import com.tibco.as.io.operation.TakeOperation;
 import com.tibco.as.space.ASException;
 import com.tibco.as.space.Member.DistributionRole;
+import com.tibco.as.space.FieldDef;
 import com.tibco.as.space.Metaspace;
 import com.tibco.as.space.Space;
 import com.tibco.as.space.SpaceDef;
@@ -48,6 +50,13 @@ public class SpaceOutputStream implements IOutputStream {
 		SpaceDef spaceDef = metaspace.getSpaceDef(spaceName);
 		if (spaceDef == null) {
 			spaceDef = destination.getSpaceDef();
+			Collection<String> keys = spaceDef.getKeyDef().getFieldNames();
+			if (keys.isEmpty()) {
+				log.log(Level.INFO, "No keys specified, using all fields");
+				for (FieldDef fieldDef : spaceDef.getFieldDefs()) {
+					keys.add(fieldDef.getName());
+				}
+			}
 			log.log(Level.FINE, "Defining {0}", spaceDef);
 			metaspace.defineSpace(spaceDef);
 		} else {
