@@ -1,5 +1,7 @@
 package com.tibco.as.io.cli;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +17,7 @@ import com.tibco.as.io.IChannel;
 import com.tibco.as.io.cli.converters.BlobConverter;
 import com.tibco.as.io.cli.converters.LogLevelConverter;
 import com.tibco.as.util.Member;
+import com.tibco.as.util.Utils;
 import com.tibco.as.util.convert.Blob;
 import com.tibco.as.util.convert.Settings;
 import com.tibco.as.util.log.LogFactory;
@@ -26,6 +29,8 @@ public class Application {
 
 	@Parameter(names = { "-?", "-help" }, description = "Print this help message", help = true)
 	private Boolean help;
+	@Parameter(names = { "-version" }, description = "Print this application's version")
+	private Boolean version;
 	@Parameter(names = "-debug", converter = LogLevelConverter.class, validateWith = LogLevelConverter.class, description = "Log level (ERROR, WARNING, INFO, DEBUG or VERBOSE)")
 	private LogLevel logLevel = LogLevel.INFO;
 	@Parameter(names = "-log", description = "Log file path")
@@ -70,6 +75,7 @@ public class Application {
 	private String timeZoneID;
 
 	public void execute(String[] args) {
+		System.out.println(getBanner());
 		JCommander jc = new JCommander(this);
 		jc.setProgramName(getProgramName());
 		addCommands(jc);
@@ -82,6 +88,9 @@ public class Application {
 		}
 		if (args.length == 0 || Boolean.TRUE.equals(help)) {
 			jc.usage();
+			return;
+		}
+		if (Boolean.TRUE.equals(version)) {
 			return;
 		}
 		try {
@@ -129,6 +138,19 @@ public class Application {
 			} catch (Exception e) {
 				log.log(Level.SEVERE, "Could not close channel", e);
 			}
+		}
+	}
+
+	private String getBanner() {
+		InputStream in = getClass().getClassLoader().getResourceAsStream(
+				"banner.txt");
+		if (in == null) {
+			return "";
+		}
+		try {
+			return Utils.readString(in);
+		} catch (IOException e) {
+			return "";
 		}
 	}
 
