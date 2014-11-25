@@ -68,6 +68,14 @@ public class Destination implements IDestination {
 		return accessors.toArray(new IAccessor[accessors.size()]);
 	}
 
+	protected IConverter getConverter(Class<?> from, Class<?> to) {
+		return converterFactory.getConverter(channel.getSettings(), from, to);
+	}
+
+	protected IConverter getConverter(FieldType from, Class<?> to) {
+		return converterFactory.getConverter(channel.getSettings(), from, to);
+	}
+
 	public Collection<FieldDef> getFieldDefs(TransferConfig transfer) {
 		if (transfer.getFieldNames().isEmpty()) {
 			return getSpaceDef().getFieldDefs();
@@ -85,6 +93,14 @@ public class Destination implements IDestination {
 
 	protected FieldDef getFieldDef(String fieldName) {
 		return spaceDef.getFieldDef(fieldName);
+	}
+
+	public String[] getFieldNames(TransferConfig transferConfig) {
+		Collection<String> fieldNames = new ArrayList<String>();
+		for (FieldDef fieldDef : getFieldDefs(transferConfig)) {
+			fieldNames.add(fieldDef.getName());
+		}
+		return fieldNames.toArray(new String[fieldNames.size()]);
 	}
 
 	public IConverter[] getJavaConverters(TransferConfig transfer) {

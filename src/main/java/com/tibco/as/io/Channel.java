@@ -20,7 +20,13 @@ public class Channel implements IChannel {
 	private Collection<IDestination> destinations = new ArrayList<IDestination>();
 	private Metaspace metaspace;
 
-	public Channel(String metaspaceName) {
+	@Override
+	public String getMetaspaceName() {
+		return metaspaceName;
+	}
+
+	@Override
+	public void setMetaspaceName(String metaspaceName) {
 		this.metaspaceName = metaspaceName;
 	}
 
@@ -32,10 +38,10 @@ public class Channel implements IChannel {
 	@Override
 	public void open() throws Exception {
 		if (metaspace == null) {
-			metaspace = Utils.getMetaspace(metaspaceName);
+			metaspace = Utils.getMetaspace(getMetaspaceName());
 			if (metaspace == null) {
 				log.fine("Connecting to metaspace");
-				metaspace = Utils.connect(metaspaceName, member);
+				metaspace = Utils.connect(getMetaspaceName(), member);
 			}
 		}
 	}

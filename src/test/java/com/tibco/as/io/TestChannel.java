@@ -9,10 +9,6 @@ public class TestChannel extends Channel {
 
 	private Map<String, List<Object>> lists = new HashMap<String, List<Object>>();
 
-	protected TestChannel(String metaspaceName) {
-		super(metaspaceName);
-	}
-
 	public synchronized List<Object> getList(String name) {
 		if (!lists.containsKey(name)) {
 			lists.put(name, new Vector<Object>());

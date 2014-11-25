@@ -1,14 +1,14 @@
 package com.tibco.as.io;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 public class TransferConfig {
 
 	private Integer workerCount;
 	private Long limit;
 	private Integer batchSize;
-	private Collection<String> fieldNames = new ArrayList<String>();
+	private List<String> fieldNames = new ArrayList<String>();
 
 	public void copyTo(TransferConfig target) {
 		if (target.workerCount == null) {
@@ -47,11 +47,11 @@ public class TransferConfig {
 		this.batchSize = batchSize;
 	}
 
-	public Collection<String> getFieldNames() {
+	public List<String> getFieldNames() {
 		return fieldNames;
 	}
 
-	public void setFieldNames(Collection<String> fieldNames) {
+	public void setFieldNames(List<String> fieldNames) {
 		this.fieldNames = fieldNames;
 	}
 

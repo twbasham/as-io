@@ -118,7 +118,8 @@ public class Application {
 				commands.add((ICommand) command);
 			}
 		}
-		IChannel channel = getChannel(metaspaceName);
+		IChannel channel = getChannel();
+		channel.setMetaspaceName(metaspaceName);
 		configure(channel.getMember());
 		configure(channel.getSettings());
 		try {
@@ -184,8 +185,8 @@ public class Application {
 		}
 	}
 
-	protected IChannel getChannel(String metaspaceName) {
-		return new Channel(metaspaceName);
+	protected IChannel getChannel() {
+		return new Channel();
 	}
 
 	protected ICommand getDefaultCommand() {

@@ -8,6 +8,10 @@ import com.tibco.as.util.convert.Settings;
 
 public interface IChannel {
 
+	String getMetaspaceName();
+
+	void setMetaspaceName(String metaspaceName);
+
 	Member getMember();
 
 	Settings getSettings();

@@ -17,7 +17,7 @@ public class TestBase {
 
 	@Before
 	public void openChannel() throws Exception {
-		channel = new TestChannel(null);
+		channel = new TestChannel();
 		Member member = channel.getMember();
 		member.setDiscovery(DISCOVERY);
 		member.setConnectTimeout(10000L);
